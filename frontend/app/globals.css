@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+:root {
+  --background: #FCF8FF;
+  --foreground: #171717;
+  --primary: #1D2B83;
+  --secondary: #6366f1;
+}
+
+@layer base {
+  body {
+    @apply bg-[#FCF8FF] text-[#171717] antialiased;
+  }
+}
+
+.glass {
+  @apply bg-white/80 backdrop-blur-md border border-white/20;
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+}
