@@ -2,7 +2,7 @@ import React from 'react';
 import Navbar from '@/components/common/Navbar';
 import ContactHero from '@/components/contact/ContactHero';
 import ContactSection from '@/components/contact/ContactSection';
-import ContactMap from '@/components/contact/ContactMap';
+// import ContactMap from '@/components/contact/ContactMap';
 import Footer from '@/components/common/Footer';
 import StickyNavPill from '@/components/common/StickyNavPill';
 
@@ -19,7 +19,7 @@ export default function ContactPage() {
             <Navbar />
             <ContactHero />
             <ContactSection />
-            <ContactMap />
+            {/* <ContactMap /> */}
             <Footer />
         </main>
     );
