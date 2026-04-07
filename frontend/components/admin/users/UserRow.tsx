@@ -1,0 +1,83 @@
+"use client";
+
+import React from 'react';
+import { MoreVertical, Eye, Trash2, Ban, CheckCircle2 } from 'lucide-react';
+import Badge from '../common/Badge';
+
+import { User } from '../types';
+
+interface UserRowProps {
+  user: User;
+  onView: (u: User) => void;
+  onBlock?: (u: User) => void;
+  onDelete?: (u: User) => void;
+}
+
+const UserRow: React.FC<UserRowProps> = ({ user, onView, onBlock, onDelete }) => {
+  return (
+    <tr className="group hover:bg-gray-50/50 transition-all duration-300">
+      <td className="px-6 py-3">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <img 
+              src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=eff6ff&color=2563eb&bold=true`} 
+              alt={user.name} 
+              className="w-9 h-9 rounded-xl object-cover shadow-sm ring-2 ring-transparent group-hover:ring-blue-100 transition-all" 
+            />
+            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white shadow-sm ${
+              user.status === 'Active' ? 'bg-green-500' : user.status === 'Blocked' ? 'bg-red-500' : 'bg-yellow-500'
+            }`} />
+          </div>
+          <div>
+            <p className="text-[11px] font-black text-gray-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{user.name}</p>
+            <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest mt-0.5">UID: {Number(user.id) + 2840}</p>
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-3">
+        <p className="text-[11px] font-bold text-gray-500">{user.email}</p>
+      </td>
+      <td className="px-6 py-3">
+        <p className="text-[10px] text-gray-400 font-black tracking-widest uppercase">{user.phone}</p>
+      </td>
+      <td className="px-6 py-3">
+        <div className="flex flex-col">
+          <span className="text-[11px] font-black text-gray-700">{user.joinedDate}</span>
+          <span className="text-[8px] text-gray-400 uppercase font-black tracking-widest mt-0.5">Reg. Date</span>
+        </div>
+      </td>
+      <td className="px-6 py-3">
+        <div className="scale-[0.85] origin-left">
+          <Badge variant={user.status === 'Active' ? 'success' : user.status === 'Blocked' ? 'danger' : 'warning'}>
+            {user.status}
+          </Badge>
+        </div>
+      </td>
+      <td className="px-6 py-3 text-right">
+        <div className="flex items-center justify-end gap-1.5">
+          <button 
+            onClick={() => onView(user)}
+            className="p-1 px-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100 active:scale-95"
+            title="Inspect Member"
+          >
+            <Eye size={14} />
+          </button>
+          <button 
+            className="p-1 px-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-all border border-transparent hover:border-orange-100 active:scale-95"
+            title="Suspend Access"
+          >
+             <Ban size={14} />
+          </button>
+          <button 
+            className="p-1 px-2 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95"
+            title="Remove Permanent"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+export default UserRow;
