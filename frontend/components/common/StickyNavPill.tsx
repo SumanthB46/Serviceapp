@@ -36,7 +36,7 @@ const StickyNavPill = () => {
     return (
         <>
             {/* Sticky Floating Nav Pill */}
-            <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[60] w-full max-w-4xl px-4 transition-all duration-500 transform ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-24 opacity-0 pointer-events-none'
+            <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] w-full max-w-4xl px-4 transition-all duration-500 transform ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-24 opacity-0 pointer-events-none'
                 }`}>
                 <div className="bg-white/90 backdrop-blur-xl border border-gray-100 shadow-xl shadow-black/10 rounded-full py-3 px-6">
                     <nav className="flex items-center w-full justify-around">
