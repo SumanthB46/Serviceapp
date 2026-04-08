@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Provider } from '../types';
 import ApprovalModal from './ApprovalModal';
+import InviteExpertModal from './InviteExpertModal';
 import Table from '../common/Table';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
@@ -57,12 +58,14 @@ const ProviderTable: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('All');
   const [serviceFilter, setServiceFilter] = useState('All');
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [providers, setProviders] = useState<Provider[]>(DUMMY_PROVIDERS);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 6;
 
-  const filtered = DUMMY_PROVIDERS.filter(p => {
+  const filtered = providers.filter(p => {
     const matchStatus = activeTab === 'All' || p.status === activeTab;
     const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.providerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -73,9 +76,9 @@ const ProviderTable: React.FC = () => {
   });
 
   // Stats
-  const totalProviders = DUMMY_PROVIDERS.length;
-  const pendingCount = DUMMY_PROVIDERS.filter(p => p.status === 'Pending').length;
-  const approvedCount = DUMMY_PROVIDERS.filter(p => p.status === 'Approved').length;
+  const totalProviders = providers.length;
+  const pendingCount = providers.filter(p => p.status === 'Pending').length;
+  const approvedCount = providers.filter(p => p.status === 'Approved').length;
 
   // Calculate slices
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
@@ -103,6 +106,10 @@ const ProviderTable: React.FC = () => {
 
   const handleNext = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handleAddProvider = (newProvider: Provider) => {
+    setProviders([newProvider, ...providers]);
   };
 
   return (
@@ -151,7 +158,15 @@ const ProviderTable: React.FC = () => {
                 <option value="Plumbing">Plumbing</option>
               </select>
             </div>
-            <Button variant="primary" size="sm" icon={UserPlus} className="shadow-lg bg-blue-600 text-[10px] py-3 rounded-2xl hidden md:flex">Invite Expert</Button>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={UserPlus}
+              onClick={() => setIsInviteModalOpen(true)}
+              className="shadow-lg bg-blue-600 text-[10px] py-3 rounded-2xl hidden md:flex"
+            >
+              Invite Expert
+            </Button>
           </div>
         </div>
 
@@ -237,8 +252,8 @@ const ProviderTable: React.FC = () => {
                     </Badge>
                   </td>
                   {showOperations && (
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-1">
                         {provider.status !== 'Pending' && (
                           <>
                             {provider.status === 'Approved' ? (
@@ -310,6 +325,11 @@ const ProviderTable: React.FC = () => {
       </div>
 
       <ApprovalModal provider={selectedProvider} onClose={() => setSelectedProvider(null)} />
+      <InviteExpertModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        onAdd={handleAddProvider}
+      />
     </div>
   );
 };

@@ -1,25 +1,40 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Search, Filter, Eye, Ban, Trash2, MoreVertical, Plus } from 'lucide-react';
+import { Search, Filter, Eye, Ban, Trash2, MoreVertical, Plus, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const DUMMY_USERS = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', phone: '+91 9876543210', status: 'Active' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '+91 9876543211', status: 'Active' },
-  { id: 3, name: 'Robert Johnson', email: 'robert@example.com', phone: '+91 9876543212', status: 'Blocked' },
-  { id: 4, name: 'Emily Davis', email: 'emily@example.com', phone: '+91 9876543213', status: 'Active' },
+  { id: 1, name: 'John Doe', email: 'john@example.com', phone: '+91 9876543210', status: 'OPERATIONAL' },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '+91 9876543211', status: 'OPERATIONAL' },
+  { id: 3, name: 'Robert Johnson', email: 'robert@example.com', phone: '+91 9876543212', status: 'SUSPENDED' },
+  { id: 4, name: 'Emily Davis', email: 'emily@example.com', phone: '+91 9876543213', status: 'ONBOARDING' },
 ];
 
 export default function UsersManagement() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('All'); // All, Active, Blocked
+   const [searchTerm, setSearchTerm] = useState('');
+   const [filterStatus, setFilterStatus] = useState('ALL ROLES'); 
+   const [isFilterOpen, setIsFilterOpen] = useState(false);
+   const filterRef = React.useRef<HTMLDivElement>(null);
+
+   React.useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+         if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+            setIsFilterOpen(false);
+         }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+   }, []);
+
+   const roles = ['ALL ROLES', 'OPERATIONAL', 'SUSPENDED', 'ONBOARDING'];
 
   const filteredUsers = DUMMY_USERS.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'All' || user.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+     const matchesFilter = filterStatus === 'ALL ROLES' || user.status.toUpperCase() === filterStatus.toUpperCase();
+     return matchesSearch && matchesFilter;
+   });
 
   return (
     <div className="space-y-6">
@@ -47,18 +62,42 @@ export default function UsersManagement() {
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Filter size={16} className="text-gray-400" />
-            <select 
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:border-blue-500 transition-colors"
-            >
-              <option value="All">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Blocked">Blocked</option>
-            </select>
-          </div>
+           <div className="relative" ref={filterRef}>
+             <div 
+               onClick={() => setIsFilterOpen(!isFilterOpen)}
+               className={`flex items-center gap-2 px-4 py-2 bg-white border rounded-xl shadow-sm cursor-pointer transition-all hover:border-blue-400 group ${isFilterOpen ? 'border-blue-500 ring-4 ring-blue-500/5' : 'border-gray-200'}`}
+             >
+               <Filter size={14} className={isFilterOpen ? 'text-blue-500' : 'text-gray-400'} />
+               <span className="text-[11px] font-black text-gray-700 uppercase tracking-widest">{filterStatus}</span>
+               <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${isFilterOpen ? 'rotate-180 text-blue-500' : ''}`} />
+             </div>
+
+             <AnimatePresence>
+               {isFilterOpen && (
+                 <motion.div 
+                   initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                   animate={{ opacity: 1, y: 4, scale: 1 }}
+                   exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                   className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-100 rounded-xl shadow-2xl z-50 overflow-hidden"
+                 >
+                   <div className="p-1">
+                     {roles.map((role) => (
+                       <div 
+                         key={role}
+                         onClick={() => {
+                           setFilterStatus(role);
+                           setIsFilterOpen(false);
+                         }}
+                         className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest cursor-pointer transition-colors rounded-lg ${filterStatus === role ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'}`}
+                       >
+                         {role}
+                       </div>
+                     ))}
+                   </div>
+                 </motion.div>
+               )}
+             </AnimatePresence>
+           </div>
         </div>
 
         {/* Table Area */}

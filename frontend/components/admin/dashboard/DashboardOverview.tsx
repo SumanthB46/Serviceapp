@@ -27,6 +27,47 @@ import {
 
 export default function DashboardOverview() {
    const [revenueTimeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+   
+   // State for filter dropdowns
+   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+   const [selectedDate, setSelectedDate] = useState('Last 7 Days');
+   const [selectedCategory, setSelectedCategory] = useState('All Categories');
+   const [selectedLocation, setSelectedLocation] = useState('All Locations');
+   const [startDate, setStartDate] = useState('');
+   const [endDate, setEndDate] = useState('');
+
+   const toggleDropdown = (name: string) => {
+      setActiveDropdown(activeDropdown === name ? null : name);
+   };
+
+   const handleSelect = (setter: (val: string) => void, value: string) => {
+      setter(value);
+      setActiveDropdown(null);
+   };
+
+   const handleApplyCustomDate = () => {
+      if (startDate && endDate) {
+         setSelectedDate(`${startDate} - ${endDate}`);
+         setActiveDropdown(null);
+      }
+   };
+
+   const handleQuickSelect = (days: number, label: string) => {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(end.getDate() - days);
+      
+      const formatDate = (d: Date) => d.toISOString().split('T')[0];
+      
+      setStartDate(formatDate(start));
+      setEndDate(formatDate(end));
+      setSelectedDate(label);
+      setActiveDropdown(null);
+   };
+
+   const dateOptions = ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'Custom Range'];
+   const categoryOptions = ['All Categories', 'Cleaning', 'Repair', 'Installation', 'Moving', 'Plumbing', 'Electrical'];
+   const locationOptions = ['All Locations', 'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Pune', 'Chennai'];
 
    // ... (stats definition remains same or adjusted for glass)
    const stats = [
@@ -38,6 +79,18 @@ export default function DashboardOverview() {
       { title: 'Cancelled Orders', value: '18', icon: XCircle, trend: -12.5, trendLabel: 'this week' },
    ];
 
+   const filterRef = React.useRef<HTMLDivElement>(null);
+
+   React.useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+         if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+            setActiveDropdown(null);
+         }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+   }, []);
+
    return (
       <div className="space-y-6 pb-10">
          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
@@ -45,25 +98,144 @@ export default function DashboardOverview() {
                <h1 className="text-3xl font-black text-gray-900 tracking-tight">Executive Dashboard</h1>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-               {/* Filters */}
-               <div className="flex items-center gap-2 px-3 py-1.5 bg-white/40 backdrop-blur-md border border-white/60 rounded-xl shadow-sm cursor-pointer hover:bg-white/60 transition-colors">
-                  <Calendar size={12} className="text-blue-600" />
-                  <span className="text-[10px] font-bold text-gray-600">Last 7 Days</span>
-                  <ChevronDown size={12} className="text-gray-400" />
-               </div>
+            <div ref={filterRef} className="flex flex-wrap items-center gap-3">
+                {/* Filters */}
+                <div className="relative">
+                   <div 
+                      onClick={() => toggleDropdown('calendar')}
+                      className={`flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border rounded-xl shadow-sm cursor-pointer transition-all ${activeDropdown === 'calendar' ? 'bg-white/80 border-blue-200' : 'bg-white/40 border-white/60 hover:bg-white/60'}`}
+                   >
+                      <Calendar size={12} className="text-blue-600" />
+                      <span className="text-[10px] font-bold text-gray-600">{selectedDate}</span>
+                      <ChevronDown size={12} className={`text-gray-400 transition-transform duration-200 ${activeDropdown === 'calendar' ? 'rotate-180' : ''}`} />
+                   </div>
+                   
+                   <AnimatePresence>
+                      {activeDropdown === 'calendar' && (
+                         <motion.div 
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 5, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute top-full left-0 mt-1 w-64 bg-white/80 backdrop-blur-xl border border-white/60 rounded-xl shadow-xl z-50 overflow-hidden"
+                         >
+                            <div className="p-4 space-y-4">
+                               <div className="flex items-center justify-between mb-2">
+                                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Select Period</span>
+                               </div>
 
-               <div className="flex items-center gap-2 px-3 py-1.5 bg-white/40 backdrop-blur-md border border-white/60 rounded-xl shadow-sm cursor-pointer hover:bg-white/60 transition-colors">
-                  <LayoutGrid size={12} className="text-blue-600" />
-                  <span className="text-[10px] font-bold text-gray-600">All Categories</span>
-                  <ChevronDown size={12} className="text-gray-400" />
-               </div>
+                               <div className="flex flex-wrap gap-2">
+                                  {[
+                                     { label: 'Today', days: 0 },
+                                     { label: '7 Days', days: 7 },
+                                     { label: '30 Days', days: 30 }
+                                  ].map(p => (
+                                     <button 
+                                        key={p.label}
+                                        onClick={() => handleQuickSelect(p.days, p.label)}
+                                        className="px-2 py-1 bg-blue-50 text-blue-600 text-[8px] font-bold rounded-md hover:bg-blue-600 hover:text-white transition-colors"
+                                     >
+                                        {p.label}
+                                     </button>
+                                  ))}
+                               </div>
+                               
+                               <div className="space-y-3 pt-2">
+                                  <div className="space-y-1">
+                                     <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">From Date</label>
+                                     <input 
+                                        type="date" 
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="w-full px-3 py-2 bg-white/50 border border-gray-100 rounded-lg text-[10px] font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                     />
+                                  </div>
+                                  <div className="space-y-1">
+                                     <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">To Date</label>
+                                     <input 
+                                        type="date" 
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className="w-full px-3 py-2 bg-white/50 border border-gray-100 rounded-lg text-[10px] font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                     />
+                                  </div>
+                               </div>
 
-               <div className="flex items-center gap-2 px-3 py-1.5 bg-white/40 backdrop-blur-md border border-white/60 rounded-xl shadow-sm cursor-pointer hover:bg-white/60 transition-colors">
-                  <MapPin size={12} className="text-blue-600" />
-                  <span className="text-[10px] font-bold text-gray-600">All Locations</span>
-                  <ChevronDown size={12} className="text-gray-400" />
-               </div>
+                               <button 
+                                  onClick={handleApplyCustomDate}
+                                  disabled={!startDate || !endDate}
+                                  className="w-full py-2 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:grayscale transition-all"
+                               >
+                                  Apply Range
+                               </button>
+                            </div>
+                         </motion.div>
+                      )}
+                   </AnimatePresence>
+                </div>
+
+                <div className="relative">
+                   <div 
+                      onClick={() => toggleDropdown('category')}
+                      className={`flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border rounded-xl shadow-sm cursor-pointer transition-all ${activeDropdown === 'category' ? 'bg-white/80 border-blue-200' : 'bg-white/40 border-white/60 hover:bg-white/60'}`}
+                   >
+                      <LayoutGrid size={12} className="text-blue-600" />
+                      <span className="text-[10px] font-bold text-gray-600">{selectedCategory}</span>
+                      <ChevronDown size={12} className={`text-gray-400 transition-transform duration-200 ${activeDropdown === 'category' ? 'rotate-180' : ''}`} />
+                   </div>
+
+                   <AnimatePresence>
+                      {activeDropdown === 'category' && (
+                         <motion.div 
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 5, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute top-full left-0 mt-1 w-40 bg-white/80 backdrop-blur-xl border border-white/60 rounded-xl shadow-xl z-50 overflow-hidden"
+                         >
+                            {categoryOptions.map((option) => (
+                               <div 
+                                  key={option}
+                                  onClick={() => handleSelect(setSelectedCategory, option)}
+                                  className="px-4 py-2 text-[10px] font-bold text-gray-600 hover:bg-blue-600 hover:text-white cursor-pointer transition-colors"
+                               >
+                                  {option}
+                               </div>
+                            ))}
+                         </motion.div>
+                      )}
+                   </AnimatePresence>
+                </div>
+
+                <div className="relative">
+                   <div 
+                      onClick={() => toggleDropdown('location')}
+                      className={`flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border rounded-xl shadow-sm cursor-pointer transition-all ${activeDropdown === 'location' ? 'bg-white/80 border-blue-200' : 'bg-white/40 border-white/60 hover:bg-white/60'}`}
+                   >
+                      <MapPin size={12} className="text-blue-600" />
+                      <span className="text-[10px] font-bold text-gray-600">{selectedLocation}</span>
+                      <ChevronDown size={12} className={`text-gray-400 transition-transform duration-200 ${activeDropdown === 'location' ? 'rotate-180' : ''}`} />
+                   </div>
+
+                   <AnimatePresence>
+                      {activeDropdown === 'location' && (
+                         <motion.div 
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 5, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute top-full left-0 mt-1 w-40 bg-white/80 backdrop-blur-xl border border-white/60 rounded-xl shadow-xl z-50 overflow-hidden"
+                         >
+                            {locationOptions.map((option) => (
+                               <div 
+                                  key={option}
+                                  onClick={() => handleSelect(setSelectedLocation, option)}
+                                  className="px-4 py-2 text-[10px] font-bold text-gray-600 hover:bg-blue-600 hover:text-white cursor-pointer transition-colors"
+                               >
+                                  {option}
+                               </div>
+                            ))}
+                         </motion.div>
+                      )}
+                   </AnimatePresence>
+                </div>
 
                <div className="h-6 w-[1px] bg-gray-200 mx-1" />
 

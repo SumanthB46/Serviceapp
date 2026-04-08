@@ -1,6 +1,6 @@
 import React from 'react';
-import LocationTable from '@/components/admin/location/LocationTable';
+import CityToggleRegistry from '@/components/admin/location/CityToggle';
 
 export default function LocationsPage() {
-  return <LocationTable />;
+  return <CityToggleRegistry />;
 }
