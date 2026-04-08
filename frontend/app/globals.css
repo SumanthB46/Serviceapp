@@ -7,9 +7,45 @@
   --secondary: #6366f1;
 }
 
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: #F8FAFC !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1D2B83 !important;
+  border-radius: 10px !important;
+  border: 2px solid #F8FAFC !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #162266 !important;
+}
+
+/* Firefox Support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1D2B83 #F8FAFC;
+}
+
 @layer base {
   body {
     @apply bg-[#FCF8FF] text-[#171717] antialiased;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 

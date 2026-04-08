@@ -59,18 +59,18 @@ const categoriesData = [
       {
         title: "Home Cleaning",
         services: [
-          { id: "full-house", name: "Full house deep cleaning", image: "/images/services/fullhouse.png", duration: "4-6 hrs", badge: "Best Seller" },
-          { id: "kitchen-clean", name: "Kitchen deep cleaning", image: "/images/services/kitchen.png", duration: "2 hrs" },
-          { id: "bathroom-clean", name: "Bathroom cleaning", image: "/images/services/bathroom.png", duration: "1 hr" },
-          { id: "sofa-clean", name: "Sofa cleaning", duration: "1.5 hrs" },
+          { id: "full-house", name: "Full house deep cleaning", image: "/images/categorymodal/home_cleaning/cleaning (2).png", duration: "4-6 hrs", badge: "Best Seller" },
+          { id: "kitchen-clean", name: "Kitchen deep cleaning", image: "/images/categorymodal/home_cleaning/kitchen (1).png", duration: "2 hrs" },
+          { id: "bathroom-clean", name: "Bathroom cleaning", image: "/images/categorymodal/home_cleaning/bathtub-cleaning.png", duration: "1 hr" },
+          { id: "sofa-clean", name: "Sofa cleaning", image: "/images/categorymodal/home_cleaning/cleaning (3).png", duration: "1.5 hrs" },
         ],
       },
       {
         title: "Commercial Cleaning",
         services: [
-          { id: "office", name: "Office cleaning", icon: Building2 },
-          { id: "bulk", name: "Apartment bulk cleaning", icon: Building2 },
-          { id: "post-construction", name: "Post-construction cleaning", icon: Construction },
+          { id: "office", name: "Office cleaning", image: "/images/categorymodal/commercial_cleaning/office.png", duration: "2 hrs" },
+          { id: "bulk", name: "Apartment bulk cleaning", image: "/images/categorymodal/commercial_cleaning/cleaning-service.png", duration: "1 hrs" },
+          { id: "post-construction", name: "Post-construction cleaning", image: "/images/categorymodal/commercial_cleaning/power-washing.png", duration: "3 hrs" },
         ],
       },
     ],
@@ -84,34 +84,34 @@ const categoriesData = [
       {
         title: "AC Services",
         services: [
-          { id: "ac-install", name: "AC installation", icon: Wind },
-          { id: "ac-repair", name: "AC repair", icon: Settings },
-          { id: "ac-gas", name: "Gas refill", icon: Wind },
-          { id: "ac-service", name: "AC servicing", icon: Sparkles },
+          { id: "ac-install", name: "AC installation", image: "/images/categorymodal/ac/air-conditioner.png", duration: "45 mins", badge: "Sale" },
+          { id: "ac-repair", name: "AC repair", image: "/images/categorymodal/ac/air-conditioner (1).png", duration: "45 mins" },
+          { id: "ac-gas", name: "Gas refill", image: "/images/categorymodal/ac/maintenance.png", duration: "45 mins" },
+          { id: "ac-service", name: "AC servicing", image: "/images/categorymodal/ac/service (1).png", duration: "45 mins" },
         ],
       },
       {
         title: "Washing Machine",
         services: [
-          { id: "wm-repair", name: "Repair", icon: Settings },
-          { id: "wm-install", name: "Installation", icon: Hammer },
-          { id: "wm-drum", name: "Drum cleaning", icon: Sparkles },
+          { id: "wm-repair", name: "Repair", image: "/images/categorymodal/washing_machine/repair.png" },
+          { id: "wm-install", name: "Installation", image: "/images/categorymodal/washing_machine/washing-machine.png" },
+          { id: "wm-drum", name: "Drum cleaning", image: "/images/categorymodal/washing_machine/washing-machine (1).png" },
         ],
       },
       {
         title: "Refrigerator",
         services: [
-          { id: "ref-cooling", name: "Cooling issue fix", icon: Wind },
-          { id: "ref-gas", name: "Gas refill", icon: Wind },
-          { id: "ref-service", name: "General service", icon: Settings },
+          { id: "ref-cooling", name: "Cooling issue fix", image: "/images/categorymodal/refrigerator/fridge.png" },
+          { id: "ref-gas", name: "Gas refill", image: "/images/categorymodal/refrigerator/gear.png" },
+          { id: "ref-service", name: "General service", image: "/images/categorymodal/refrigerator/toolbox.png" },
         ],
       },
       {
         title: "TV",
         services: [
-          { id: "tv-mount", name: "Wall mounting", icon: Tv },
-          { id: "tv-screen", name: "Screen repair", icon: Monitor },
-          { id: "tv-setup", name: "Setup", icon: Settings },
+          { id: "tv-mount", name: "Wall mounting", image: "/images/categorymodal/tv/cinema.png" },
+          { id: "tv-screen", name: "Screen repair", image: "/images/categorymodal/tv/tv.png" },
+          { id: "tv-setup", name: "Setup", image: "/images/categorymodal/tv/monitor.png" },
         ],
       },
     ],
@@ -125,17 +125,17 @@ const categoriesData = [
       {
         title: "Painting",
         services: [
-          { id: "interior", name: "Interior painting", icon: Paintbrush },
-          { id: "exterior", name: "Exterior painting", icon: Paintbrush },
-          { id: "waterproof", name: "Waterproofing", icon: Droplets },
+          { id: "interior", name: "Interior painting", image: "/images/categorymodal/painting/interior-design.png" },
+          { id: "exterior", name: "Exterior painting", image: "/images/categorymodal/painting/building.png" },
+          { id: "waterproof", name: "Waterproofing", image: "/images/categorymodal/painting/waterproof.png" },
         ],
       },
       {
         title: "Renovation",
         services: [
-          { id: "bath-reno", name: "Bathroom renovation", icon: Layout },
-          { id: "kit-reno", name: "Kitchen renovation", icon: Layout },
-          { id: "tile-work", name: "Tile work", icon: Layout },
+          { id: "bath-reno", name: "Bathroom renovation", image: "/images/categorymodal/renovation/shinny.png"},
+          { id: "kit-reno", name: "Kitchen renovation", image: "/images/categorymodal/renovation/kitchen (2).png" },
+          { id: "tile-work", name: "Tile work", image: "/images/categorymodal/renovation/mosaic.png" },
         ],
       },
     ],
@@ -149,10 +149,10 @@ const categoriesData = [
       {
         title: "Tech Solutions",
         services: [
-          { id: "cctv", name: "CCTV installation", icon: Video },
-          { id: "smart-home", name: "Smart home setup", icon: Smartphone },
-          { id: "wifi", name: "WiFi / router setup", icon: Wifi },
-          { id: "automation", name: "Home automation", icon: Zap },
+          { id: "cctv", name: "CCTV installation", image: "/images/categorymodal/tech/camera.png" },
+          { id: "smart-home", name: "Smart home setup", image: "/images/categorymodal/tech/smart-house.png" },
+          { id: "wifi", name: "WiFi / router setup", image: "/images/categorymodal/tech/router.png" },
+          { id: "automation", name: "Home automation", image: "/images/categorymodal/tech/customization.png" },
         ],
       },
     ],
@@ -166,10 +166,10 @@ const categoriesData = [
       {
         title: "Care & Maintenance",
         services: [
-          { id: "gardening", name: "Gardening", icon: Leaf },
-          { id: "pest", name: "Pest control", icon: Bug },
-          { id: "tank-clean", name: "Water tank cleaning", icon: Droplets },
-          { id: "landscaping", name: "Landscaping", icon: Palmtree },
+          { id: "gardening", name: "Gardening", image: "/images/categorymodal/outdoor/gardening (1).png" },
+          { id: "pest", name: "Pest control", image: "/images/categorymodal/outdoor/pest-control.png" },
+          { id: "tank-clean", name: "Water tank cleaning", image: "/images/categorymodal/outdoor/water-tank.png" },
+          { id: "landscaping", name: "Landscaping", image: "/images/categorymodal/outdoor/river.png" },
         ],
       },
     ],
@@ -183,11 +183,11 @@ const categoriesData = [
       {
         title: "Wellness & Learning",
         services: [
-          { id: "salon", name: "Salon at home", icon: Scissors },
-          { id: "spa", name: "Spa / massage", icon: Sparkles },
-          { id: "makeup", name: "Makeup artist", icon: Sparkles },
-          { id: "fitness", name: "Fitness trainer", icon: Dumbbell },
-          { id: "tutor", name: "Home tutor", icon: GraduationCap },
+          { id: "salon", name: "Salon at home", image: "/images/categorymodal/personal/hair-cutting.png" },
+          { id: "spa", name: "Spa / massage", image: "/images/categorymodal/personal/massage.png" },
+          { id: "makeup", name: "Makeup artist", image: "/images/categorymodal/personal/makeup.png" },
+          { id: "fitness", name: "Fitness trainer", image: "/images/categorymodal/personal/exercise.png" },
+          { id: "tutor", name: "Home tutor", image: "/images/categorymodal/personal/tutoring.png" },
         ],
       },
     ],
@@ -195,14 +195,14 @@ const categoriesData = [
   {
     id: "b2b",
     name: "B2B / Bulk",
-    image: "/images/Category/service.png",
+    image: "/images/category/service.png",
     label: "BUSINESS",
     groups: [
       {
         title: "Apartment / Society",
         services: [
-          { id: "society-bulk", name: "Apartment / Society Services", icon: Building2 },
-          { id: "bulk-elec", name: "Bulk electrical work", icon: Zap },
+          { id: "society-bulk", name: "Apartment / Society Services", image: "/images/categorymodal/emergency/repair (2).png" },
+          { id: "bulk-elec", name: "Bulk electrical work", image: "/images/categorymodal/emergency/electrician.png" },
         ],
       },
     ],
