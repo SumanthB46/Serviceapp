@@ -32,7 +32,7 @@ const Table: React.FC<TableProps> = ({
               {headers.map((header, index) => (
                 <th 
                   key={index} 
-                  className={`px-6 py-4 font-semibold ${index === 0 ? 'rounded-tl-xl' : ''} ${index === headers.length - 1 ? 'rounded-tr-xl' : ''}`}
+                  className={`px-6 py-4 font-semibold ${index === 0 ? 'rounded-tl-xl' : ''} ${index === headers.length - 1 ? 'rounded-tr-xl text-center' : ''}`}
                 >
                   {header}
                 </th>

@@ -19,14 +19,13 @@ const UserRow: React.FC<UserRowProps> = ({ user, onView, onBlock, onDelete }) =>
       <td className="px-6 py-3">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <img 
-              src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=eff6ff&color=2563eb&bold=true`} 
-              alt={user.name} 
-              className="w-9 h-9 rounded-xl object-cover shadow-sm ring-2 ring-transparent group-hover:ring-blue-100 transition-all" 
+            <img
+              src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=eff6ff&color=2563eb&bold=true`}
+              alt={user.name}
+              className="w-9 h-9 rounded-xl object-cover shadow-sm ring-2 ring-transparent group-hover:ring-blue-100 transition-all"
             />
-            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white shadow-sm ${
-              user.status === 'Active' ? 'bg-green-500' : user.status === 'Blocked' ? 'bg-red-500' : 'bg-yellow-500'
-            }`} />
+            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white shadow-sm ${user.status === 'Active' ? 'bg-green-500' : user.status === 'Blocked' ? 'bg-red-500' : 'bg-yellow-500'
+              }`} />
           </div>
           <div>
             <p className="text-[11px] font-black text-gray-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{user.name}</p>
@@ -53,22 +52,22 @@ const UserRow: React.FC<UserRowProps> = ({ user, onView, onBlock, onDelete }) =>
           </Badge>
         </div>
       </td>
-      <td className="px-6 py-3 text-right">
-        <div className="flex items-center justify-end gap-1.5">
-          <button 
+      <td className="px-6 py-3">
+        <div className="flex items-center justify-center gap-1.5">
+          <button
             onClick={() => onView(user)}
             className="p-1 px-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100 active:scale-95"
             title="Inspect Member"
           >
             <Eye size={14} />
           </button>
-          <button 
+          <button
             className="p-1 px-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-all border border-transparent hover:border-orange-100 active:scale-95"
             title="Suspend Access"
           >
-             <Ban size={14} />
+            <Ban size={14} />
           </button>
-          <button 
+          <button
             className="p-1 px-2 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95"
             title="Remove Permanent"
           >

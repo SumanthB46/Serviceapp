@@ -6,6 +6,7 @@ import Table from '../common/Table';
 import UserRow from './UserRow';
 import { User } from '../types';
 import UserDetailsModal from './UserDetailsModal';
+import AddUserModal from './AddUserModal';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,12 +32,14 @@ const UserTable: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>(DUMMY_USERS);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 6;
 
-  const filtered = DUMMY_USERS.filter(u => {
+  const filtered = users.filter(u => {
     const matchSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = filterStatus === 'All' || u.status === filterStatus;
     return matchSearch && matchStatus;
@@ -61,6 +64,10 @@ const UserTable: React.FC = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
+  const handleAddUser = (newUser: User) => {
+    setUsers([newUser, ...users]);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2">
@@ -70,7 +77,15 @@ const UserTable: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" icon={Download} className="shadow-sm border-gray-100 bg-white text-[11px]">Export Users</Button>
-          <Button variant="primary" size="sm" icon={UserPlus} className="shadow-lg shadow-blue-600/30 text-[11px]">Add New Member</Button>
+          <Button 
+            onClick={() => setIsAddModalOpen(true)}
+            variant="primary" 
+            size="sm" 
+            icon={UserPlus} 
+            className="shadow-lg shadow-blue-600/30 text-[11px]"
+          >
+            Add New Member
+          </Button>
         </div>
       </div>
 
@@ -185,7 +200,17 @@ const UserTable: React.FC = () => {
         </div>
       </div>
 
-      <UserDetailsModal user={selectedUser} onClose={() => setSelectedUser(null)} />
+      <UserDetailsModal 
+        user={selectedUser} 
+        isOpen={!!selectedUser} 
+        onClose={() => setSelectedUser(null)} 
+      />
+
+      <AddUserModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onAdd={handleAddUser}
+      />
     </div>
   );
 };

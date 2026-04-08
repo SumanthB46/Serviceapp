@@ -9,9 +9,10 @@ import CategoryCard from './CategoryCard';
 import Table from '../common/Table';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
+import CategoryModal from './CategoryModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const CATEGORIES = [
+const DUMMY_CATEGORIES = [
   { name: 'Electrician', icon: Zap, serviceCount: 8, color: 'text-yellow-600', bg: 'bg-yellow-50' },
   { name: 'Plumber', icon: Droplets, serviceCount: 6, color: 'text-blue-600', bg: 'bg-blue-50' },
   { name: 'AC Repair', icon: Wind, serviceCount: 5, color: 'text-cyan-600', bg: 'bg-cyan-50' },
@@ -21,6 +22,28 @@ const CATEGORIES = [
 ];
 
 const ServiceTable: React.FC = () => {
+  const [categories, setCategories] = useState(DUMMY_CATEGORIES);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+
+  const handleOpenAdd = () => {
+    setSelectedCategory(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (cat: any) => {
+    setSelectedCategory(cat);
+    setIsModalOpen(true);
+  };
+
+  const handleSave = (categoryData: any) => {
+    if (selectedCategory) {
+      setCategories(categories.map(c => c.name === selectedCategory.name ? categoryData : c));
+    } else {
+      setCategories([categoryData, ...categories]);
+    }
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
       {/* Simplified Modern Header */}
@@ -30,7 +53,15 @@ const ServiceTable: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="primary" size="sm" icon={Plus} className="shadow-lg bg-blue-600 text-[11px] py-3 rounded-2xl px-6">Add Category</Button>
+          <Button 
+            variant="primary" 
+            size="sm" 
+            icon={Plus} 
+            onClick={handleOpenAdd}
+            className="shadow-lg bg-blue-600 text-[11px] py-3 rounded-2xl px-6"
+          >
+            Add Category
+          </Button>
         </div>
       </div>
 
@@ -49,7 +80,7 @@ const ServiceTable: React.FC = () => {
                 className="relative z-10"
               >
                 <AnimatePresence mode="popLayout" initial={false}>
-                  {CATEGORIES.map((cat, i) => (
+                  {categories.map((cat, i) => (
                     <motion.tr
                       layout
                       initial={{ opacity: 0 }}
@@ -89,10 +120,18 @@ const ServiceTable: React.FC = () => {
                           </button>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-1.5">
-                          <button className="p-1 px-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100 active:scale-95" title="Edit Domain"><Pencil size={12} /></button>
-                          <button className="p-1 px-3 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95" title="Remove Vertical"><Trash2 size={12} /></button>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-center gap-1.5">
+                          <button 
+                            onClick={() => handleOpenEdit(cat)}
+                            className="p-1 px-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100 active:scale-95" 
+                            title="Edit Domain"
+                          >
+                            <Pencil size={12} />
+                          </button>
+                          <button className="p-1 px-3 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95" title="Remove Vertical">
+                            <Trash2 size={12} />
+                          </button>
                         </div>
                       </td>
                     </motion.tr>
@@ -105,6 +144,13 @@ const ServiceTable: React.FC = () => {
           </div>
         </motion.div>
       </AnimatePresence>
+
+      <CategoryModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        category={selectedCategory}
+        onSave={handleSave}
+      />
     </div>
   );
 };
