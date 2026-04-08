@@ -22,30 +22,30 @@ const categoriesData = [
       {
         title: "Electrical",
         services: [
-          { id: "fan", name: "Fan installation / repair", attributionLink: "https://www.flaticon.com/free-icons/furniture-and-household" },
-          { id: "light", name: "Light & switch installation" },
-          { id: "wiring", name: "Wiring / rewiring" },
-          { id: "inverter", name: "Inverter setup" },
-          { id: "doorbell", name: "Doorbell installation" },
+          { id: "fan", name: "Fan installation / repair", image: "/images/categorymodal/electrical/ceiling.png", duration: "45 mins", badge: "Sale" },
+          { id: "light", name: "Light & switch installation", image: "/images/categorymodal/electrical/wall-lamp.png", duration: "30 mins" },
+          { id: "wiring", name: "Wiring / rewiring", image: "/images/categorymodal/electrical/wiring.png", duration: "60 mins" },
+          { id: "inverter", name: "Inverter setup", image: "/images/categorymodal/electrical/solar-inverter.png", duration: "45 mins", badge: "New" },
+          { id: "doorbell", name: "Doorbell installation", image: "/images/categorymodal/electrical/doorbell.png", duration: "20 mins" },
         ],
       },
       {
         title: "Plumbing",
         services: [
-          { id: "tap", name: "Tap repair" },
-          { id: "leakage", name: "Pipe leakage fix" },
-          { id: "fittings", name: "Bathroom fittings", image: "/images/services/bathroom.png", attributionLink: "https://www.flaticon.com/free-icons/furniture-and-household" },
-          { id: "tank-cleaning", name: "Water tank cleaning" },
-          { id: "motor", name: "Motor repair" },
+          { id: "tap", name: "Tap repair", image: "/images/categorymodal/plumbing/plumbing.png", duration: "30 mins" },
+          { id: "leakage", name: "Pipe leakage fix", image: "/images/categorymodal/plumbing/leaking.png", duration: "45 mins", badge: "Sale" },
+          { id: "fittings", name: "Bathroom fittings", image: "/images/categorymodal/plumbing/shower.png", duration: "60 mins" },
+          { id: "tank-cleaning", name: "Water tank cleaning", image: "/images/categorymodal/plumbing/cleaning (1).png", duration: "90 mins" },
+          { id: "motor", name: "Motor repair", image: "/images/categorymodal/plumbing/motor.png", duration: "60 mins" },
         ],
       },
       {
         title: "Carpentry",
         services: [
-          { id: "furniture", name: "Furniture repair", icon: Hammer },
-          { id: "door-fixing", name: "Door / window fixing", icon: Home },
-          { id: "kitchen-work", name: "Modular kitchen work", icon: Layout },
-          { id: "shelf", name: "Shelf installation", icon: PenTool },
+          { id: "furniture", name: "Furniture repair", image: "/images/categorymodal/carpentry/sofa.png", duration: "60 mins", badge: "Sale" },
+          { id: "door-fixing", name: "Door / window fixing", image: "/images/categorymodal/carpentry/window.png", duration: "45 mins" },
+          { id: "kitchen-work", name: "Modular kitchen work", image: "/images/categorymodal/carpentry/kitchen.png", duration: "120 mins", badge: "Expert" },
+          { id: "shelf", name: "Shelf installation", image: "/images/categorymodal/carpentry/stand.png", duration: "45 mins" },
         ],
       },
     ],
@@ -59,10 +59,10 @@ const categoriesData = [
       {
         title: "Home Cleaning",
         services: [
-          { id: "full-house", name: "Full house deep cleaning", image: "/images/services/fullhouse.png" },
-          { id: "kitchen-clean", name: "Kitchen deep cleaning", image: "/images/services/kitchen.png" },
-          { id: "bathroom-clean", name: "Bathroom cleaning", image: "/images/services/bathroom.png" },
-          { id: "sofa-clean", name: "Sofa cleaning" },
+          { id: "full-house", name: "Full house deep cleaning", image: "/images/services/fullhouse.png", duration: "4-6 hrs", badge: "Best Seller" },
+          { id: "kitchen-clean", name: "Kitchen deep cleaning", image: "/images/services/kitchen.png", duration: "2 hrs" },
+          { id: "bathroom-clean", name: "Bathroom cleaning", image: "/images/services/bathroom.png", duration: "1 hr" },
+          { id: "sofa-clean", name: "Sofa cleaning", duration: "1.5 hrs" },
         ],
       },
       {
@@ -249,9 +249,9 @@ const Categories = () => {
                   className={`rounded-xl p-2 transition-all duration-300 ${isActive ? "bg-white/20 scale-110" : "bg-slate-50"
                     }`}
                 >
-                  <img 
-                    src={cat.image} 
-                    alt={cat.name} 
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
                     className="h-10 w-10 object-contain"
                   />
                 </div>
