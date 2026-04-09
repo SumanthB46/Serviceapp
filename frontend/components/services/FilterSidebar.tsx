@@ -80,7 +80,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, onApply 
             </div>
 
             {/* Content Swiper Area */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 no-scrollbar">
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
               {/* Sort By Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">

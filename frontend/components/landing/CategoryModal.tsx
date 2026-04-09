@@ -71,7 +71,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               </button>
 
               {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-10 mt-2 no-scrollbar">
+              <div className="flex-1 overflow-y-auto p-10 mt-2">
                 <div className="space-y-12">
                   <h2 className="text-3xl font-black text-slate-800 tracking-tight text-center sm:text-left">
                     {categoryName}
