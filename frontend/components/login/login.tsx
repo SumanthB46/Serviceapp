@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { 
   Button, 
   Input, 
   Checkbox, 
   Form, 
-  Divider 
+  Divider,
+  message
 } from "antd";
 import { 
   GoogleOutlined, 
@@ -17,13 +18,55 @@ import {
 } from "@ant-design/icons";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 import StickyNavPill from "@/components/common/StickyNavPill";
 
 const LoginComponent = () => {
-    const onFinish = (values: any) => {
-        console.log('Success:', values);
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+
+    const onFinish = async (values: any) => {
+        try {
+            setLoading(true);
+            const response = await fetch("http://localhost:5000/api/users/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: values.email,
+                    password: values.password,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                message.success("Login successful!");
+                
+                // Store user info and token
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("user", JSON.stringify(data));
+
+                // Redirect based on role
+                if (data.role === "admin") {
+                    router.push("/admin");
+                } else if (data.role === "provider") {
+                    router.push("/provider/dashboard"); // Or wherever the provider dashboard is
+                } else {
+                    router.push("/"); // Customer to landing page
+                }
+            } else {
+                message.error(data.message || "Login failed");
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            message.error("Something went wrong. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -117,6 +160,7 @@ const LoginComponent = () => {
                                 <Button 
                                     type="primary" 
                                     htmlType="submit" 
+                                    loading={loading}
                                     className="w-full h-14 bg-[#1D2B83] rounded-2xl font-bold tracking-wide shadow-xl shadow-blue-900/20 hover:scale-[1.02] transition-all"
                                 >
                                     SIGN IN
