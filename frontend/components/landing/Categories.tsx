@@ -2,17 +2,30 @@
 
 import React, { useState } from "react";
 import {
-  Wind, Zap, Pipette as Pipe, Sparkles, Settings, Hammer, ChevronRight,
-  Home, Monitor, ShieldCheck, Trees, User, Building2,
-  Lightbulb, Droplets, PenTool, Layout, WashingMachine, Refrigerator,
-  Tv, Paintbrush, Construction, Video, Wifi, Smartphone, Bug, Scissors,
-  Palmtree, GraduationCap, Dumbbell, Coffee, Leaf
+  ChevronRight
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import CategoryModal from "./CategoryModal";
 
-const categoriesData = [
+interface Category {
+  id: string;
+  name: string;
+  image: string;
+  label: string;
+  redirectPath?: string;
+  groups?: {
+    title: string;
+    services: {
+      id: string;
+      name: string;
+      image: string;
+    }[];
+  }[];
+}
+
+const categoriesData: Category[] = [
   {
     id: "home-services",
     name: "Home Services",
@@ -20,32 +33,11 @@ const categoriesData = [
     label: "REPAIR & FIX",
     groups: [
       {
-        title: "Electrical",
+        title: "",
         services: [
-          { id: "fan", name: "Fan installation / repair", image: "/images/categorymodal/electrical/ceiling.png", duration: "45 mins", badge: "Sale" },
-          { id: "light", name: "Light & switch installation", image: "/images/categorymodal/electrical/wall-lamp.png", duration: "30 mins" },
-          { id: "wiring", name: "Wiring / rewiring", image: "/images/categorymodal/electrical/wiring.png", duration: "60 mins" },
-          { id: "inverter", name: "Inverter setup", image: "/images/categorymodal/electrical/solar-inverter.png", duration: "45 mins", badge: "New" },
-          { id: "doorbell", name: "Doorbell installation", image: "/images/categorymodal/electrical/doorbell.png", duration: "20 mins" },
-        ],
-      },
-      {
-        title: "Plumbing",
-        services: [
-          { id: "tap", name: "Tap repair", image: "/images/categorymodal/plumbing/plumbing.png", duration: "30 mins" },
-          { id: "leakage", name: "Pipe leakage fix", image: "/images/categorymodal/plumbing/leaking.png", duration: "45 mins", badge: "Sale" },
-          { id: "fittings", name: "Bathroom fittings", image: "/images/categorymodal/plumbing/shower.png", duration: "60 mins" },
-          { id: "tank-cleaning", name: "Water tank cleaning", image: "/images/categorymodal/plumbing/cleaning (1).png", duration: "90 mins" },
-          { id: "motor", name: "Motor repair", image: "/images/categorymodal/plumbing/motor.png", duration: "60 mins" },
-        ],
-      },
-      {
-        title: "Carpentry",
-        services: [
-          { id: "furniture", name: "Furniture repair", image: "/images/categorymodal/carpentry/sofa.png", duration: "60 mins", badge: "Sale" },
-          { id: "door-fixing", name: "Door / window fixing", image: "/images/categorymodal/carpentry/window.png", duration: "45 mins" },
-          { id: "kitchen-work", name: "Modular kitchen work", image: "/images/categorymodal/carpentry/kitchen.png", duration: "120 mins", badge: "Expert" },
-          { id: "shelf", name: "Shelf installation", image: "/images/categorymodal/carpentry/stand.png", duration: "45 mins" },
+          { id: "electrical", name: "Electrical", image: "/images/categorymodal/electrical/wiring.png" },
+          { id: "plumbing", name: "Plumbing", image: "/images/categorymodal/plumbing/plumbing.png" },
+          { id: "carpentry", name: "Carpentry", image: "/images/categorymodal/carpentry/sofa.png" },
         ],
       },
     ],
@@ -57,20 +49,10 @@ const categoriesData = [
     label: "DEEP CLEAN",
     groups: [
       {
-        title: "Home Cleaning",
+        title: "",
         services: [
-          { id: "full-house", name: "Full house deep cleaning", image: "/images/categorymodal/home_cleaning/cleaning (2).png", duration: "4-6 hrs", badge: "Best Seller" },
-          { id: "kitchen-clean", name: "Kitchen deep cleaning", image: "/images/categorymodal/home_cleaning/kitchen (1).png", duration: "2 hrs" },
-          { id: "bathroom-clean", name: "Bathroom cleaning", image: "/images/categorymodal/home_cleaning/bathtub-cleaning.png", duration: "1 hr" },
-          { id: "sofa-clean", name: "Sofa cleaning", image: "/images/categorymodal/home_cleaning/cleaning (3).png", duration: "1.5 hrs" },
-        ],
-      },
-      {
-        title: "Commercial Cleaning",
-        services: [
-          { id: "office", name: "Office cleaning", image: "/images/categorymodal/commercial_cleaning/office.png", duration: "2 hrs" },
-          { id: "bulk", name: "Apartment bulk cleaning", image: "/images/categorymodal/commercial_cleaning/cleaning-service.png", duration: "1 hrs" },
-          { id: "post-construction", name: "Post-construction cleaning", image: "/images/categorymodal/commercial_cleaning/power-washing.png", duration: "3 hrs" },
+          { id: "home-cleaning", name: "Home Cleaning", image: "/images/categorymodal/home_cleaning/cleaning (2).png" },
+          { id: "commercial-cleaning", name: "Commercial Cleaning", image: "/images/categorymodal/commercial_cleaning/office.png" },
         ],
       },
     ],
@@ -82,36 +64,12 @@ const categoriesData = [
     label: "GADGET FIX",
     groups: [
       {
-        title: "AC Services",
+        title: "",
         services: [
-          { id: "ac-install", name: "AC installation", image: "/images/categorymodal/ac/air-conditioner.png", duration: "45 mins", badge: "Sale" },
-          { id: "ac-repair", name: "AC repair", image: "/images/categorymodal/ac/air-conditioner (1).png", duration: "45 mins" },
-          { id: "ac-gas", name: "Gas refill", image: "/images/categorymodal/ac/maintenance.png", duration: "45 mins" },
-          { id: "ac-service", name: "AC servicing", image: "/images/categorymodal/ac/service (1).png", duration: "45 mins" },
-        ],
-      },
-      {
-        title: "Washing Machine",
-        services: [
-          { id: "wm-repair", name: "Repair", image: "/images/categorymodal/washing_machine/repair.png" },
-          { id: "wm-install", name: "Installation", image: "/images/categorymodal/washing_machine/washing-machine.png" },
-          { id: "wm-drum", name: "Drum cleaning", image: "/images/categorymodal/washing_machine/washing-machine (1).png" },
-        ],
-      },
-      {
-        title: "Refrigerator",
-        services: [
-          { id: "ref-cooling", name: "Cooling issue fix", image: "/images/categorymodal/refrigerator/fridge.png" },
-          { id: "ref-gas", name: "Gas refill", image: "/images/categorymodal/refrigerator/gear.png" },
-          { id: "ref-service", name: "General service", image: "/images/categorymodal/refrigerator/toolbox.png" },
-        ],
-      },
-      {
-        title: "TV",
-        services: [
-          { id: "tv-mount", name: "Wall mounting", image: "/images/categorymodal/tv/cinema.png" },
-          { id: "tv-screen", name: "Screen repair", image: "/images/categorymodal/tv/tv.png" },
-          { id: "tv-setup", name: "Setup", image: "/images/categorymodal/tv/monitor.png" },
+          { id: "ac-services", name: "AC Services", image: "/images/categorymodal/ac/air-conditioner.png" },
+          { id: "washing-machine", name: "Washing Machine", image: "/images/categorymodal/washing_machine/washing-machine.png" },
+          { id: "refrigerator", name: "Refrigerator", image: "/images/categorymodal/refrigerator/fridge.png" },
+          { id: "tv", name: "TV", image: "/images/categorymodal/tv/tv.png" },
         ],
       },
     ],
@@ -123,19 +81,10 @@ const categoriesData = [
     label: "RENOVATION",
     groups: [
       {
-        title: "Painting",
+        title: "",
         services: [
-          { id: "interior", name: "Interior painting", image: "/images/categorymodal/painting/interior-design.png" },
-          { id: "exterior", name: "Exterior painting", image: "/images/categorymodal/painting/building.png" },
-          { id: "waterproof", name: "Waterproofing", image: "/images/categorymodal/painting/waterproof.png" },
-        ],
-      },
-      {
-        title: "Renovation",
-        services: [
-          { id: "bath-reno", name: "Bathroom renovation", image: "/images/categorymodal/renovation/shinny.png"},
-          { id: "kit-reno", name: "Kitchen renovation", image: "/images/categorymodal/renovation/kitchen (2).png" },
-          { id: "tile-work", name: "Tile work", image: "/images/categorymodal/renovation/mosaic.png" },
+          { id: "painting", name: "Painting", image: "/images/categorymodal/painting/interior-design.png" },
+          { id: "renovation", name: "Renovation", image: "/images/categorymodal/renovation/shinny.png" },
         ],
       },
     ],
@@ -145,52 +94,21 @@ const categoriesData = [
     name: "Smart / Tech",
     image: "/images/Category/security-cam.png",
     label: "PRO SETUP",
-    groups: [
-      {
-        title: "Tech Solutions",
-        services: [
-          { id: "cctv", name: "CCTV installation", image: "/images/categorymodal/tech/camera.png" },
-          { id: "smart-home", name: "Smart home setup", image: "/images/categorymodal/tech/smart-house.png" },
-          { id: "wifi", name: "WiFi / router setup", image: "/images/categorymodal/tech/router.png" },
-          { id: "automation", name: "Home automation", image: "/images/categorymodal/tech/customization.png" },
-        ],
-      },
-    ],
+    redirectPath: "/services/tech",
   },
   {
     id: "outdoor",
     name: "Outdoor Services",
     image: "/images/Category/gardening.png",
     label: "GREEN & CLEAN",
-    groups: [
-      {
-        title: "Care & Maintenance",
-        services: [
-          { id: "gardening", name: "Gardening", image: "/images/categorymodal/outdoor/gardening (1).png" },
-          { id: "pest", name: "Pest control", image: "/images/categorymodal/outdoor/pest-control.png" },
-          { id: "tank-clean", name: "Water tank cleaning", image: "/images/categorymodal/outdoor/water-tank.png" },
-          { id: "landscaping", name: "Landscaping", image: "/images/categorymodal/outdoor/river.png" },
-        ],
-      },
-    ],
+    redirectPath: "/services/outdoor",
   },
   {
     id: "lifestyle",
     name: "Personal & Lifestyle",
     image: "/images/Category/salon.png",
     label: "LUXURY CARE",
-    groups: [
-      {
-        title: "Wellness & Learning",
-        services: [
-          { id: "salon", name: "Salon at home", image: "/images/categorymodal/personal/hair-cutting.png" },
-          { id: "spa", name: "Spa / massage", image: "/images/categorymodal/personal/massage.png" },
-          { id: "makeup", name: "Makeup artist", image: "/images/categorymodal/personal/makeup.png" },
-          { id: "fitness", name: "Fitness trainer", image: "/images/categorymodal/personal/exercise.png" },
-          { id: "tutor", name: "Home tutor", image: "/images/categorymodal/personal/tutoring.png" },
-        ],
-      },
-    ],
+    redirectPath: "/services/lifestyle",
   },
   {
     id: "b2b",
@@ -199,21 +117,34 @@ const categoriesData = [
     label: "BUSINESS",
     groups: [
       {
-        title: "Apartment / Society",
+        title: "",
         services: [
-          { id: "society-bulk", name: "Apartment / Society Services", image: "/images/categorymodal/emergency/repair (2).png" },
-          { id: "bulk-elec", name: "Bulk electrical work", image: "/images/categorymodal/emergency/electrician.png" },
+          { id: "apartment-society", name: "Apartment / Society Services", image: "/images/categorymodal/emergency/repair (2).png" },
+          { id: "commercial-vendors", name: "Commercial Vendors", image: "/images/categorymodal/emergency/technician.png" },
         ],
       },
     ],
   },
+  {
+    id: "emergency",
+    name: "Emergency Services",
+    image: "/images/Category/emergency-call.png",
+    label: "24/7 SUPPORT",
+    redirectPath: "/services/emergency",
+  }
+  
 ];
 
 const Categories = () => {
-  const [selectedCategory, setSelectedCategory] = useState<typeof categoriesData[0] | null>(null);
+  const router = useRouter();
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleCategoryClick = (category: typeof categoriesData[0]) => {
+  const handleCategoryClick = (category: Category) => {
+    if (category.redirectPath) {
+      router.push(category.redirectPath);
+      return;
+    }
     setSelectedCategory(category);
     setIsModalOpen(true);
   };
@@ -230,7 +161,7 @@ const Categories = () => {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 px-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-4 px-2">
           {categoriesData.map((cat) => {
             const isActive = selectedCategory?.id === cat.id;
 
@@ -289,7 +220,7 @@ const Categories = () => {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           categoryName={selectedCategory.name}
-          serviceGroups={selectedCategory.groups}
+          serviceGroups={selectedCategory.groups || []}
         />
       )}
     </section>

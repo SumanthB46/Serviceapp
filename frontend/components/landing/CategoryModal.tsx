@@ -35,10 +35,10 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 }) => {
   const router = useRouter();
 
-  const handleServiceClick = (serviceName: string) => {
+  const handleServiceClick = (serviceId: string) => {
     onClose();
-    // Navigate to services page with the search query pre-filled
-    router.push(`/services?search=${encodeURIComponent(serviceName)}`);
+    // Navigate to the dynamic booking page for this specific sub-category
+    router.push(`/services/${serviceId}`);
   };
 
   return (
@@ -61,7 +61,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", damping: 30, stiffness: 400 }}
-              className="bg-white pointer-events-auto w-full max-w-xl max-h-[85vh] rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] overflow-hidden relative flex flex-col"
+              className="bg-white pointer-events-auto w-full max-w-lg rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] overflow-hidden relative flex flex-col"
             >
               <button
                 onClick={onClose}
@@ -70,51 +70,51 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                 <X className="w-5 h-5 text-slate-500" />
               </button>
 
-              {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-10 mt-2">
-                <div className="space-y-12">
-                  <h2 className="text-3xl font-black text-slate-800 tracking-tight text-center sm:text-left">
+              {/* Header and Content Wrapper */}
+              <div className="flex-1 p-8 sm:p-10">
+                <div className="space-y-10">
+                  <h2 className="text-2xl font-black text-slate-800 tracking-tight text-center sm:text-left">
                     {categoryName}
                   </h2>
 
                   {serviceGroups.map((group, groupIdx) => (
-                    <div key={groupIdx} className="space-y-8">
+                    <div key={groupIdx} className="space-y-6">
                       {group.title && (
                         <div className="flex items-center gap-4">
-                          <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap">
+                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap">
                             {group.title}
                           </h3>
                           <div className="h-px w-full bg-slate-100" />
                         </div>
                       )}
                       
-                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-x-6 gap-y-10">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-8 max-w-lg mx-auto sm:mx-0">
                         {group.services.map((service, serviceIdx) => {
                           const Icon = service.icon;
                           return (
                             <motion.button
                               key={serviceIdx}
-                              whileHover={{ y: -6 }}
+                              whileHover={{ y: -4 }}
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => handleServiceClick(service.name)}
-                              className="group flex flex-col items-center gap-4"
+                              onClick={() => handleServiceClick(service.id)}
+                              className="group flex flex-col items-center gap-3"
                             >
-                              <div className="relative w-full aspect-square bg-[#F8F9FA] rounded-[24px] flex items-center justify-center transition-all group-hover:bg-white group-hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.12)] overflow-hidden border border-transparent group-hover:border-slate-100">
+                              <div className="relative w-full aspect-square bg-slate-50 rounded-[24px] flex items-center justify-center transition-all group-hover:bg-white group-hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.1)] overflow-hidden border border-transparent group-hover:border-slate-100/50">
                                 {service.image ? (
                                   <img 
                                     src={service.image} 
                                     alt={service.name} 
-                                    className="w-1/2 h-1/2 object-contain"
+                                    className="w-[50%] h-[50%] object-contain"
                                   />
                                 ) : Icon ? (
-                                  <Icon className="w-8 h-8 text-slate-400 group-hover:text-[#1D2B83] transition-colors" />
+                                  <Icon className="w-7 h-7 text-slate-400 group-hover:text-[#1D2B83] transition-colors" />
                                 ) : (
-                                  <div className="w-3 h-3 rounded-full bg-[#1D2B83] opacity-20" />
+                                  <div className="w-2.5 h-2.5 rounded-full bg-[#1D2B83] opacity-20" />
                                 )}
 
                                 {/* Badge */}
                                 {service.badge && (
-                                  <div className="absolute top-2 right-2 px-2 py-0.5 bg-[#E6F9F0] text-[#008A4E] text-[8px] font-bold rounded-full leading-none border border-[#BFF0D9]">
+                                  <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-[#E6F9F0] text-[#008A4E] text-[7px] font-bold rounded-full leading-none border border-[#BFF0D9]">
                                     {service.badge}
                                   </div>
                                 )}
@@ -122,14 +122,14 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                                 {/* Duration Label */}
                                 {service.duration && (
                                   <div className="absolute bottom-2 inset-x-2 flex justify-center">
-                                    <div className="px-2 py-0.5 bg-white/90 backdrop-blur-[2px] text-slate-500 text-[8px] font-bold rounded-md shadow-sm border border-slate-50">
+                                    <div className="px-1.5 py-0.5 bg-white/90 backdrop-blur-[2px] text-slate-500 text-[7px] font-black rounded-md shadow-sm border border-slate-50">
                                       {service.duration}
                                     </div>
                                   </div>
                                 )}
                               </div>
                               
-                              <span className="text-[11px] font-bold text-center leading-tight text-slate-600 group-hover:text-[#1D2B83] transition-colors line-clamp-2 px-1">
+                              <span className="text-[10px] font-bold text-center leading-tight text-slate-600 group-hover:text-[#1D2B83] transition-colors line-clamp-2 px-1">
                                 {service.name}
                               </span>
                             </motion.button>

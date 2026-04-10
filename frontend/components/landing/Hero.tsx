@@ -33,7 +33,7 @@ const Hero = () => {
             transition={{ duration: 0.6 }}
             className="-mt-12 md:-mt-20 lg:-mt-24"
           >
-
+            
             <h1 className="text-4xl font-extrabold tracking-tight text-[#171717] md:text-5xl lg:text-6xl leading-[1.1]">
               Book Trusted <br />
               Home Services <br />

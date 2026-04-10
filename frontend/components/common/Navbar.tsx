@@ -55,9 +55,9 @@ const Navbar = () => {
                 <MapPin className="w-4.5 h-4.5" />
               </div>
               <div className="flex flex-col items-start leading-none">
-                <span className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-400 mb-0.5">
+                {/* <span className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-400 mb-0.5">
                   Update Location
-                </span>
+                </span> */}
                 <div className="flex items-center gap-1.5 cursor-pointer">
                   <span className="text-xs font-bold text-slate-700">
                     {location}
