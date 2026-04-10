@@ -10,34 +10,55 @@ import AddUserModal from './AddUserModal';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const DUMMY_USERS: User[] = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', phone: '+91 9876543210', status: 'Active', joinedDate: '12 Jan 2025' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '+91 9876543211', status: 'Active', joinedDate: '18 Feb 2025' },
-  { id: 3, name: 'Robert Johnson', email: 'robert@example.com', phone: '+91 9876543212', status: 'Blocked', joinedDate: '05 Mar 2025' },
-  { id: 4, name: 'Emily Davis', email: 'emily@example.com', phone: '+91 9876543213', status: 'Active', joinedDate: '22 Mar 2025' },
-  { id: 5, name: 'Michael Brown', email: 'michael@example.com', phone: '+91 9876543214', status: 'Blocked', joinedDate: '01 Apr 2025' },
-  { id: 6, name: 'Rahul Sharma', email: 'rahul@example.com', phone: '+91 9876543215', status: 'Active', joinedDate: '10 Apr 2025' },
-  { id: 7, name: 'Sarah Wilson', email: 'sarah@example.com', phone: '+91 9876543216', status: 'Pending', joinedDate: '12 Apr 2025' },
-  { id: 8, name: 'David Miller', email: 'david@example.com', phone: '+91 9876543217', status: 'Active', joinedDate: '15 Apr 2025' },
-  { id: 9, name: 'Laura Chen', email: 'laura@example.com', phone: '+91 9876543218', status: 'Active', joinedDate: '18 Apr 2025' },
-  { id: 10, name: 'Kevin Park', email: 'kevin@example.com', phone: '+91 9876543219', status: 'Blocked', joinedDate: '20 Apr 2025' },
-  { id: 11, name: 'Anna Scott', email: 'anna@example.com', phone: '+91 9876543220', status: 'Active', joinedDate: '22 Apr 2025' },
-  { id: 12, name: 'Chris Evans', email: 'chris@example.com', phone: '+91 9876543221', status: 'Active', joinedDate: '25 Apr 2025' },
-  { id: 13, name: 'Jessica Alba', email: 'jessica@example.com', phone: '+91 9876543222', status: 'Pending', joinedDate: '28 Apr 2025' },
-  { id: 14, name: 'Tony Stark', email: 'tony@example.com', phone: '+91 9876543223', status: 'Active', joinedDate: '01 May 2025' },
-  { id: 15, name: 'Bruce Wayne', email: 'bruce@example.com', phone: '+91 9876543224', status: 'Blocked', joinedDate: '05 May 2025' },
-];
+import axios from 'axios';
+import ConfirmationModal from '../common/ConfirmationModal';
 
 const UserTable: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [users, setUsers] = useState<User[]>(DUMMY_USERS);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 6;
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('http://127.0.0.1:5000/api/users');
+      console.log('API Response:', response.data);
+      // Filter for customers only and map backend fields to frontend types
+      const mappedUsers = response.data
+        .filter((u: any) => {
+          const isCustomer = u.role && u.role.toString().toLowerCase().trim() === 'customer';
+          return isCustomer;
+        })
+        .map((u: any) => ({
+          id: u._id,
+          name: u.name,
+          email: u.email,
+          phone: u.phone,
+          status: u.status === 'active' ? 'Active' : 'Blocked',
+          joinedDate: new Date(u.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          avatar: u.profile_image
+        }));
+      console.log('Filtered Users Data:');
+      console.table(mappedUsers);
+      setUsers(mappedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtered = users.filter(u => {
     const matchSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -64,8 +85,26 @@ const UserTable: React.FC = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
-  const handleAddUser = (newUser: User) => {
-    setUsers([newUser, ...users]);
+  const handleAddUser = async (newUserData: any) => {
+    try {
+      await axios.post('http://localhost:5000/api/users/register', newUserData);
+      await fetchUsers(); // Refresh the list
+    } catch (error) {
+      console.error('Error registering user:', error);
+      throw error;
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/users/${userToDelete.id}`);
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    } finally {
+      setUserToDelete(null);
+    }
   };
 
   return (
@@ -77,11 +116,11 @@ const UserTable: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" icon={Download} className="shadow-sm border-gray-100 bg-white text-[11px]">Export Users</Button>
-          <Button 
+          <Button
             onClick={() => setIsAddModalOpen(true)}
-            variant="primary" 
-            size="sm" 
-            icon={UserPlus} 
+            variant="primary"
+            size="sm"
+            icon={UserPlus}
             className="shadow-lg shadow-blue-600/30 text-[11px]"
           >
             Add New Member
@@ -110,10 +149,9 @@ const UserTable: React.FC = () => {
               onChange={e => setFilterStatus(e.target.value)}
               className="bg-transparent text-[10px] font-black uppercase tracking-widest text-gray-600 focus:outline-none cursor-pointer appearance-none pr-4"
             >
-              <option value="All">All Roles</option>
-              <option value="Active">Operational</option>
-              <option value="Blocked">Suspended</option>
-              <option value="Pending">Onboarding</option>
+              <option value="All">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Blocked">Blocked</option>
             </select>
           </div>
 
@@ -131,12 +169,22 @@ const UserTable: React.FC = () => {
             className="relative z-10"
           >
             <AnimatePresence mode="popLayout" initial={false}>
-              {currentUsers.length > 0 ? (
+              {loading ? (
+                <tr key="loading">
+                  <td colSpan={6} className="px-6 py-32 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <RefreshCcw size={40} className="text-blue-500 animate-spin opacity-50" />
+                      <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] animate-pulse">Synchronizing Registry...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : currentUsers.length > 0 ? (
                 currentUsers.map((user) => (
                   <UserRow
                     key={user.id}
                     user={user}
                     onView={u => setSelectedUser(u)}
+                    onDelete={u => setUserToDelete(u)}
                   />
                 ))
               ) : (
@@ -147,8 +195,12 @@ const UserTable: React.FC = () => {
                         <Search size={48} className="text-gray-400" />
                       </div>
                       <div>
-                        <p className="text-lg font-black text-gray-900 tracking-tight">No match found</p>
-                        <p className="text-xs font-bold text-gray-400 mt-1 uppercase tracking-widest">Adjust your search parameters</p>
+                        <p className="text-lg font-black text-gray-900 tracking-tight">
+                          {users.length === 0 ? "No Registered User Found" : "No match found"}
+                        </p>
+                        <p className="text-xs font-bold text-gray-400 mt-1 uppercase tracking-widest">
+                          {users.length === 0 ? "The neural network is currently empty" : "Adjust your search parameters"}
+                        </p>
                       </div>
                     </div>
                   </td>
@@ -200,16 +252,27 @@ const UserTable: React.FC = () => {
         </div>
       </div>
 
-      <UserDetailsModal 
-        user={selectedUser} 
-        isOpen={!!selectedUser} 
-        onClose={() => setSelectedUser(null)} 
+      <UserDetailsModal
+        user={selectedUser}
+        isOpen={!!selectedUser}
+        onClose={() => setSelectedUser(null)}
       />
 
-      <AddUserModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
+      <AddUserModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddUser}
+      />
+
+      <ConfirmationModal
+        isOpen={!!userToDelete}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={handleDeleteUser}
+        title="Account Termination"
+        message={`Are you absolutely sure you want to remove ${userToDelete?.name}? This operation is irreversible and will scrub all associated data from the registry.`}
+        confirmLabel="Terminate Account"
+        cancelLabel="Abort Mission"
+        variant="danger"
       />
     </div>
   );

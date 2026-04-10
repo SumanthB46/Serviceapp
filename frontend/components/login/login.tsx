@@ -7,7 +7,7 @@ import {
   Checkbox, 
   Form, 
   Divider,
-  message
+  App
 } from "antd";
 import { 
   GoogleOutlined, 
@@ -23,9 +23,10 @@ import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 import StickyNavPill from "@/components/common/StickyNavPill";
 
-const LoginComponent = () => {
+const LoginForm = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const { message } = App.useApp();
 
     const onFinish = async (values: any) => {
         try {
@@ -185,5 +186,11 @@ const LoginComponent = () => {
         </main>
     );
 };
+
+const LoginComponent = () => (
+    <App>
+        <LoginForm />
+    </App>
+);
 
 export default LoginComponent;

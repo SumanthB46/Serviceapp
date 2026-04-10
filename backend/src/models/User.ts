@@ -7,7 +7,7 @@ export interface IUser extends Document {
   password?: string;
   role: 'admin' | 'customer' | 'provider';
   profile_image?: string;
-  status: 'active' | 'blocked';
+  status: 'active' | 'blocked' | 'deleted';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,7 +50,7 @@ const userSchema = new Schema<IUser>(
     },
     status: {
       type: String,
-      enum: ['active', 'blocked'],
+      enum: ['active', 'blocked', 'deleted'],
       default: 'active',
     },
   },
