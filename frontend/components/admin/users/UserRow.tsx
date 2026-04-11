@@ -29,7 +29,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, onView, onBlock, onDelete }) =>
           </div>
           <div>
             <p className="text-[11px] font-black text-gray-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{user.name}</p>
-            <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest mt-0.5">UID: {Number(user.id) + 2840}</p>
+            <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest mt-0.5">UID: {typeof user.id === 'number' ? user.id + 2840 : user.id.toString().slice(-4).toUpperCase()}</p>
           </div>
         </div>
       </td>
@@ -61,13 +61,9 @@ const UserRow: React.FC<UserRowProps> = ({ user, onView, onBlock, onDelete }) =>
           >
             <Eye size={14} />
           </button>
+
           <button
-            className="p-1 px-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-all border border-transparent hover:border-orange-100 active:scale-95"
-            title="Suspend Access"
-          >
-            <Ban size={14} />
-          </button>
-          <button
+            onClick={() => onDelete?.(user)}
             className="p-1 px-2 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95"
             title="Remove Permanent"
           >
