@@ -141,6 +141,48 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+// @desc    Update any user (Admin only)
+// @route   PUT /api/users/:id
+// @access  Private/Admin
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await User.findById(req.params.id) as IUser & { _id: string; password?: string };
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    user.name          = req.body.name          ?? user.name;
+    user.email         = req.body.email         ?? user.email;
+    user.phone         = req.body.phone         ?? user.phone;
+    user.profile_image = req.body.profile_image ?? user.profile_image;
+    
+    // Explicitly handle status mapping to lower-case for registry consistency
+    if (req.body.status) {
+       user.status = req.body.status.toLowerCase();
+    }
+
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(req.body.password, salt);
+    }
+
+    const updated = await user.save();
+
+    res.json({
+      _id:           updated._id,
+      name:          updated.name,
+      email:         updated.email,
+      phone:         updated.phone,
+      role:          updated.role,
+      profile_image: updated.profile_image,
+      status:        updated.status,
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Delete a user (Soft Delete)
 // @route   DELETE /api/users/:id
 // @access  Private/Admin

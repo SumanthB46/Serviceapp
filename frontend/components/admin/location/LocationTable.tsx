@@ -8,6 +8,7 @@ import Badge from '../common/Badge';
 import LocationModal from './LocationModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, Filter, RefreshCw } from 'lucide-react';
+import ConfirmationModal from '../common/ConfirmationModal';
 
 const CITIES_INIT = [
   { city: 'Mumbai', active: true, stateRegion: 'MH, IN' },
@@ -28,6 +29,13 @@ const LocationTable: React.FC = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<any>(null);
+  const [locationToDelete, setLocationToDelete] = useState<any>(null);
+
+  const handleDelete = () => {
+    if (!locationToDelete) return;
+    setCities(cities.filter(c => c.city !== locationToDelete.city));
+    setLocationToDelete(null);
+  };
 
   // Filter State
   const [filterStatus, setFilterStatus] = useState('All');
@@ -182,7 +190,7 @@ const LocationTable: React.FC = () => {
                        onClick={() => handleOpenEdit(c)}
                        className="p-1 px-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100 active:scale-95"
                     ><Pencil size={12} /></button>
-                    <button className="p-1 px-2 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95"><Trash2 size={12} /></button>
+                    <button onClick={() => setLocationToDelete(c)} className="p-1 px-2 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95"><Trash2 size={12} /></button>
                   </div>
                 </td>
               </tr>
@@ -238,6 +246,17 @@ const LocationTable: React.FC = () => {
          onClose={() => setIsModalOpen(false)}
          locationState={editingLocation}
          onSave={handleSave}
+      />
+
+      <ConfirmationModal
+         isOpen={!!locationToDelete}
+         onClose={() => setLocationToDelete(null)}
+         onConfirm={handleDelete}
+         title="Hub Shutdown"
+         message={`Are you sure you want to shut down operations in "${locationToDelete?.city}"? Strategic assets will be moved to standby.`}
+         confirmLabel="Confirm Shutdown"
+         cancelLabel="Maintain Mission"
+         variant="danger"
       />
     </div>
   );

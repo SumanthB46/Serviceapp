@@ -8,23 +8,45 @@ export interface Booking {
   status: 'Confirmed' | 'Pending' | 'Completed' | 'Cancelled';
 }
 
-export interface Provider {
-  id: number;
-  providerId: string;
-  name: string;
-  email: string;
-  phone: string;
-  service: string;
-  location: string;
+export interface ProviderDocument {
+  doc_type: string;
+  file_url: string;
+  uploaded_at: string;
+}
+
+export interface ProviderService {
+  _id: string;
+  provider_id: string;
+  service_id: string;
+  service_name: string;
   experience: number;
-  rating: number;
-  status: 'Approved' | 'Pending' | 'Rejected' | 'Blocked';
-  joinedDate: string;
-  avatar?: string;
-  idVerified: boolean;
-  expVerified: boolean;
-  docsRequested: boolean;
-  active: boolean;
+  price: number;
+  skills: string[];
+  documents: ProviderDocument[];
+  service_rating: number;
+  is_active: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+}
+
+export interface Provider {
+  _id: string;
+  user_id: {
+    _id: string;
+    name: string;
+    email: string;
+    phone: string;
+    profile_image?: string;
+    status: string;
+  };
+  availability_status: 'available' | 'busy' | 'offline';
+  location: string;
+  overall_rating: number;
+  is_verified: boolean;
+  status: 'Pending' | 'Approved' | 'Rejected' | 'Blocked';
+  services?: ProviderService[]; 
+  isDeleted: boolean;
+  createdAt: string;
 }
 
 export interface User {

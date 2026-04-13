@@ -13,10 +13,16 @@ import {
 interface ApprovalModalProps {
   provider: Provider | null;
   onClose: () => void;
+  onUpdate: (id: string, status: string) => void;
 }
 
-const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose }) => {
+const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpdate }) => {
   if (!provider) return null;
+
+  const handleAction = (status: string) => {
+    onUpdate(provider._id, status);
+    onClose();
+  };
 
   const statusVariant = provider.status === 'Approved' ? 'success' : provider.status === 'Pending' ? 'warning' : provider.status === 'Blocked' ? 'neutral' : 'danger';
 
@@ -36,8 +42,8 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose }) => {
               {provider.status === 'Pending' && (
                 <>
                   <Button variant="outline" size="sm" onClick={onClose} className="text-[10px] uppercase font-black text-amber-600 border-amber-100 bg-amber-50 shadow-sm">Request Docs</Button>
-                  <Button variant="danger" size="sm" onClick={onClose} className="text-[10px] uppercase font-black bg-red-600 shadow-lg">Reject Entry</Button>
-                  <Button variant="success" size="sm" onClick={onClose} className="text-[10px] uppercase font-black bg-green-600 shadow-lg">Approve Access</Button>
+                  <Button variant="danger" size="sm" onClick={() => handleAction('Rejected')} className="text-[10px] uppercase font-black bg-red-600 shadow-lg">Reject Entry</Button>
+                  <Button variant="success" size="sm" onClick={() => handleAction('Approved')} className="text-[10px] uppercase font-black bg-green-600 shadow-lg">Approve Access</Button>
                 </>
               )}
               {provider.status === 'Rejected' && (
@@ -52,19 +58,19 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose }) => {
         <div className="flex items-start gap-6 bg-gray-50/50 p-6 rounded-[2.5rem] border border-gray-100">
            <div className="relative group">
               <img
-                src={provider.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.name)}&background=EFF6FF&color=2563EB&bold=true&size=100`}
-                alt={provider.name}
+                src={provider.user_id?.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.user_id?.name || 'Expert')}&background=EFF6FF&color=2563EB&bold=true&size=100`}
+                alt={provider.user_id?.name || 'Expert'}
                 className="w-24 h-24 rounded-[2rem] border-4 border-white shadow-md group-hover:rotate-3 transition-transform"
               />
-              <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-4 border-white shadow-sm flex items-center justify-center ${provider.active ? 'bg-green-500' : 'bg-gray-300'}`}>
+              <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-4 border-white shadow-sm flex items-center justify-center ${provider.availability_status === 'available' ? 'bg-green-500' : 'bg-gray-300'}`}>
                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
               </div>
            </div>
-           <div className="flex-1">
+            <div className="flex-1">
               <div className="flex justify-between items-start">
                  <div>
-                    <h3 className="text-xl font-black text-gray-900 tracking-tight">{provider.name}</h3>
-                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">Registry ID: {provider.providerId}</p>
+                    <h3 className="text-xl font-black text-gray-900 tracking-tight">{provider.user_id?.name || 'Pending Identity'}</h3>
+                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">Registry ID: {provider._id.slice(-6).toUpperCase()}</p>
                  </div>
                  <div className="scale-90 origin-left">
                     <Badge variant={statusVariant}>{provider.status}</Badge>
@@ -75,40 +81,40 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose }) => {
                     <div className="p-2 bg-white rounded-xl border border-gray-100 shadow-sm text-blue-500 transition-transform group-hover:scale-110">
                        <Mail size={12} />
                     </div>
-                    <span className="text-[11px] font-bold text-gray-600 truncate">{provider.email}</span>
+                    <span className="text-[11px] font-bold text-gray-600 truncate">{provider.user_id?.email || 'N/A'}</span>
                  </div>
                  <div className="flex items-center gap-2 group cursor-pointer">
                     <div className="p-2 bg-white rounded-xl border border-gray-100 shadow-sm text-green-500 transition-transform group-hover:scale-110">
                        <Phone size={12} />
                     </div>
-                    <span className="text-[11px] font-bold text-gray-600">{provider.phone}</span>
+                    <span className="text-[11px] font-bold text-gray-600">{provider.user_id?.phone || 'N/A'}</span>
                  </div>
               </div>
-           </div>
+            </div>
         </div>
 
         {/* Verification Status Multi-Tier */}
         <div className="grid grid-cols-2 gap-4">
-           <div className={`p-4 rounded-[1.5rem] border flex items-center justify-between transition-all ${provider.idVerified ? 'bg-green-50 border-green-100 text-green-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
+            <div className={`p-4 rounded-[1.5rem] border flex items-center justify-between transition-all ${provider.is_verified ? 'bg-green-50 border-green-100 text-green-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
               <div className="flex items-center gap-3">
                  <div className="p-2 bg-white rounded-xl shadow-sm"><ShieldCheck size={16} /></div>
                  <div>
                     <p className="text-[8px] font-black uppercase tracking-[0.15em] opacity-60">Identity Bureau</p>
-                    <p className="text-[11px] font-black">{provider.idVerified ? 'Verified' : 'Inspection Required'}</p>
+                    <p className="text-[11px] font-black">{provider.is_verified ? 'Verified' : 'Inspection Required'}</p>
                  </div>
               </div>
               <button className="p-1.5 bg-white rounded-lg border border-gray-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><Eye size={12} /></button>
-           </div>
-           <div className={`p-4 rounded-[1.5rem] border flex items-center justify-between transition-all ${provider.expVerified ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
+            </div>
+            <div className={`p-4 rounded-[1.5rem] border flex items-center justify-between transition-all ${provider.services && provider.services.length > 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
               <div className="flex items-center gap-3">
                  <div className="p-2 bg-white rounded-xl shadow-sm"><Award size={16} /></div>
                  <div>
                     <p className="text-[8px] font-black uppercase tracking-[0.15em] opacity-60">Credential Bureau</p>
-                    <p className="text-[11px] font-black">{provider.experience}Y Certification</p>
+                    <p className="text-[11px] font-black">{provider.services?.[0]?.experience || 0}Y Certification</p>
                  </div>
               </div>
               <button className="p-1.5 bg-white rounded-lg border border-gray-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><Eye size={12} /></button>
-           </div>
+            </div>
         </div>
 
         {/* Dynamic Verification Hub */}

@@ -9,16 +9,19 @@ interface SubServiceModalProps {
   isOpen: boolean;
   onClose: () => void;
   subService: any | null;
-  category: string;
+  category: any;
   onSave: (subService: any) => void;
 }
 
 const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subService, category, onSave }) => {
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    status: 'Active'
+    service_name: '',
+    base_price: '',
+    description: '',
+    duration: '',
+    image: '',
+    status: 'active'
   });
 
   useEffect(() => {
@@ -30,12 +33,22 @@ const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subS
       document.body.style.overflow = 'hidden';
       if (subService) {
         setFormData({
-          name: subService.name || '',
-          price: subService.price.replace('₹', '') || '',
-          status: subService.status || 'Active'
+          service_name: subService.service_name || '',
+          base_price: String(subService.base_price) || '',
+          description: subService.description || '',
+          duration: String(subService.duration) || '',
+          image: subService.image || '',
+          status: subService.status || 'active'
         });
       } else {
-        setFormData({ name: '', price: '', status: 'Active' });
+        setFormData({ 
+          service_name: '', 
+          base_price: '', 
+          description: '',
+          duration: '',
+          image: '',
+          status: 'active' 
+        });
       }
     } else {
       document.body.style.overflow = 'unset';
@@ -49,11 +62,13 @@ const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subS
     e.preventDefault();
     onSave({
       ...subService,
-      name: formData.name,
-      price: `₹${formData.price}`,
+      service_name: formData.service_name,
+      base_price: Number(formData.base_price),
+      description: formData.description,
+      duration: Number(formData.duration),
+      image: formData.image,
       status: formData.status,
-      category: category,
-      id: subService ? subService.id : Math.floor(Math.random() * 10000)
+      category_id: category._id
     });
     onClose();
   };
@@ -65,6 +80,7 @@ const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subS
       <div className="fixed inset-0 z-[9990] flex items-center justify-center p-4 pointer-events-none">
         {/* Backdrop */}
         <motion.div
+          key="subservice-backdrop"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -74,6 +90,7 @@ const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subS
 
         {/* Modal Content */}
         <motion.div
+          key="subservice-content"
           initial={{ opacity: 0, scale: 0.9, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 30 }}
@@ -85,7 +102,7 @@ const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subS
               <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase tracking-[0.1em]">
                 {subService ? 'Edit Offering' : 'New Offering'}
               </h2>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Catalog: {category}</p>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Catalog: {category?.category_name}</p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors self-start">
               <X size={20} className="text-gray-400" />
@@ -104,15 +121,43 @@ const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subS
               <div className="space-y-4 relative z-10">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                    <Layers size={12} className="text-blue-500" /> Offering Details
+                    <Layers size={12} className="text-blue-500" /> Service Name
                   </label>
                   <input 
                     type="text" 
                     required
                     placeholder="e.g. Wire Fixes"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    value={formData.service_name}
+                    onChange={(e) => setFormData({...formData, service_name: e.target.value})}
                     className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all uppercase"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <X size={12} className="text-blue-500 rotate-45" /> Description
+                  </label>
+                  <textarea 
+                    required
+                    rows={2}
+                    placeholder="Briefly describe this service..."
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <Layers size={12} className="text-blue-500" /> Image URL
+                  </label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="https://images.unsplash.com/..."
+                    value={formData.image}
+                    onChange={(e) => setFormData({...formData, image: e.target.value})}
+                    className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
                   />
                 </div>
 
@@ -128,8 +173,8 @@ const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subS
                         required
                         min="0"
                         placeholder="299"
-                        value={formData.price}
-                        onChange={(e) => setFormData({...formData, price: e.target.value})}
+                        value={formData.base_price}
+                        onChange={(e) => setFormData({...formData, base_price: e.target.value})}
                         className="w-full pl-8 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
                       />
                     </div>
@@ -144,9 +189,24 @@ const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subS
                       onChange={(e) => setFormData({...formData, status: e.target.value})}
                       className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all appearance-none"
                     >
-                      <option value="Active">Active (Live)</option>
-                      <option value="Inactive">Inactive (Offline)</option>
+                      <option value="active">Active (Live)</option>
+                      <option value="inactive">Inactive (Offline)</option>
                     </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                       <Activity size={12} className="text-blue-500" /> Duration (Mins)
+                    </label>
+                    <input 
+                       type="number"
+                       required
+                       min="1"
+                       placeholder="60"
+                       value={formData.duration}
+                       onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                       className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                    />
                   </div>
                 </div>
               </div>

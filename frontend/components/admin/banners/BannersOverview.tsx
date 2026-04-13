@@ -6,6 +6,7 @@ import BannerCard, { Banner } from './BannerCard';
 import BannerForm from './BannerForm';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
+import ConfirmationModal from '../common/ConfirmationModal';
 
 interface BannersOverviewProps {
   initialBanners: Banner[];
@@ -15,6 +16,13 @@ export default function BannersOverview({ initialBanners }: BannersOverviewProps
   const [banners, setBanners] = useState<Banner[]>(initialBanners);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
+  const [bannerToDelete, setBannerToDelete] = useState<Banner | null>(null);
+
+  const handleDelete = () => {
+    if (!bannerToDelete) return;
+    setBanners(prev => prev.filter(item => item.id !== bannerToDelete.id));
+    setBannerToDelete(null);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
@@ -34,7 +42,7 @@ export default function BannersOverview({ initialBanners }: BannersOverviewProps
             banner={banner}
             onEdit={(b) => { setEditingBanner(b); setIsFormOpen(true); }}
             onToggle={(b) => { setBanners(prev => prev.map(item => item.id === b.id ? { ...item, isActive: !item.isActive } : item)); }}
-            onDelete={(b) => { setBanners(prev => prev.filter(item => item.id !== b.id)); }}
+            onDelete={(b) => setBannerToDelete(b)}
           />
         ))}
 
@@ -61,6 +69,17 @@ export default function BannersOverview({ initialBanners }: BannersOverviewProps
           onCancel={() => setIsFormOpen(false)}
         />
       </Modal>
+
+      <ConfirmationModal
+        isOpen={!!bannerToDelete}
+        onClose={() => setBannerToDelete(null)}
+        onConfirm={handleDelete}
+        title="Banner Deletion"
+        message={`Are you sure you want to remove the "${bannerToDelete?.title}" banner? This campaign will be immediately terminated.`}
+        confirmLabel="Decommission Banner"
+        cancelLabel="Keep Campaign"
+        variant="danger"
+      />
     </div>
   );
 }

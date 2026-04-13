@@ -6,6 +6,7 @@ import {
   User2, Mail, Phone, ShieldCheck, Lock, CheckCircle2, AlertCircle, Camera,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { API_URL } from '@/config/api';
 
 interface HeaderProps { onMenuClick: () => void; }
 
@@ -203,7 +204,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
       if (form.password.trim()) body.password = form.password;
       if (previewImg)           body.profile_image = previewImg;
 
-      const res = await fetch("http://localhost:5000/api/users/me", {
+      const res = await fetch(`${API_URL}/users/me`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),

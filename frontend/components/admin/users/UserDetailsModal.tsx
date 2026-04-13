@@ -9,6 +9,7 @@ import { User } from '../types';
 import { Mail, Phone, Calendar, Shield, History, MessageSquare, AlertCircle, ExternalLink, User as UserIcon, X, RefreshCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { API_URL } from '@/config/api';
 
 interface UserDetailsModalProps {
   user: any;
@@ -37,10 +38,10 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, isOpen, onClo
     try {
       setLoading(true);
       // Sequentially fetch for better stability and debugging
-      const bRes = await axios.get(`http://127.0.0.1:5000/api/bookings/user/${user.id}`);
+      const bRes = await axios.get(`${API_URL}/bookings/user/${user.id}`);
       setBookings(bRes.data);
 
-      const cRes = await axios.get(`http://127.0.0.1:5000/api/complaints/user/${user.id}`);
+      const cRes = await axios.get(`${API_URL}/complaints/user/${user.id}`);
       setComplaints(cRes.data);
     } catch (error: any) {
       console.error('BUREAU ERROR:', error);

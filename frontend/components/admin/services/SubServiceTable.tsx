@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Zap, Droplets, Wind, Hammer, Paintbrush, Trash2, Plus, Pencil, Power,
     Search, Filter, RefreshCw, BarChart3, ChevronLeft, LayoutGrid, Layers, ArrowLeft
@@ -10,6 +10,10 @@ import Button from '../common/Button';
 import Badge from '../common/Badge';
 import SubServiceModal from './SubServiceModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import ConfirmationModal from '../common/ConfirmationModal';
+import CategoryCard from './CategoryCard';
+import axios from 'axios';
+import { API_URL } from '@/config/api';
 
 const CATEGORIES = [
     { name: 'Electrician', icon: Zap, serviceCount: 8, color: 'text-yellow-600', bg: 'bg-yellow-50', desc: 'Electrical repairs, wiring & installations' },
@@ -32,24 +36,99 @@ const SUB_SERVICES_DATA = [
 ];
 
 const SubServiceTable: React.FC = () => {
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    const fetchCategories = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.get(`${API_URL}/categories`);
+            setCategories(response.data);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
     
     // Core data state
-    const [subServices, setSubServices] = useState(SUB_SERVICES_DATA);
+    const [subServices, setSubServices] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (selectedCategory) {
+            fetchSubServices();
+        }
+    }, [selectedCategory]);
+
+    const fetchSubServices = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${API_URL}/services?category_id=${selectedCategory._id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSubServices(response.data);
+        } catch (error) {
+            console.error('Error fetching sub-services:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
     
-    // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingService, setEditingService] = useState<any>(null);
+    const [subServiceToDelete, setSubServiceToDelete] = useState<any>(null);
+    const [subServiceChangingStatus, setSubServiceChangingStatus] = useState<any>(null);
     
     // Filter dropdown state
     const [filterStatus, setFilterStatus] = useState('All');
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
 
+    const handleStatusToggle = async () => {
+        if (!subServiceChangingStatus) return;
+        try {
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: { Authorization: `Bearer ${token}` }
+            };
+            const newStatus = subServiceChangingStatus.status === 'active' ? 'inactive' : 'active';
+            await axios.put(`${API_URL}/services/${subServiceChangingStatus._id}`, {
+                ...subServiceChangingStatus,
+                status: newStatus
+            }, config);
+            fetchSubServices();
+        } catch (error) {
+            console.error('Error updating status:', error);
+        } finally {
+            setSubServiceChangingStatus(null);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!subServiceToDelete) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_URL}/services/${subServiceToDelete._id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchSubServices();
+        } catch (error) {
+            console.error('Error deleting sub-service:', error);
+            alert('Failed to delete offering.');
+        } finally {
+            setSubServiceToDelete(null);
+        }
+    };
+
     const filteredSubServices = subServices.filter(s =>
-        s.category === selectedCategory &&
-        (s.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (filterStatus === 'All' || s.status === filterStatus)
+        (s.service_name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (filterStatus === 'All' || s.status.toLowerCase() === filterStatus.toLowerCase())
     );
 
     const handleOpenAdd = () => {
@@ -62,11 +141,23 @@ const SubServiceTable: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleSave = (savedService: any) => {
-        if (editingService) {
-            setSubServices(subServices.map(s => s.id === savedService.id ? savedService : s));
-        } else {
-            setSubServices([savedService, ...subServices]);
+    const handleSave = async (savedService: any) => {
+        try {
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: { Authorization: `Bearer ${token}` }
+            };
+
+            if (editingService) {
+                await axios.put(`${API_URL}/services/${editingService._id}`, savedService, config);
+            } else {
+                await axios.post(`${API_URL}/services`, savedService, config);
+            }
+            fetchSubServices();
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error('Error saving sub-service:', error);
+            alert('Failed to save offering.');
         }
     };
 
@@ -76,19 +167,19 @@ const SubServiceTable: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
 
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+                        <h1 className="text-3xl font-black text-gray-900 tracking-tight">
                         {selectedCategory ? (
                             <span className="flex items-center gap-2">
                                 Catalog<span className="text-blue-600">.</span>
                                 <span className="text-gray-300 text-2xl font-light">/</span>
-                                <span className="text-blue-600">{selectedCategory.toLowerCase()}</span>
+                                <span className="text-blue-600">{selectedCategory.category_name.toLowerCase()}</span>
                             </span>
                         ) : (
                             <>Sub-services<span className="text-blue-600">.</span></>
                         )}
                     </h1>
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1 italic">
-                        {selectedCategory}
+                        {selectedCategory?.category_name}
                     </p>
                 </div>
 
@@ -125,43 +216,12 @@ const SubServiceTable: React.FC = () => {
                         exit={{ opacity: 0, scale: 0.95 }}
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
                     >
-                        {CATEGORIES.map((cat) => (
-                            <div
-                                key={cat.name}
-                                onClick={() => setSelectedCategory(cat.name)}
-                                className="relative bg-white/20 backdrop-blur-2xl border border-white/40 rounded-[2rem] p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-500 cursor-pointer group overflow-hidden"
-                            >
-                                {/* Frosted Ambient Glow */}
-                                <div className={`absolute -top-12 -left-12 w-32 h-32 rounded-full ${cat.bg} opacity-20 blur-3xl group-hover:scale-150 transition-transform duration-700`} />
-                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-
-                                <div className="flex items-start justify-between relative z-10">
-                                    <div className={`w-14 h-14 rounded-2xl ${cat.bg}/40 backdrop-blur-md flex items-center justify-center ${cat.color} shadow-lg shadow-black/5 group-hover:rotate-6 group-hover:scale-110 transition-all duration-500`}>
-                                        <cat.icon size={28} strokeWidth={2.5} />
-                                    </div>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Catalog Size</span>
-                                        <span className="text-2xl font-black text-gray-900 mt-1.5 tracking-tighter">{cat.serviceCount}</span>
-                                    </div>
-                                </div>
-
-                                <div className="mt-6 relative z-10">
-                                    <h3 className="text-xl font-black text-gray-900 tracking-tight group-hover:text-blue-600 transition-colors">{cat.name}</h3>
-                                    <p className="text-[11px] text-gray-500 mt-2 font-medium leading-relaxed max-w-[200px] opacity-80 line-clamp-2">
-                                        {cat.desc}
-                                    </p>
-                                </div>
-
-                                <div className="mt-6 pt-5 border-t border-white/30 flex items-center justify-between relative z-10">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                                        <span className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em]">Open Registry</span>
-                                    </div>
-                                    <div className="w-9 h-9 rounded-xl bg-white/50 backdrop-blur-sm border border-white/60 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white group-hover:rotate-12 transition-all duration-500 shadow-inner">
-                                        <LayoutGrid size={16} />
-                                    </div>
-                                </div>
-                            </div>
+                        {categories.map((cat) => (
+                            <CategoryCard 
+                                key={cat._id} 
+                                category={cat} 
+                                onClick={() => setSelectedCategory(cat)}
+                            />
                         ))}
                     </motion.div>
                 ) : (
@@ -229,7 +289,7 @@ const SubServiceTable: React.FC = () => {
                         <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden group min-h-[460px] flex flex-col">
                             <div className="flex-1">
                                 <Table
-                                    headers={['Offering Detail', 'Catalog ID', 'Pricing Matrix', 'Status', 'Actions']}
+                                    headers={['Service Name', 'Description', 'Base Price', 'Duration', 'Image', 'Status', 'Actions']}
                                     className="relative z-10"
                                 >
                                     <AnimatePresence mode="popLayout" initial={false}>
@@ -239,39 +299,47 @@ const SubServiceTable: React.FC = () => {
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
                                                 exit={{ opacity: 0 }}
-                                                key={s.id}
+                                                key={s._id}
                                                 className="hover:bg-blue-50/20 transition-all group/row border-b border-gray-50 last:border-0 text-[11px]"
                                             >
                                                 <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm transition-transform group-hover/row:scale-110">
-                                                            <BarChart3 size={14} />
-                                                        </div>
-                                                        <span className="font-black text-gray-900 tracking-tight uppercase tracking-widest text-[10px]">{s.name}</span>
-                                                    </div>
+                                                    <span className="font-black text-gray-900 tracking-tight uppercase tracking-widest text-[10px]">{s.service_name}</span>
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest bg-gray-100 px-2 py-1 rounded-lg">#{String(s.id).padStart(3, '0')}</span>
+                                                <td className="px-6 py-4 max-w-[200px]">
+                                                    <span className="text-[10px] text-gray-500 font-medium line-clamp-2 leading-relaxed">{s.description}</span>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-baseline gap-1">
                                                         <span className="text-[8px] font-bold text-gray-400">INR</span>
-                                                        <span className="font-black text-gray-900 tracking-tighter text-[13px]">{s.price.replace('₹', '')}</span>
+                                                        <span className="font-black text-gray-900 tracking-tighter text-[13px]">{s.base_price}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="text-[10px] text-blue-600 font-black uppercase tracking-widest">{s.duration} Mins</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 shadow-sm transition-transform group-hover/row:scale-110 overflow-hidden">
+                                                        {s.image && s.image.startsWith('http') ? (
+                                                            <img src={s.image} alt={s.service_name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <BarChart3 size={16} />
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center">
                                                         <button
-                                                            className={`relative w-12 h-6 flex items-center p-0.5 rounded-full transition-all duration-300 shadow-inner group/toggle ${s.status === 'Active' ? 'bg-green-600' : 'bg-red-600'}`}
-                                                            title={s.status === 'Active' ? 'Offering Live' : 'Offering Offline'}
+                                                            onClick={() => setSubServiceChangingStatus(s)}
+                                                            className={`relative w-12 h-6 flex items-center p-0.5 rounded-full transition-all duration-300 shadow-inner group/toggle ${s.status === 'active' ? 'bg-green-600' : 'bg-red-600'}`}
+                                                            title={s.status === 'active' ? 'Offering Live' : 'Offering Offline'}
                                                         >
                                                             {/* Sliding Indicator */}
-                                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 z-10 ${s.status === 'Active' ? 'translate-x-6' : 'translate-x-0'}`} />
+                                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 z-10 ${s.status === 'active' ? 'translate-x-6' : 'translate-x-0'}`} />
 
                                                             {/* ON/OFF Labels */}
                                                             <div className="absolute inset-0 flex items-center justify-between px-1.5 text-[7px] font-black uppercase tracking-tighter text-white pointer-events-none">
-                                                                <span className={`transition-opacity duration-300 ${s.status === 'Active' ? 'opacity-100' : 'opacity-0'}`}>ON</span>
-                                                                <span className={`transition-opacity duration-300 ${s.status === 'Active' ? 'opacity-0' : 'opacity-100'}`}>OFF</span>
+                                                                <span className={`transition-opacity duration-300 ${s.status === 'active' ? 'opacity-100' : 'opacity-0'}`}>ON</span>
+                                                                <span className={`transition-opacity duration-300 ${s.status === 'active' ? 'opacity-0' : 'opacity-100'}`}>OFF</span>
                                                             </div>
                                                         </button>
                                                     </div>
@@ -285,7 +353,13 @@ const SubServiceTable: React.FC = () => {
                                                         >
                                                             <Pencil size={12} />
                                                         </button>
-                                                        <button className="p-1 px-3 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95" title="Remove Entry"><Trash2 size={12} /></button>
+                                                        <button 
+                                                            onClick={() => setSubServiceToDelete(s)}
+                                                            className="p-1 px-3 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95" 
+                                                            title="Remove Entry"
+                                                        >
+                                                            <Trash2 size={12} />
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </motion.tr>
@@ -311,6 +385,27 @@ const SubServiceTable: React.FC = () => {
                 subService={editingService}
                 category={selectedCategory || ''}
                 onSave={handleSave}
+            />
+
+            <ConfirmationModal
+                isOpen={!!subServiceToDelete}
+                onClose={() => setSubServiceToDelete(null)}
+                onConfirm={handleDelete}
+                title="Offering Removal"
+                message={`Are you sure you want to permanently delete "${subServiceToDelete?.service_name}"? Action cannot be reversed.`}
+                confirmLabel="Confirm Delete"
+                cancelLabel="Keep Offering"
+                variant="danger"
+            />
+            <ConfirmationModal
+                isOpen={!!subServiceChangingStatus}
+                onClose={() => setSubServiceChangingStatus(null)}
+                onConfirm={handleStatusToggle}
+                title="Status Transition"
+                message={`Are you sure you want to change the status of "${subServiceChangingStatus?.service_name}" from ${subServiceChangingStatus?.status} to ${subServiceChangingStatus?.status === 'active' ? 'inactive' : 'active'}?`}
+                confirmLabel="Update Status"
+                cancelLabel="Maintain State"
+                variant="info"
             />
         </div>
     );

@@ -7,7 +7,7 @@ import { Category } from '../models/Category';
 // @access  Public
 export const getServices = async (req: Request, res: Response): Promise<void> => {
   try {
-    const filter: Record<string, any> = {};
+    const filter: Record<string, any> = { isDeleted: false };
     if (req.query.category_id) filter.category_id = req.query.category_id;
 
     const services = await Service.find(filter)
@@ -115,8 +115,11 @@ export const deleteService = async (req: Request, res: Response): Promise<void> 
       res.status(404).json({ message: 'Service not found' });
       return;
     }
-    await service.deleteOne();
-    res.json({ message: 'Service deleted successfully' });
+    service.isDeleted = true;
+    service.status = 'inactive';
+    await service.save();
+    
+    res.json({ message: 'Service removed (soft delete) successfully' });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

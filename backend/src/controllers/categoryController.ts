@@ -6,7 +6,7 @@ import { Category } from '../models/Category';
 // @access  Public
 export const getCategories = async (req: Request, res: Response): Promise<void> => {
   try {
-    const categories = await Category.find().sort({ createdAt: -1 });
+    const categories = await Category.find({ isDeleted: false }).sort({ createdAt: -1 });
     res.json(categories);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -84,8 +84,12 @@ export const deleteCategory = async (req: Request, res: Response): Promise<void>
       res.status(404).json({ message: 'Category not found' });
       return;
     }
-    await category.deleteOne();
-    res.json({ message: 'Category deleted successfully' });
+    
+    category.isDeleted = true;
+    category.status = 'inactive';
+    await category.save();
+    
+    res.json({ message: 'Category removed (soft delete) successfully' });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

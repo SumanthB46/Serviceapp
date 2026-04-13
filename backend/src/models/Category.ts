@@ -5,6 +5,7 @@ export interface ICategory extends Document {
   icon: string;
   description: string;
   status: 'active' | 'inactive';
+  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,6 +32,11 @@ const categorySchema = new Schema<ICategory>(
       type: String,
       enum: ['active', 'inactive'],
       default: 'active',
+      required: true,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
       required: true,
     },
   },
