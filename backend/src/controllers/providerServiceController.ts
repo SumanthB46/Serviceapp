@@ -25,6 +25,23 @@ export const addProviderService = async (req: AuthRequest, res: Response): Promi
   }
 };
 
+// @desc    Get all provider services (Admin)
+// @route   GET /api/provider-services
+// @access  Private/Admin
+export const getAllProviderServices = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const services = await ProviderService.find({ isDeleted: false })
+      .populate({
+        path: 'provider_id',
+        populate: { path: 'user_id', select: 'name email' }
+      })
+      .populate('service_id');
+    res.json(services);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Get services of a provider
 // @route   GET /api/provider-services/:providerId
 // @access  Public

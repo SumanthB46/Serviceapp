@@ -16,6 +16,7 @@ import notificationRoutes from './routes/notificationRoutes';
 import paymentRoutes   from './routes/paymentRoutes';
 import providerServiceRoutes from './routes/providerServiceRoutes';
 import complaintRoutes from './routes/complaintRoutes';
+import locationRoutes from './routes/locationRoutes';
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/payments',   paymentRoutes);
 app.use('/api/provider-services', providerServiceRoutes);
 app.use('/api/complaints', complaintRoutes);
+app.use('/api/locations', locationRoutes);
 
 
 app.get('/api/health', (req: Request, res: Response) => {

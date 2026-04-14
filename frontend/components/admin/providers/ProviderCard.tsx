@@ -25,8 +25,8 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, onApprove, onReje
       <div className="flex items-start justify-between relative z-10">
         <div className="relative">
           <img 
-            src={provider.avatar || `https://ui-avatars.com/api/?name=${provider.name}&background=f8f9ff&color=4f46e5&bold=true`} 
-            alt={provider.name} 
+            src={provider.user_id.profile_image || `https://ui-avatars.com/api/?name=${provider.user_id.name}&background=f8f9ff&color=4f46e5&bold=true`} 
+            alt={provider.user_id.name} 
             className="w-16 h-16 rounded-[1.5rem] object-cover ring-4 ring-gray-50 group-hover:rotate-3 transition-transform" 
           />
           {provider.status === 'Approved' && (
@@ -42,18 +42,18 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, onApprove, onReje
            </Badge>
            <div className="flex items-center gap-1.5 bg-yellow-50 px-2.5 py-1 rounded-full border border-yellow-100/50">
               <Star size={14} className="fill-yellow-500 text-yellow-500" />
-              <span className="text-xs font-black text-yellow-700 leading-none">{provider.rating}</span>
+              <span className="text-xs font-black text-yellow-700 leading-none">{provider.overall_rating}</span>
            </div>
         </div>
       </div>
 
       {/* Identity Info */}
       <div className="mt-6 relative z-10">
-        <h3 className="text-lg font-black text-gray-900 group-hover:text-blue-600 transition-colors">{provider.name}</h3>
+        <h3 className="text-lg font-black text-gray-900 group-hover:text-blue-600 transition-colors">{provider.user_id.name}</h3>
         <div className="flex items-center gap-2 mt-2">
            <div className="flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
               <Briefcase size={12} />
-              {provider.service}
+              {provider.services?.[0]?.service_name || 'Consultant'}
            </div>
            <div className="flex items-center gap-1 px-2.5 py-1 bg-gray-50 text-gray-500 rounded-lg text-[10px] font-bold">
               <MapPin size={12} />
@@ -66,7 +66,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, onApprove, onReje
       <div className="mt-8 pt-6 border-t border-gray-50 flex items-center justify-between">
          <div>
             <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest leading-none">Registration</p>
-            <p className="text-[13px] font-bold text-gray-700 mt-1.5">{provider.joinedDate}</p>
+            <p className="text-[13px] font-bold text-gray-700 mt-1.5">{new Date(provider.createdAt).toLocaleDateString()}</p>
          </div>
          <button 
            onClick={() => onView(provider)}

@@ -8,33 +8,51 @@ import BookingDetails from './BookingDetails';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { Booking } from '../types';
-
-const DUMMY_BOOKINGS: Booking[] = [
-  { id: 'BK001', customer: 'John Doe', provider: 'Ravi Kumar', service: 'Electrician', date: '07 Apr 2025', amount: '₹850', status: 'Confirmed' },
-  { id: 'BK002', customer: 'Jane Smith', provider: 'Sunita Sharma', service: 'Cleaning', date: '06 Apr 2025', amount: '₹600', status: 'Completed' },
-  { id: 'BK003', customer: 'Robert J.', provider: 'Arjun Mehta', service: 'Plumbing', date: '05 Apr 2025', amount: '₹1,200', status: 'Pending' },
-  { id: 'BK004', customer: 'Emily Davis', provider: 'Priya Nair', service: 'Carpentry', date: '04 Apr 2025', amount: '₹950', status: 'Cancelled' },
-  { id: 'BK005', customer: 'Michael B.', provider: 'Kavya Iyer', service: 'AC Repair', date: '03 Apr 2025', amount: '₹1,500', status: 'Completed' },
-  { id: 'BK006', customer: 'Rahul Sharma', provider: 'Vikram Singh', service: 'Electrician', date: '02 Apr 2025', amount: '₹750', status: 'Confirmed' },
-  { id: 'BK007', customer: 'Sarah W.', provider: 'Amit Patel', service: 'Pest Control', date: '01 Apr 2025', amount: '₹1,800', status: 'Completed' },
-  { id: 'BK008', customer: 'Kevin L.', provider: 'Deepa Rao', service: 'Salon', date: '31 Mar 2025', amount: '₹2,200', status: 'Confirmed' },
-];
+import axios from 'axios';
+import { API_URL } from '@/config/api';
 
 const BookingTable: React.FC = () => {
-  const [selected, setSelected] = useState<Booking | null>(null);
+  const [selected, setSelected] = useState<any | null>(null);
   const [statusFilter, setStatusFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 6;
 
-  const filtered = DUMMY_BOOKINGS.filter(b => {
-    const matchStatus = statusFilter === 'All' || b.status === statusFilter;
-    const matchSearch = b.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.id.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/bookings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBookings(response.data);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filtered = bookings.filter(b => {
+    const status = b.status?.toLowerCase();
+    const matchStatus = statusFilter === 'All' || status === statusFilter.toLowerCase();
+    const customerName = b.user_id?.name || '';
+    const providerName = b.provider_id?.user_id?.name || 'Unassigned';
+    const serviceName = b.service_id?.service_name || '';
+    const refId = b._id || '';
+
+    const matchSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      providerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      refId.toLowerCase().includes(searchTerm.toLowerCase());
     return matchStatus && matchSearch;
   });
 
@@ -58,10 +76,10 @@ const BookingTable: React.FC = () => {
   };
 
   const totals = {
-    all: DUMMY_BOOKINGS.length,
-    pending: DUMMY_BOOKINGS.filter(b => b.status === 'Pending').length,
-    confirmed: DUMMY_BOOKINGS.filter(b => b.status === 'Confirmed').length,
-    completed: DUMMY_BOOKINGS.filter(b => b.status === 'Completed').length,
+    all: bookings.length,
+    pending: bookings.filter(b => b.status === 'pending').length,
+    confirmed: bookings.filter(b => b.status === 'confirmed').length,
+    completed: bookings.filter(b => b.status === 'completed').length,
   };
 
   return (
@@ -94,7 +112,7 @@ const BookingTable: React.FC = () => {
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
           <input
             type="text"
-            placeholder="Search by ID, customer expert profile..."
+            placeholder="Search by ID, customer, expert, or service..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-100 focus:border-blue-200 focus:bg-white focus:ring-4 focus:ring-blue-100/50 rounded-xl text-[11px] font-bold text-gray-800 transition-all duration-300 shadow-sm"
@@ -110,10 +128,10 @@ const BookingTable: React.FC = () => {
               className="pl-10 pr-10 py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 appearance-none focus:outline-none focus:border-blue-200 focus:ring-4 focus:ring-blue-100/50 shadow-sm cursor-pointer w-full md:min-w-[180px] transition-all"
             >
               <option value="All">Filter By Status</option>
-              <option value="Pending">🟡 Pending</option>
-              <option value="Confirmed">🔵 Confirmed</option>
-              <option value="Completed">🟢 Completed</option>
-              <option value="Cancelled">🔴 Cancelled</option>
+              <option value="pending">🟡 Pending</option>
+              <option value="confirmed">🔵 Confirmed</option>
+              <option value="completed">🟢 Completed</option>
+              <option value="cancelled">🔴 Cancelled</option>
             </select>
             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
               <RefreshCw size={12} className="animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -141,37 +159,45 @@ const BookingTable: React.FC = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    key={booking.id}
+                    key={booking._id}
                     onClick={() => setSelected(booking)}
                     className="hover:bg-blue-50/20 transition-all cursor-pointer group/row border-b border-gray-50 last:border-0 text-[11px]"
                   >
                     <td className="px-6 py-3 font-black text-[9px] text-blue-600 tracking-widest leading-none">
-                      <span className="px-2 py-1 bg-blue-50 rounded-md border border-blue-100/50">{booking.id}</span>
+                      <span className="px-2 py-1 bg-blue-50 rounded-md border border-blue-100/50">{String(booking._id).slice(-6).toUpperCase()}</span>
                     </td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 shadow-sm transition-transform group-hover/row:scale-110">
-                          <User size={14} />
+                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 shadow-sm overflow-hidden transition-transform group-hover/row:scale-110">
+                           {booking.user_id?.profile_image ? (
+                             <img src={booking.user_id.profile_image} alt="user" className="w-full h-full object-cover" />
+                           ) : (
+                             <User size={14} />
+                           )}
                         </div>
-                        <span className="font-black text-gray-900 uppercase tracking-tight">{booking.customer}</span>
+                        <span className="font-black text-gray-900 uppercase tracking-tight">{booking.user_id?.name || 'Unknown'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-2 text-gray-500 font-bold uppercase text-[9px] tracking-widest">
                         <Briefcase size={12} className="text-gray-400" />
-                        {booking.provider}
+                        {booking.provider_id?.user_id?.name || 'Unassigned'}
                       </div>
                     </td>
                     <td className="px-6 py-3">
-                      <span className="text-[9px] font-black uppercase tracking-widest text-indigo-600 px-2 py-0.5 bg-indigo-50 rounded-lg border border-indigo-100/50">{booking.service}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-indigo-600 px-2 py-0.5 bg-indigo-50 rounded-lg border border-indigo-100/50 w-fit">{booking.service_id?.service_name || 'N/A'}</span>
+                        <span className="text-[8px] font-bold text-gray-400">{booking.service_id?.category_id?.category_name || ''}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-1.5 text-gray-400 font-black text-[9px] uppercase tracking-widest">
                         <Calendar size={12} />
-                        {booking.date}
+                        {new Date(booking.booking_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {booking.time_slot ? `, ${booking.time_slot}` : ''}
                       </div>
                     </td>
-                    <td className="px-6 py-3 font-black text-gray-900 tracking-tighter text-[12px]">{booking.amount}</td>
+                    <td className="px-6 py-3 font-black text-gray-900 tracking-tighter text-[12px]">₹{booking.total_amount}</td>
                     <td className="px-6 py-3">
                       <div className="scale-75 origin-left">
                         <StatusBadge status={booking.status} />

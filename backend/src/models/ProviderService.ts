@@ -9,6 +9,7 @@ interface IDocument {
 export interface IProviderService extends Document {
   provider_id: Types.ObjectId;
   service_id: Types.ObjectId;    // Refers to the SubService/Service catalog
+  location_id?: Types.ObjectId;  // Refers to Location
   service_name: string;          // Denormalized for easier search
   experience: number;
   price: number;
@@ -41,6 +42,10 @@ const providerServiceSchema = new Schema<IProviderService>(
       type: Schema.Types.ObjectId,
       ref: 'Service', 
       required: true,
+    },
+    location_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'Location',
     },
     service_name: {
       type: String,

@@ -8,7 +8,7 @@ import { Booking } from '../types';
 import { User, Briefcase, Calendar, DollarSign, Hash } from 'lucide-react';
 
 interface BookingDetailsProps {
-  booking: Booking | null;
+  booking: any | null;
   onClose: () => void;
 }
 
@@ -16,12 +16,12 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
   if (!booking) return null;
 
   const fields = [
-    { icon: Hash,       label: 'Booking ID', value: booking.id },
-    { icon: User,       label: 'Customer',   value: booking.customer },
-    { icon: Briefcase,  label: 'Provider',   value: booking.provider },
-    { icon: Briefcase,  label: 'Service',    value: booking.service },
-    { icon: Calendar,   label: 'Date',       value: booking.date },
-    { icon: DollarSign, label: 'Amount',     value: booking.amount },
+    { icon: Hash,       label: 'Booking ID', value: booking._id ? String(booking._id).slice(-6).toUpperCase() : '' },
+    { icon: User,       label: 'Customer',   value: booking.user_id?.name || 'Unknown' },
+    { icon: Briefcase,  label: 'Provider',   value: booking.provider_id?.user_id?.name || 'Unassigned' },
+    { icon: Briefcase,  label: 'Service',    value: booking.service_id?.service_name || 'N/A' },
+    { icon: Calendar,   label: 'Date',       value: `${new Date(booking.booking_date).toLocaleDateString()} ${booking.time_slot || ''}` },
+    { icon: DollarSign, label: 'Amount',     value: `₹${booking.total_amount}` },
   ];
 
   return (
@@ -37,7 +37,7 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
           <p className="text-xs text-gray-500 font-medium mb-1">Status</p>
           <StatusBadge status={booking.status} />
         </div>
-        <span className="text-2xl font-bold text-gray-900">{booking.amount}</span>
+        <span className="text-2xl font-bold text-gray-900">₹{booking.total_amount}</span>
       </div>
 
       <div className="space-y-3">

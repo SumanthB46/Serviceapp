@@ -108,7 +108,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onUpdate
          // Only send password if it's been touched
          const payload = { ...formData };
          if (!payload.password) delete (payload as any).password;
-         
+
          await onUpdate(user.id, payload);
          onClose();
       } catch (error) {
@@ -152,7 +152,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onUpdate
 
                      <div className="space-y-4 relative z-10">
                         <div className="flex flex-col items-center gap-3 mb-6">
-                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                           <label className="text-[10px] font-black text-gray-400 tracking-widest flex items-center gap-2">
                               Visual Identity
                            </label>
                            <div className="relative group/avatar">
@@ -176,7 +176,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onUpdate
                         </div>
 
                         <div className="space-y-1">
-                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                           <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                               <UserIcon size={12} className="text-amber-500" /> Full Name
                            </label>
                            <input
@@ -190,7 +190,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onUpdate
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                  <Mail size={12} className="text-amber-500" /> Email Access
                               </label>
                               <input
@@ -202,7 +202,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onUpdate
                               {errors.email && <p className="text-[9px] font-bold text-red-500 ml-2 mt-1 uppercase tracking-widest">{errors.email}</p>}
                            </div>
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                  <Phone size={12} className="text-amber-500" /> Contact Link
                               </label>
                               <input
@@ -217,7 +217,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onUpdate
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                  <Shield size={12} className="text-amber-500" /> Reset Password
                               </label>
                               <input
@@ -230,7 +230,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onUpdate
                               {errors.password && <p className="text-[9px] font-bold text-red-500 ml-2 mt-1 uppercase tracking-widest leading-tight">{errors.password}</p>}
                            </div>
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                  <UserCheck size={12} className="text-amber-500" /> Account Status
                               </label>
                               <select

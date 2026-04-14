@@ -16,7 +16,7 @@ export interface ProviderDocument {
 
 export interface ProviderService {
   _id: string;
-  provider_id: string;
+  provider_id: string | { _id: string; user_id: { name: string; email: string } };
   service_id: string;
   service_name: string;
   experience: number;
@@ -61,4 +61,31 @@ export interface User {
   lastActive?: string;
   role?: 'Customer' | 'Admin' | 'Support';
   avatar?: string;
+}
+export interface ILocation {
+  _id: string;
+  name: string;
+  type: 'city' | 'area';
+  parent_id?: string | ILocation | null;
+  state?: string;
+  country?: string;
+  latitude?: number;
+  longitude?: number;
+  status: 'active' | 'inactive';
+  isDeleted: boolean;
+  createdAt: string;
+}
+
+export interface IOffer {
+  _id: string;
+  code: string;
+  coupon_id?: string;
+  provider_service_id?: string;
+  discount_type: 'flat' | 'percentage';
+  discount_value: number;
+  min_amount: number;
+  expiry_date: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
 }

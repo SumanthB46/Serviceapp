@@ -41,13 +41,13 @@ const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subS
           status: subService.status || 'active'
         });
       } else {
-        setFormData({ 
-          service_name: '', 
-          base_price: '', 
+        setFormData({
+          service_name: '',
+          base_price: '',
           description: '',
           duration: '',
           image: '',
-          status: 'active' 
+          status: 'active'
         });
       }
     } else {
@@ -120,73 +120,73 @@ const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subS
 
               <div className="space-y-4 relative z-10">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                  <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                     <Layers size={12} className="text-blue-500" /> Service Name
                   </label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     placeholder="e.g. Wire Fixes"
                     value={formData.service_name}
-                    onChange={(e) => setFormData({...formData, service_name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, service_name: e.target.value })}
                     className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all uppercase"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                  <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                     <X size={12} className="text-blue-500 rotate-45" /> Description
                   </label>
-                  <textarea 
+                  <textarea
                     required
                     rows={2}
                     placeholder="Briefly describe this service..."
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                  <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                     <Layers size={12} className="text-blue-500" /> Image URL
                   </label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     placeholder="https://images.unsplash.com/..."
                     value={formData.image}
-                    onChange={(e) => setFormData({...formData, image: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                     className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                       <IndianRupee size={12} className="text-blue-500" /> Pricing Matrix
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                      <IndianRupee size={12} className="text-blue-500" /> Pricing Matrix
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">₹</span>
-                      <input 
+                      <input
                         type="number"
                         required
                         min="0"
                         placeholder="299"
                         value={formData.base_price}
-                        onChange={(e) => setFormData({...formData, base_price: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, base_price: e.target.value })}
                         className="w-full pl-8 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                       <Activity size={12} className="text-blue-500" /> Status
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                      <Activity size={12} className="text-blue-500" /> Status
                     </label>
-                    <select 
+                    <select
                       value={formData.status}
-                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                       className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all appearance-none"
                     >
                       <option value="active">Active (Live)</option>
@@ -195,17 +195,17 @@ const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subS
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                       <Activity size={12} className="text-blue-500" /> Duration (Mins)
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                      <Activity size={12} className="text-blue-500" /> Duration (Mins)
                     </label>
-                    <input 
-                       type="number"
-                       required
-                       min="1"
-                       placeholder="60"
-                       value={formData.duration}
-                       onChange={(e) => setFormData({...formData, duration: e.target.value})}
-                       className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      placeholder="60"
+                      value={formData.duration}
+                      onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                      className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
                     />
                   </div>
                 </div>
@@ -214,14 +214,14 @@ const SubServiceModal: React.FC<SubServiceModalProps> = ({ isOpen, onClose, subS
 
             {/* Actions */}
             <div className="flex gap-3 pt-2">
-              <button 
+              <button
                 type="button"
-                onClick={onClose} 
-                className="flex-1 py-4 bg-[#F1F5F9] text-gray-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
+                onClick={onClose}
+                className="flex-1 py-4 bg-[#F1F5F9] text-gray-600 rounded-2xl text-[10px] font-black tracking-widest hover:bg-gray-200 transition-all"
               >
                 Cancel Entry
               </button>
-              <button 
+              <button
                 type="submit"
                 className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
