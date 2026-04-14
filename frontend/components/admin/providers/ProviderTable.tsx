@@ -2,55 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Search, Filter, RefreshCcw, UserPlus, Briefcase, ChevronLeft, ChevronRight,
+  Search, Filter, RefreshCcw, UserPlus, Briefcase, ChevronLeft, ChevronRight, ChevronDown,
   MapPin, Star, ShieldCheck, Eye, Trash2, Ban, UserCheck, UserX, FileWarning,
   Power, Award, FileSearch, RotateCcw, ShieldAlert, CheckCircle2, MoreHorizontal
 } from 'lucide-react';
 import { Provider } from '../types';
 import ApprovalModal from './ApprovalModal';
 import InviteExpertModal from './InviteExpertModal';
+import ProviderDetailsModal from './ProviderDetailsModal';
 import Table from '../common/Table';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+import { API_URL } from '@/config/api';
 
-const DUMMY_PROVIDERS: Provider[] = [
-  {
-    id: 1, providerId: 'SP-1023', name: 'Ravi Kumar', email: 'ravi@example.com', phone: '+91 98765 43210',
-    service: 'Electrician', location: 'Mumbai', experience: 5, rating: 4.8, status: 'Approved', joinedDate: '10 Jan 2025',
-    idVerified: true, expVerified: true, docsRequested: false, active: true
-  },
-  {
-    id: 2, providerId: 'SP-1024', name: 'Sunita Sharma', email: 'sunita@example.com', phone: '+91 98765 43211',
-    service: 'Cleaning', location: 'Delhi', experience: 3, rating: 4.5, status: 'Pending', joinedDate: '14 Feb 2025',
-    idVerified: false, expVerified: false, docsRequested: true, active: false
-  },
-  {
-    id: 3, providerId: 'SP-1025', name: 'Arjun Mehta', email: 'arjun@example.com', phone: '+91 98765 43212',
-    service: 'Plumbing', location: 'Bangalore', experience: 7, rating: 4.2, status: 'Pending', joinedDate: '20 Mar 2025',
-    idVerified: true, expVerified: false, docsRequested: false, active: false
-  },
-  {
-    id: 4, providerId: 'SP-1026', name: 'Priya Nair', email: 'priya@example.com', phone: '+91 98765 43213',
-    service: 'Carpentry', location: 'Chennai', experience: 4, rating: 4.9, status: 'Approved', joinedDate: '02 Apr 2025',
-    idVerified: true, expVerified: true, docsRequested: false, active: true
-  },
-  {
-    id: 5, providerId: 'SP-1027', name: 'Deepak Rao', email: 'deepak@example.com', phone: '+91 98765 43214',
-    service: 'Painting', location: 'Hyderabad', experience: 6, rating: 3.8, status: 'Rejected', joinedDate: '05 Apr 2025',
-    idVerified: false, expVerified: false, docsRequested: false, active: false
-  },
-  {
-    id: 6, providerId: 'SP-1028', name: 'Kavya Iyer', email: 'kavya@example.com', phone: '+91 98765 43215',
-    service: 'AC Repair', location: 'Pune', experience: 5, rating: 4.6, status: 'Pending', joinedDate: '06 Apr 2025',
-    idVerified: false, expVerified: true, docsRequested: false, active: false
-  },
-  {
-    id: 7, providerId: 'SP-1029', name: 'Vikram Singh', email: 'vikram@example.com', phone: '+91 98765 43216',
-    service: 'Electrician', location: 'Mumbai', experience: 8, rating: 4.7, status: 'Approved', joinedDate: '08 Apr 2025',
-    idVerified: true, expVerified: true, docsRequested: false, active: true
-  },
-];
+// ... Removed DUMMY_PROVIDERS ...
 
 const ProviderTable: React.FC = () => {
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
@@ -59,7 +26,50 @@ const ProviderTable: React.FC = () => {
   const [locationFilter, setLocationFilter] = useState('All');
   const [serviceFilter, setServiceFilter] = useState('All');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [providers, setProviders] = useState<Provider[]>(DUMMY_PROVIDERS);
+  const [isServiceFilterOpen, setIsServiceFilterOpen] = useState(false);
+  const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      console.log('ProviderTable: Initiating data fetch...');
+      await fetchCategories();
+      await fetchProviders();
+    };
+    loadData();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/categories`);
+      console.log('Fetched Categories Raw:', response.data);
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        setCategories(response.data);
+      } else {
+        console.warn('Categories API returned empty or invalid data');
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchProviders = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/providers`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('Fetched Providers:', response.data);
+      setProviders(response.data);
+    } catch (error) {
+      console.error('Error fetching providers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,11 +77,11 @@ const ProviderTable: React.FC = () => {
 
   const filtered = providers.filter(p => {
     const matchStatus = activeTab === 'All' || p.status === activeTab;
-    const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.providerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.phone.includes(searchTerm);
+    const matchSearch = (p.user_id?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+      (p.user_id?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+      (p.user_id?.phone?.includes(searchTerm) ?? false);
     const matchLocation = locationFilter === 'All' || p.location === locationFilter;
-    const matchService = serviceFilter === 'All' || p.service === serviceFilter;
+    const matchService = serviceFilter === 'All' || (p.services && p.services.some(s => s.service_name === serviceFilter));
     return matchStatus && matchSearch && matchLocation && matchService;
   });
 
@@ -88,10 +98,10 @@ const ProviderTable: React.FC = () => {
 
   // Dynamic Column Logic
   const headers = activeTab === 'Pending'
-    ? ['Name', 'Service', 'Location', 'Tenure', 'Compliance', 'Status']
+    ? ['Name', 'Services', 'Location', 'Tenure', 'Compliance', 'Status']
     : (activeTab === 'Approved' || activeTab === 'Rejected')
-      ? ['Name', 'Service', 'Location', 'Tenure', 'Status', 'Operations']
-      : ['Name', 'Service', 'Location', 'Tenure', 'Compliance', 'Status', 'Operations'];
+      ? ['Name', 'Services', 'Location', 'Tenure', 'Status', 'Operations']
+      : ['Name', 'Services', 'Location', 'Tenure', 'Compliance', 'Status', 'Operations'];
 
   const showCompliance = headers.includes('Compliance');
   const showOperations = headers.includes('Operations');
@@ -110,6 +120,32 @@ const ProviderTable: React.FC = () => {
 
   const handleAddProvider = (newProvider: Provider) => {
     setProviders([newProvider, ...providers]);
+  };
+
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(`${API_URL}/providers/${id}`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setProviders(providers.map(p => p._id === id ? response.data : p));
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to remove this provider?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/providers/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProviders(providers.filter(p => p._id !== id));
+    } catch (error) {
+      console.error('Error deleting provider:', error);
+    }
   };
 
   return (
@@ -147,16 +183,52 @@ const ProviderTable: React.FC = () => {
               </select>
             </div>
             <div className="relative">
-              <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-              <select
-                onChange={(e) => setServiceFilter(e.target.value)}
-                className="pl-10 pr-8 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-600 appearance-none focus:outline-none focus:border-blue-200 shadow-sm cursor-pointer w-full"
+              <button
+                onClick={() => setIsServiceFilterOpen(!isServiceFilterOpen)}
+                className="flex items-center gap-3 pl-10 pr-10 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-200 w-full"
               >
-                <option value="All">All Services</option>
-                <option value="Electrician">Electrician</option>
-                <option value="Cleaning">Cleaning</option>
-                <option value="Plumbing">Plumbing</option>
-              </select>
+                <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <span className="truncate">{serviceFilter === 'All' ? 'All Services' : serviceFilter}</span>
+                <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition-transform ${isServiceFilterOpen ? 'rotate-180' : ''}`} size={12} />
+              </button>
+
+              <AnimatePresence>
+                {isServiceFilterOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsServiceFilterOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden"
+                    >
+                      <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                        <div
+                          onClick={() => { setServiceFilter('All'); setIsServiceFilterOpen(false); }}
+                          className={`px-4 py-3 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${serviceFilter === 'All' ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
+                        >
+                          All Services
+                        </div>
+                        {categories.map((cat, idx) => {
+                          const name = cat.category_name || cat.name || `Category ${idx + 1}`;
+                          return (
+                            <div
+                              key={cat._id || idx}
+                              onClick={() => {
+                                setServiceFilter(name);
+                                setIsServiceFilterOpen(false);
+                              }}
+                              className={`px-4 py-3 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${serviceFilter === name ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
+                            >
+                              {name}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
             <Button
               variant="primary"
@@ -202,29 +274,34 @@ const ProviderTable: React.FC = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  key={provider.id}
+                  key={provider._id}
                   className="hover:bg-blue-50/20 transition-all group/row border-b border-gray-50 last:border-0 text-[11px]"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <img
-                          src={provider.avatar || `https://ui-avatars.com/api/?name=${provider.name}&background=EFF6FF&color=2563EB&bold=true`}
-                          alt={provider.name}
+                          src={provider.user_id?.profile_image || `https://ui-avatars.com/api/?name=${provider.user_id?.name || 'Expert'}&background=EFF6FF&color=2563EB&bold=true`}
+                          alt={provider.user_id?.name || 'Provider'}
                           className="w-10 h-10 rounded-xl object-cover ring-2 ring-transparent group-hover/row:ring-blue-100 transition-all"
                         />
-                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${provider.active ? 'bg-green-500' : 'bg-gray-300'}`} />
+                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${provider.availability_status === 'available' ? 'bg-green-500' : 'bg-gray-300'}`} />
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-black text-gray-900 group-hover/row:text-blue-600 transition-colors uppercase tracking-tight">{provider.name}</span>
-                        <span className="text-[8px] font-black text-gray-400 tracking-[0.1em]">{provider.providerId}</span>
+                        <span 
+                          onClick={() => setEditingProvider(provider)}
+                          className="font-black text-gray-900 group-hover/row:text-blue-600 transition-colors uppercase tracking-tight cursor-pointer"
+                        >
+                          {provider.user_id?.name || 'Pending Identity'}
+                        </span>
+                        <span className="text-[8px] font-black text-gray-400 tracking-[0.1em]">#{String(provider._id).slice(-6).toUpperCase()}</span>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="scale-90 origin-left">
                       <Badge variant="neutral">
-                        {provider.service}
+                        {provider.services?.[0]?.service_name || 'General'}
                       </Badge>
                     </div>
                   </td>
@@ -232,7 +309,7 @@ const ProviderTable: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5 text-gray-900 font-black">
                       <Award size={14} className="text-blue-600" />
-                      <span>{provider.experience} Yrs</span>
+                      <span>{provider.services?.[0]?.experience || 0} Yrs</span>
                     </div>
                   </td>
                   {showCompliance && (
@@ -259,12 +336,14 @@ const ProviderTable: React.FC = () => {
                             {provider.status === 'Approved' ? (
                               <>
                                 <button onClick={() => setSelectedProvider(provider)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View"><Eye size={14} /></button>
-                                <button className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-all" title="Deactivate"><Power size={14} /></button>
+                                <button onClick={() => handleUpdateStatus(provider._id, 'Blocked')} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-all" title="Deactivate"><Power size={14} /></button>
+                                <button onClick={() => handleDelete(provider._id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Delete"><Trash2 size={14} /></button>
                               </>
                             ) : (
                               <>
                                 <button onClick={() => setSelectedProvider(provider)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View"><Eye size={14} /></button>
-                                <button className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="Reconsider"><RotateCcw size={14} /></button>
+                                <button onClick={() => handleUpdateStatus(provider._id, 'Pending')} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="Reconsider"><RotateCcw size={14} /></button>
+                                <button onClick={() => handleDelete(provider._id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Delete"><Trash2 size={14} /></button>
                               </>
                             )}
                           </>
@@ -324,11 +403,24 @@ const ProviderTable: React.FC = () => {
         </div>
       </div>
 
-      <ApprovalModal provider={selectedProvider} onClose={() => setSelectedProvider(null)} />
+      <ApprovalModal
+        provider={selectedProvider}
+        onClose={() => setSelectedProvider(null)}
+        onUpdate={handleUpdateStatus}
+      />
       <InviteExpertModal
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
         onAdd={handleAddProvider}
+      />
+      <ProviderDetailsModal
+        isOpen={!!editingProvider}
+        onClose={() => setEditingProvider(null)}
+        provider={editingProvider}
+        onUpdateComplete={() => {
+          setEditingProvider(null);
+          fetchProviders();
+        }}
       />
     </div>
   );

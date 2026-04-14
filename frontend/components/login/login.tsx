@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 import StickyNavPill from "@/components/common/StickyNavPill";
+import { API_URL } from '@/config/api';
 
 const LoginForm = () => {
     const router = useRouter();
@@ -31,7 +32,7 @@ const LoginForm = () => {
     const onFinish = async (values: any) => {
         try {
             setLoading(true);
-            const response = await fetch("http://localhost:5000/api/users/login", {
+            const response = await fetch(`${API_URL}/users/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

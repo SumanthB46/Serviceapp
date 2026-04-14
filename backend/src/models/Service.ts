@@ -8,6 +8,7 @@ export interface IService extends Document {
   duration: number;       // duration in minutes
   image: string;
   status: 'active' | 'inactive';
+  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,6 +49,11 @@ const serviceSchema = new Schema<IService>(
       type: String,
       enum: ['active', 'inactive'],
       default: 'active',
+      required: true,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
       required: true,
     },
   },

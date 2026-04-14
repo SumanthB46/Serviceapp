@@ -22,7 +22,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onConfirm,
   title,
   message,
-  confirmLabel = 'Confirm',
+  confirmLabel = 'Delete',
   cancelLabel = 'Cancel',
   variant = 'danger'
 }) => {
@@ -36,52 +36,67 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 pointer-events-none">
+        {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm shadow-2xl"
+          className="absolute inset-0 bg-black/40 backdrop-blur-[2px] pointer-events-auto"
         />
+
+        {/* Modal Window */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-gray-100"
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="relative w-full max-w-[380px] bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden border border-gray-100/50 pointer-events-auto flex flex-col items-center p-8 pt-10 text-center"
         >
-          <div className="p-8 pb-6">
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${
-              variant === 'danger' ? 'bg-red-50 text-red-500' : 
-              variant === 'warning' ? 'bg-orange-50 text-orange-500' : 
-              'bg-blue-50 text-blue-500'
-            }`}>
-              <AlertTriangle size={28} />
+          {/* Close Button */}
+          <button 
+            onClick={onClose}
+            className="absolute top-6 right-6 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X size={20} />
+          </button>
+
+          {/* Icon Section */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-red-500/10 blur-xl rounded-full scale-150 animate-pulse" />
+            <div className="relative w-12 h-12 bg-red-600 rounded-xl rotate-45 flex items-center justify-center shadow-lg shadow-red-200">
+              <div className="-rotate-45">
+                <AlertTriangle size={24} className="text-white fill-white/20" />
+              </div>
             </div>
-            
-            <h3 className="text-xl font-black text-gray-900 tracking-tight mb-2 uppercase tracking-wide">{title}</h3>
-            <p className="text-sm font-bold text-gray-500 leading-relaxed uppercase tracking-tight opacity-70 italic">{message}</p>
           </div>
 
-          <div className="p-6 bg-gray-50/50 flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 py-4 bg-white border border-gray-100 text-gray-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all active:scale-95"
-            >
-              {cancelLabel}
-            </button>
+          {/* Content */}
+          <div className="space-y-3 mb-10">
+            <h3 className="text-xl font-bold text-gray-900 leading-tight">
+              {title}
+            </h3>
+            <p className="text-[13px] font-medium text-gray-500 leading-relaxed max-w-[280px]">
+              {message}
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
             <button
               onClick={() => {
                 onConfirm();
                 onClose();
               }}
-              className={`flex-1 py-4 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 ${
-                variant === 'danger' ? 'bg-red-600 shadow-red-200 hover:bg-red-700' :
-                variant === 'warning' ? 'bg-orange-600 shadow-orange-200 hover:bg-orange-700' :
-                'bg-blue-600 shadow-blue-200 hover:bg-blue-700'
-              }`}
+              className="flex-1 order-2 sm:order-1 py-3.5 bg-red-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-red-200 hover:bg-red-700 active:scale-95 transition-all"
             >
               {confirmLabel}
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 order-1 sm:order-2 py-3.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 active:scale-95 transition-all"
+            >
+              {cancelLabel}
             </button>
           </div>
         </motion.div>

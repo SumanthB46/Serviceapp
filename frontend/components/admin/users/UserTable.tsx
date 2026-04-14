@@ -7,16 +7,19 @@ import UserRow from './UserRow';
 import { User } from '../types';
 import UserDetailsModal from './UserDetailsModal';
 import AddUserModal from './AddUserModal';
+import EditUserModal from './EditUserModal';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import axios from 'axios';
 import ConfirmationModal from '../common/ConfirmationModal';
+import { API_URL } from '@/config/api';
 
 const UserTable: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
@@ -33,7 +36,7 @@ const UserTable: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://127.0.0.1:5000/api/users');
+      const response = await axios.get(`${API_URL}/users`);
       console.log('API Response:', response.data);
       // Filter for customers only and map backend fields to frontend types
       const mappedUsers = response.data
@@ -87,7 +90,7 @@ const UserTable: React.FC = () => {
 
   const handleAddUser = async (newUserData: any) => {
     try {
-      await axios.post('http://localhost:5000/api/users/register', newUserData);
+      await axios.post(`${API_URL}/users/register`, newUserData);
       await fetchUsers(); // Refresh the list
     } catch (error) {
       console.error('Error registering user:', error);
@@ -95,10 +98,20 @@ const UserTable: React.FC = () => {
     }
   };
 
+  const handleUpdateUser = async (id: string, updatedData: any) => {
+    try {
+      await axios.put(`${API_URL}/users/${id}`, updatedData);
+      await fetchUsers(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  };
+
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
     try {
-      await axios.delete(`http://localhost:5000/api/users/${userToDelete.id}`);
+      await axios.delete(`${API_URL}/users/${userToDelete.id}`);
       await fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -155,7 +168,7 @@ const UserTable: React.FC = () => {
             </select>
           </div>
 
-          <button className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100">
+          <button className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100" onClick={fetchUsers}>
             <RefreshCcw size={16} />
           </button>
         </div>
@@ -184,6 +197,7 @@ const UserTable: React.FC = () => {
                     key={user.id}
                     user={user}
                     onView={u => setSelectedUser(u)}
+                    onEdit={u => setUserToEdit(u)}
                     onDelete={u => setUserToDelete(u)}
                   />
                 ))
@@ -262,6 +276,13 @@ const UserTable: React.FC = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddUser}
+      />
+
+      <EditUserModal
+        isOpen={!!userToEdit}
+        user={userToEdit}
+        onClose={() => setUserToEdit(null)}
+        onUpdate={handleUpdateUser}
       />
 
       <ConfirmationModal
