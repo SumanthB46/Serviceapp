@@ -8,6 +8,7 @@ export interface IUser extends Document {
   role: 'admin' | 'customer' | 'provider';
   profile_image?: string;
   status: 'active' | 'blocked' | 'deleted';
+  gender?: 'male' | 'female' | 'other';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -16,27 +17,27 @@ const userSchema = new Schema<IUser>(
   {
     name: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
     },
     email: {
       type: String,
-      required: true,
+      required: false,
       unique: true,
+      sparse: true,
       trim: true,
       lowercase: true,
     },
     phone: {
       type: String,
-      required: true,
+      required: false,
+      unique: true,
+      sparse: true,
       trim: true,
     },
     password: {
       type: String,
-      required: function() {
-        // Password might not be required if implementing OAuth later
-        return true; 
-      },
+      required: false,
     },
     role: {
       type: String,
@@ -52,6 +53,11 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ['active', 'blocked', 'deleted'],
       default: 'active',
+    },
+    gender: {
+      type: String,
+      enum: ['male', 'female', 'other'],
+      required: false,
     },
   },
   {

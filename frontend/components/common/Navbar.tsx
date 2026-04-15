@@ -76,9 +76,11 @@ const Navbar = () => {
                 LOGIN
               </Button>
             </Link>
-            <Button type="primary" className="bg-[#1D2B83] font-bold h-9">
-              SIGN UP
-            </Button>
+            <Link href="/signup">
+              <Button type="primary" className="bg-[#1D2B83] font-bold h-9">
+                SIGN UP
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>

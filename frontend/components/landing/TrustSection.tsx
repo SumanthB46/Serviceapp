@@ -33,11 +33,24 @@ const TrustSection = () => {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         
         {/* Section Heading */}
-        <div className="text-center mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-20"
+        >
           <h2 className="text-3xl md:text-4xl font-bold text-[#171717]">
             Why Choose Us
           </h2>
-        </div>
+          <motion.div
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="h-1 w-16 bg-[#1D2B83] rounded-full mx-auto mt-4 origin-left"
+          />
+        </motion.div>
 
         {/* 4 Cards Grid - Left Aligned to match reference */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-16">
@@ -46,16 +59,23 @@ const TrustSection = () => {
             return (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="flex flex-col items-start text-left"
+                transition={{ duration: 0.5, delay: index * 0.12, type: "spring", bounce: 0.45 }}
+                className="flex flex-col items-start text-left group"
               >
-                {/* Rounded Square Icon Box */}
-                <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E0E7FF] text-[#1D2B83]">
+                {/* Bouncing Icon Box */}
+                <motion.div
+                  initial={{ scale: 0, rotate: -10 }}
+                  whileInView={{ scale: 1, rotate: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.12 + 0.2, type: "spring", bounce: 0.6 }}
+                  whileHover={{ scale: 1.15, rotate: 6, y: -4 }}
+                  className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E0E7FF] text-[#1D2B83] cursor-default"
+                >
                   <Icon className="h-7 w-7" strokeWidth={2.5} />
-                </div>
+                </motion.div>
                 
                 {/* Content */}
                 <h3 className="mb-4 text-xl font-bold text-slate-900 tracking-tight">

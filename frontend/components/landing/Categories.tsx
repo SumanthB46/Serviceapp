@@ -153,23 +153,39 @@ const Categories = () => {
     <section className="bg-[#F5F2FB] py-16">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         {/* Heading */}
-        <div className="flex flex-col items-center mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col items-center mb-12"
+        >
           <h2 className="text-3xl font-bold text-slate-800 tracking-tight mb-2">
             What do you need help with?
           </h2>
-          <div className="h-1.5 w-20 bg-[#1D2B83] rounded-full" />
-        </div>
+          <motion.div
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="h-1.5 w-20 bg-[#1D2B83] rounded-full origin-left"
+          />
+        </motion.div>
 
         {/* Categories Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-4 px-2">
-          {categoriesData.map((cat) => {
+          {categoriesData.map((cat, index) => {
             const isActive = selectedCategory?.id === cat.id;
 
             return (
               <motion.button
                 key={cat.id}
-                whileHover={{ y: -4 }}
-                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, y: 40, scale: 0.9 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.06, type: "spring", bounce: 0.4 }}
+                whileHover={{ y: -6, scale: 1.05 }}
+                whileTap={{ scale: 0.93 }}
                 onClick={() => handleCategoryClick(cat)}
                 className={`flex flex-col items-center justify-center gap-3 rounded-2xl border p-4 transition-all duration-300 ${isActive
                   ? "border-[#1D2B83] bg-[#1D2B83] text-white shadow-lg shadow-[#1D2B83]/20"
