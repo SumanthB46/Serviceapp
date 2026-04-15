@@ -16,7 +16,8 @@ import {
   X,
   ChevronRight,
   LogOut,
-  Settings
+  Settings,
+  Ticket
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -28,6 +29,7 @@ const sidebarLinks = [
   { name: 'Categories', href: '/admin/categories', icon: List },
   { name: 'Sub-Services', href: '/admin/sub-services', icon: Layers },
   { name: 'Locations', href: '/admin/locations', icon: MapPin },
+  { name: 'Offers', href: '/admin/offers', icon: Ticket },
   { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
   { name: 'Reports', href: '/admin/reports', icon: BarChart2 },
 ];

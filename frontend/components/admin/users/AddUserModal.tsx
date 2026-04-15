@@ -152,7 +152,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onAdd }) =
                      <div className="space-y-4 relative z-10">
                         {/* Profile Image Upload */}
                         <div className="flex flex-col items-center gap-3 mb-6">
-                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                           <label className="text-[10px] font-black text-gray-400 tracking-widest flex items-center gap-2">
                               Profile Identity
                            </label>
                            <div className="relative group/avatar">
@@ -177,7 +177,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onAdd }) =
                         </div>
 
                         <div className="space-y-1">
-                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                           <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                               <UserIcon size={12} className="text-blue-500" /> Full Name
                            </label>
                            <input
@@ -193,7 +193,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onAdd }) =
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                  <Mail size={12} className="text-blue-500" /> Email Access
                               </label>
                               <input
@@ -207,7 +207,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onAdd }) =
                               {errors.email && <p className="text-[9px] font-bold text-red-500 ml-2 mt-1 uppercase tracking-widest">{errors.email}</p>}
                            </div>
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                  <Phone size={12} className="text-blue-500" /> Contact Link
                               </label>
                               <input
@@ -223,7 +223,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onAdd }) =
                         </div>
 
                         <div className="space-y-1">
-                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                           <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                               <Shield size={12} className="text-blue-500" /> Secret Key (Password)
                            </label>
                            <input
@@ -253,7 +253,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onAdd }) =
                      <button
                         type="submit"
                         disabled={loading}
-                        className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black tracking-widest shadow-lg shadow-blue-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                      >
                         {loading ? (
                            <RefreshCcw size={14} className="animate-spin" />

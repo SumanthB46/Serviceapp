@@ -17,9 +17,21 @@ export const getBookings = async (req: AuthRequest, res: Response): Promise<void
     // Admin gets all
 
     const bookings = await Booking.find(query)
-      .populate('user_id', 'name email phone')
-      .populate('provider_id', 'business_name phone')
-      .populate('service_id', 'service_name')
+      .populate('user_id', 'name email phone profile_image')
+      .populate({
+        path: 'provider_id',
+        populate: {
+          path: 'user_id',
+          select: 'name email phone profile_image'
+        }
+      })
+      .populate({
+        path: 'service_id',
+        populate: {
+          path: 'category_id',
+          select: 'category_name icon'
+        }
+      })
       .sort({ createdAt: -1 });
 
     res.json(bookings);
@@ -34,9 +46,21 @@ export const getBookings = async (req: AuthRequest, res: Response): Promise<void
 export const getBookingById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const booking = await Booking.findById(req.params.id)
-      .populate('user_id', 'name email phone')
-      .populate('provider_id', 'business_name phone')
-      .populate('service_id', 'service_name');
+      .populate('user_id', 'name email phone profile_image')
+      .populate({
+        path: 'provider_id',
+        populate: {
+          path: 'user_id',
+          select: 'name email phone profile_image'
+        }
+      })
+      .populate({
+        path: 'service_id',
+        populate: {
+          path: 'category_id',
+          select: 'category_name icon'
+        }
+      });
 
     if (!booking) {
       res.status(404).json({ message: 'Booking not found' });
@@ -110,8 +134,21 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response): Prom
 export const getBookingsByUserId = async (req: Request, res: Response): Promise<void> => {
   try {
     const bookings = await Booking.find({ user_id: req.params.userId })
-      .populate('provider_id', 'business_name phone')
-      .populate('service_id', 'service_name')
+      .populate('user_id', 'name email phone profile_image')
+      .populate({
+        path: 'provider_id',
+        populate: {
+          path: 'user_id',
+          select: 'name email phone profile_image'
+        }
+      })
+      .populate({
+        path: 'service_id',
+        populate: {
+          path: 'category_id',
+          select: 'category_name icon'
+        }
+      })
       .sort({ createdAt: -1 });
     res.json(bookings);
   } catch (error: any) {

@@ -36,11 +36,11 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, category
           status: category.status || 'active',
         });
       } else {
-        setFormData({ 
-          category_name: '', 
-          icon: '', 
-          description: '', 
-          status: 'active' 
+        setFormData({
+          category_name: '',
+          icon: '',
+          description: '',
+          status: 'active'
         });
       }
     } else {
@@ -105,15 +105,15 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, category
               <div className="space-y-4 relative z-10">
                 {/* Category Name */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                  <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                     <Tag size={12} className="text-blue-500" /> Category Name
                   </label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     placeholder="e.g. Electrical Services"
                     value={formData.category_name}
-                    onChange={(e) => setFormData({...formData, category_name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, category_name: e.target.value })}
                     className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
                   />
                 </div>
@@ -121,26 +121,26 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, category
                 {/* Icon and Status row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                       <Palette size={12} className="text-blue-500" /> Icon Name / URL
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                      <Palette size={12} className="text-blue-500" /> Icon Name / URL
                     </label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       placeholder="e.g. electrical-icon"
                       value={formData.icon}
-                      onChange={(e) => setFormData({...formData, icon: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                       className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                       <Activity size={12} className="text-blue-500" /> Status
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                      <Activity size={12} className="text-blue-500" /> Status
                     </label>
-                    <select 
+                    <select
                       value={formData.status}
-                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                       className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all appearance-none cursor-pointer"
                     >
                       <option value="active">Active</option>
@@ -151,14 +151,14 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, category
 
                 {/* Description */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                  <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                     <Layers size={12} className="text-blue-500" /> Description
                   </label>
-                  <textarea 
+                  <textarea
                     required
                     placeholder="Describe this category..."
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
                     className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all resize-none"
                   />
@@ -168,16 +168,16 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, category
 
             {/* Actions */}
             <div className="flex gap-3 pt-2">
-              <button 
+              <button
                 type="button"
-                onClick={onClose} 
-                className="flex-1 py-4 bg-[#F1F5F9] text-gray-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
+                onClick={onClose}
+                className="flex-1 py-4 bg-[#F1F5F9] text-gray-600 rounded-2xl text-[10px] font-black tracking-widest hover:bg-gray-200 transition-all"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 type="submit"
-                className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black tracking-widest shadow-lg shadow-blue-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <Save size={14} /> {category ? 'Update Category' : 'Save Category'}
               </button>

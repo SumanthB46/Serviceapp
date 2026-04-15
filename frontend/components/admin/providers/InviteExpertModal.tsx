@@ -189,7 +189,7 @@ const InviteExpertModal: React.FC<InviteExpertModalProps> = ({ isOpen, onClose, 
                      <div className="space-y-4 relative z-10">
                         {/* Profile Image Upload */}
                         <div className="flex flex-col items-center gap-3 mb-6">
-                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                           <label className="text-[10px] font-black text-gray-400 tracking-widest flex items-center gap-2">
                               Profile Identity
                            </label>
                            <div className="relative group/avatar">
@@ -214,7 +214,7 @@ const InviteExpertModal: React.FC<InviteExpertModalProps> = ({ isOpen, onClose, 
                         </div>
 
                         <div className="space-y-1">
-                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                           <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                               <UserIcon size={12} className="text-blue-500" /> Full Name
                            </label>
                            <input
@@ -229,7 +229,7 @@ const InviteExpertModal: React.FC<InviteExpertModalProps> = ({ isOpen, onClose, 
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                  <Mail size={12} className="text-blue-500" /> Email Access
                               </label>
                               <input
@@ -242,7 +242,7 @@ const InviteExpertModal: React.FC<InviteExpertModalProps> = ({ isOpen, onClose, 
                               {errors.email && <p className="text-[9px] font-bold text-red-500 ml-2 mt-1 uppercase tracking-widest">{errors.email}</p>}
                            </div>
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                  <Phone size={12} className="text-blue-500" /> Contact Link
                               </label>
                               <input
@@ -259,7 +259,7 @@ const InviteExpertModal: React.FC<InviteExpertModalProps> = ({ isOpen, onClose, 
                         <div className="space-y-4">
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-1">
-                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                 <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                     <ShieldCheck size={12} className="text-blue-500" /> Password
                                  </label>
                                  <input
@@ -284,7 +284,7 @@ const InviteExpertModal: React.FC<InviteExpertModalProps> = ({ isOpen, onClose, 
                            <ShieldCheck size={14} />
                         </div>
                         <div>
-                           <p className="text-[10px] font-black text-blue-900 uppercase tracking-widest">Verification Protocol</p>
+                           <p className="text-[10px] font-black text-blue-900 tracking-widest">Verification Protocol</p>
                            <p className="text-[10px] font-bold text-blue-600 leading-relaxed mt-1">Experts will use these credentials to log in. Their access is restricted to "Pending" status until verification.</p>
                         </div>
                      </div>

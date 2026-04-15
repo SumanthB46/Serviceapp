@@ -1,7 +1,9 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface IOffer extends Document {
   code: string;
+  coupon_id?: string; // External coupon reference
+  provider_service_id?: Types.ObjectId; // Optional link to a specific provider service
   discount_type: 'flat' | 'percentage';
   discount_value: number;
   min_amount: number;
@@ -19,6 +21,14 @@ const offerSchema = new Schema<IOffer>(
       unique: true,
       trim: true,
       uppercase: true,
+    },
+    coupon_id: {
+      type: String,
+      trim: true,
+    },
+    provider_service_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'ProviderService',
     },
     discount_type: {
       type: String,

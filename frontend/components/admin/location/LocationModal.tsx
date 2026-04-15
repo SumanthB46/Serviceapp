@@ -12,46 +12,71 @@ interface LocationModalProps {
   onSave: (locationData: any) => void;
 }
 
+import axios from 'axios';
+import { API_URL } from '@/config/api';
+
 const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, locationState, onSave }) => {
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
-    city: '',
-    stateRegion: 'MH, IN',
-    active: true
+    name: '',
+    type: 'area' as 'city' | 'area',
+    parent_id: '',
+    state: 'Karnataka',
+    country: 'India',
+    latitude: 12.9716,
+    longitude: 77.5946,
+    status: 'active' as 'active' | 'inactive'
   });
+  const [cities, setCities] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const fetchCities = async () => {
+    try {
+      const resp = await axios.get(`${API_URL}/locations`);
+      setCities(resp.data.filter((l: any) => l.type === 'city'));
+    } catch (e) {
+      console.error('Error fetching cities in modal:', e);
+    }
+  }
+
   useEffect(() => {
     if (isOpen) {
+      fetchCities();
       document.body.style.overflow = 'hidden';
       if (locationState) {
         setFormData({
-          city: locationState.city || '',
-          stateRegion: locationState.stateRegion || 'MH, IN',
-          active: locationState.active
+          name: locationState.name || '',
+          type: locationState.type || 'area',
+          parent_id: typeof locationState.parent_id === 'object' ? locationState.parent_id?._id : (locationState.parent_id || ''),
+          state: locationState.state || 'Karnataka',
+          country: locationState.country || 'India',
+          latitude: locationState.latitude || 12.9716,
+          longitude: locationState.longitude || 77.5946,
+          status: locationState.status || 'active'
         });
       } else {
-        setFormData({ city: '', stateRegion: 'MH, IN', active: true });
+        setFormData({
+          name: '',
+          type: 'area',
+          parent_id: '',
+          state: 'Karnataka',
+          country: 'India',
+          latitude: 12.9716,
+          longitude: 77.5946,
+          status: 'active'
+        });
       }
     } else {
       document.body.style.overflow = 'unset';
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, [isOpen, locationState]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      ...locationState,
-      city: formData.city,
-      stateRegion: formData.stateRegion,
-      active: formData.active,
-    });
+    onSave(formData);
     onClose();
   };
 
@@ -80,9 +105,9 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, location
           <div className="px-8 pt-6 pb-2 flex justify-between items-center">
             <div>
               <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase tracking-[0.1em]">
-                {locationState ? 'Edit Hub' : 'New Geographic Hub'}
+                {locationState ? 'Update Entry' : 'Configure Location'}
               </h2>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Operational Territory</p>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Operational Territory Node</p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors self-start">
               <X size={20} className="text-gray-400" />
@@ -90,75 +115,134 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, location
           </div>
 
           <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-5">
-            {/* Form Section Hub */}
             <div className="bg-[#F8FAFC] border border-gray-100 p-6 rounded-[2rem] space-y-4 relative group">
-              <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
-                <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:scale-110 transition-transform">
-                  <Globe2 size={120} />
-                </div>
-              </div>
-
               <div className="space-y-4 relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                      <MapPin size={12} className="text-blue-500" /> Hub City
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                      Type
                     </label>
-                    <input 
-                      type="text" 
-                      required
-                      placeholder="e.g. Surat"
-                      value={formData.city}
-                      onChange={(e) => setFormData({...formData, city: e.target.value})}
-                      className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all uppercase"
-                    />
+                    <select
+                      value={formData.type}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value as any, parent_id: e.target.value === 'city' ? '' : formData.parent_id })}
+                      className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:border-blue-200 transition-all appearance-none"
+                    >
+                      <option value="city">City Hub</option>
+                      <option value="area">Localized Area</option>
+                    </select>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                      <Globe2 size={12} className="text-blue-500" /> State/Region
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                      Status
                     </label>
-                    <input 
-                      type="text" 
-                      required
-                      placeholder="GJ, IN"
-                      value={formData.stateRegion}
-                      onChange={(e) => setFormData({...formData, stateRegion: e.target.value})}
-                      className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all uppercase"
-                    />
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                      className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:border-blue-200 transition-all appearance-none"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                     <Activity size={12} className="text-blue-500" /> Operational Phase
+                  <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                    <MapPin size={12} className="text-blue-500" /> {formData.type === 'city' ? 'City Name' : 'Area Name'}
                   </label>
-                  <select 
-                    value={formData.active ? "Active" : "Halted"}
-                    onChange={(e) => setFormData({...formData, active: e.target.value === "Active"})}
-                    className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all appearance-none"
-                  >
-                    <option value="Active">Active (Deploying Work)</option>
-                    <option value="Halted">Halted (Scaling Down)</option>
-                  </select>
+                  <input
+                    type="text"
+                    required
+                    placeholder={formData.type === 'city' ? "e.g. Bangalore" : "e.g. Whitefield"}
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:border-blue-200 transition-all"
+                  />
+                </div>
+
+                {formData.type === 'area' && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                      Parent City Hub
+                    </label>
+                    {cities.length > 0 ? (
+                      <select
+                        required
+                        value={formData.parent_id}
+                        onChange={(e) => setFormData({ ...formData, parent_id: e.target.value })}
+                        className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:border-blue-200 transition-all appearance-none"
+                      >
+                        <option value="">Select Operational Hub</option>
+                        {cities.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                      </select>
+                    ) : (
+                      <div className="px-4 py-3 bg-amber-50 border border-amber-100 rounded-2xl text-[10px] font-bold text-amber-700 uppercase tracking-tight">
+                        No active City Hubs found. Please create a Hub first.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1">Latitude</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={formData.latitude}
+                      onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })}
+                      className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:border-blue-200 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1">Longitude</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={formData.longitude}
+                      onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })}
+                      className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:border-blue-200 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1">State</label>
+                    <input
+                      type="text"
+                      value={formData.state}
+                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                      className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:border-blue-200 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1">Country</label>
+                    <input
+                      type="text"
+                      value={formData.country}
+                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                      className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:border-blue-200 transition-all"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex gap-3 pt-2">
-              <button 
+              <button
                 type="button"
-                onClick={onClose} 
-                className="flex-1 py-4 bg-[#F1F5F9] text-gray-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
+                onClick={onClose}
+                className="flex-1 py-4 bg-gray-100 text-gray-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
               >
-                Cancel Entry
+                Cancel
               </button>
-              <button 
+              <button
                 type="submit"
-                className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"
               >
-                <Save size={14} /> {locationState ? 'Update Hub' : 'Deploy Hub'}
+                <Save size={14} /> {locationState ? 'Update' : 'Register'}
               </button>
             </div>
           </form>
