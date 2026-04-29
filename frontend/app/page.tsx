@@ -1,8 +1,7 @@
 import Navbar from "@/components/common/Navbar";
 import Hero from "@/components/landing/Hero";
 import Categories from "@/components/landing/Categories";
-import LoanBanner from "@/components/landing/LoanBanner";
-import BulkBanner from "@/components/landing/BulkBanner";
+import PromoBanners from "@/components/landing/PromoBanners";
 import TrustSection from "@/components/landing/TrustSection";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Testimonials from "@/components/landing/Testimonials";
@@ -21,8 +20,7 @@ export default function Home() {
       {/* <SegmentControl /> */}
       <Hero />
       <Categories />
-      <LoanBanner />
-      <BulkBanner />
+      <PromoBanners />
       <TrustSection />
       <HowItWorks />
       <Testimonials />

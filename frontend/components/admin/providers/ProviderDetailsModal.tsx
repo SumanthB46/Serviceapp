@@ -56,7 +56,7 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
             location: provider.location || 'Unassigned',
             availability_status: provider.availability_status || 'offline',
          });
-         
+
          setErrors({});
          setActiveTab('user');
          document.body.style.overflow = 'hidden';
@@ -86,7 +86,7 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
       if (!userForm.name.trim()) newErrors.name = "Full name is required";
       if (!userForm.email.trim()) newErrors.email = "Email is required";
       if (!userForm.phone.trim()) newErrors.phone = "Phone is required";
-      
+
       if (!providerForm.location.trim()) newErrors.location = "Location is required";
 
       setErrors(newErrors);
@@ -177,12 +177,12 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
                {/* Form Body */}
                <div className="overflow-y-auto px-8 py-6 custom-scrollbar flex-1">
                   <form id="providerUpdateForm" onSubmit={handleSubmit} className="space-y-6">
-                     
+
                      {/* User Identity Tab */}
                      {activeTab === 'user' && (
                         <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
                            <div className="flex flex-col items-center gap-3 mb-6">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Visual Identity</label>
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest">Visual Identity</label>
                               <div className="relative group/avatar">
                                  <div className={`w-24 h-24 rounded-3xl bg-white border ${errors.profile_image ? 'border-red-500 ring-4 ring-red-500/10' : 'border-gray-100'} shadow-sm overflow-hidden flex items-center justify-center relative cursor-pointer hover:border-blue-200 transition-all`}>
                                     {imagePreview ? (
@@ -199,7 +199,7 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
                            </div>
 
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                  <UserIcon size={12} className="text-blue-500" /> Full Name
                               </label>
                               <input
@@ -213,7 +213,7 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
 
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                               <div className="space-y-1">
-                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                 <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                     <Mail size={12} className="text-blue-500" /> Email Access
                                  </label>
                                  <input
@@ -225,7 +225,7 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
                                  {errors.email && <p className="text-[9px] font-bold text-red-500 ml-2 mt-1 uppercase tracking-widest">{errors.email}</p>}
                               </div>
                               <div className="space-y-1">
-                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                 <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                     <Phone size={12} className="text-blue-500" /> Contact Link
                                  </label>
                                  <input
@@ -244,7 +244,7 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
                      {activeTab === 'provider' && (
                         <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                  <MapPin size={12} className="text-blue-500" /> Operating Location
                               </label>
                               <input
@@ -258,7 +258,7 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
                            </div>
 
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                  <Activity size={12} className="text-blue-500" /> Current Availability
                               </label>
                               <select

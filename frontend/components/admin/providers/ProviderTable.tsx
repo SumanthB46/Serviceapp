@@ -205,7 +205,7 @@ const ProviderTable: React.FC = () => {
                       <div className="max-h-48 overflow-y-auto custom-scrollbar">
                         <div
                           onClick={() => { setServiceFilter('All'); setIsServiceFilterOpen(false); }}
-                          className={`px-4 py-3 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${serviceFilter === 'All' ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
+                          className={`px-4 py-3 text-[10px] font-black tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${serviceFilter === 'All' ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
                         >
                           All Services
                         </div>
@@ -218,7 +218,7 @@ const ProviderTable: React.FC = () => {
                                 setServiceFilter(name);
                                 setIsServiceFilterOpen(false);
                               }}
-                              className={`px-4 py-3 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${serviceFilter === name ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
+                              className={`px-4 py-3 text-[10px] font-black tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${serviceFilter === name ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
                             >
                               {name}
                             </div>
@@ -288,7 +288,7 @@ const ProviderTable: React.FC = () => {
                         <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${provider.availability_status === 'available' ? 'bg-green-500' : 'bg-gray-300'}`} />
                       </div>
                       <div className="flex flex-col">
-                        <span 
+                        <span
                           onClick={() => setEditingProvider(provider)}
                           className="font-black text-gray-900 group-hover/row:text-blue-600 transition-colors uppercase tracking-tight cursor-pointer"
                         >

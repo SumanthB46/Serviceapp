@@ -31,9 +31,9 @@ const Hero = () => {
             animate={{ opacity: 1, x: 0 }}
             style={{ y: textY }}
             transition={{ duration: 0.6 }}
-            className="-mt-12 md:-mt-20 lg:-mt-24"
+            className="mt-7 md:mt-11 lg:mt-15"
           >
-            
+
             <h1 className="text-4xl font-extrabold tracking-tight text-[#171717] md:text-5xl lg:text-6xl leading-[1.1]">
               Book Trusted <br />
               Home Services <br />
@@ -85,7 +85,7 @@ const Hero = () => {
             animate={{ opacity: 1, scale: 1 }}
             style={{ y: imageY }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative"
+            className="relative mt-8 md:mt-12 lg:mt-16"
           >
             <div className="relative w-full h-[500px] md:h-[600px]">              {/* Image Container with rounding and overflow for the carousel */}
               <div className="h-full w-full overflow-hidden rounded-[3rem] bg-slate-50 shadow-2xl">
@@ -103,7 +103,7 @@ const Hero = () => {
               </div>
 
               {/* Trust Badge matching the reference image - now OUTSIDE the overflow hidden container */}
-              <div className="absolute -bottom-10 -left-10 z-20">
+              <div className="absolute -bottom-8 -left-8 z-20">
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}

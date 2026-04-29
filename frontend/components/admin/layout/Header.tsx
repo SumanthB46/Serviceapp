@@ -56,7 +56,7 @@ const compressImage = (file: File, maxWidth = 200, quality = 0.8): Promise<strin
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const scale = Math.min(1, maxWidth / img.width);
-        canvas.width  = img.width  * scale;
+        canvas.width = img.width * scale;
         canvas.height = img.height * scale;
         const ctx = canvas.getContext("2d");
         if (!ctx) return reject("Canvas not supported");
@@ -93,15 +93,15 @@ const FieldError = ({ msg }: { msg: string }) =>
 
 /* ══════════════════════════════════════════ */
 const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
-  const [user, setUser]               = useState<UserProfile | null>(null);
-  const [modalOpen, setModalOpen]     = useState(false);
-  const [editMode, setEditMode]       = useState(false);
-  const [saving, setSaving]           = useState(false);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [imgError, setImgError]       = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   // profile image preview (local, before save)
-  const [previewImg, setPreviewImg]   = useState<string | null>(null);
+  const [previewImg, setPreviewImg] = useState<string | null>(null);
 
   const [form, setForm] = useState<FormState>({ name: "", email: "", phone: "", password: "" });
   const [errors, setErrors] = useState<ErrorState>({ name: "", email: "", phone: "", password: "" });
@@ -109,7 +109,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
     name: false, email: false, phone: false, password: false,
   });
 
-  const modalRef  = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   /* load user from localStorage */
@@ -120,7 +120,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         const parsed: UserProfile = JSON.parse(stored);
         setUser(parsed);
         setForm({ name: parsed.name, email: parsed.email, phone: parsed.phone, password: "" });
-      } catch {}
+      } catch { }
     }
   }, []);
 
@@ -170,7 +170,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const handleChange = (field: keyof FormState, raw: string) => {
     let value = raw;
     if (field === "phone") value = raw.replace(/\D/g, "").slice(0, 10);
-    if (field === "name")  value = raw.replace(/[^A-Za-z\s]/g, "");
+    if (field === "name") value = raw.replace(/[^A-Za-z\s]/g, "");
     setForm((f) => ({ ...f, [field]: value }));
     if (touched[field]) setErrors((e) => ({ ...e, [field]: validateField(field, value) }));
   };
@@ -182,9 +182,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   const validateAll = (): boolean => {
     const newErrors: ErrorState = {
-      name:     validateField("name",     form.name),
-      email:    validateField("email",    form.email),
-      phone:    validateField("phone",    form.phone),
+      name: validateField("name", form.name),
+      email: validateField("email", form.email),
+      phone: validateField("phone", form.phone),
       password: validateField("password", form.password),
     };
     setErrors(newErrors);
@@ -202,7 +202,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         name: form.name, email: form.email, phone: form.phone,
       };
       if (form.password.trim()) body.password = form.password;
-      if (previewImg)           body.profile_image = previewImg;
+      if (previewImg) body.profile_image = previewImg;
 
       const res = await fetch(`${API_URL}/users/me`, {
         method: "PUT",
@@ -216,7 +216,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         const merged = { ...updated, profile_image: previewImg ?? updated.profile_image };
         setUser(merged);
         const stored = localStorage.getItem("user");
-        const prev   = stored ? JSON.parse(stored) : {};
+        const prev = stored ? JSON.parse(stored) : {};
         localStorage.setItem("user", JSON.stringify({ ...prev, ...merged }));
         setEditMode(false);
         setSaveSuccess(true);
@@ -232,11 +232,11 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
     }
   };
 
-  const hasErrors    = Object.values(errors).some(Boolean);
+  const hasErrors = Object.values(errors).some(Boolean);
   const displayImage = previewImg ?? (imgError ? null : (user?.profile_image || null));
 
   const roleBadge: Record<string, string> = {
-    admin:    "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+    admin: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
     provider: "bg-purple-50 text-purple-700 ring-1 ring-purple-200",
     customer: "bg-green-50 text-green-700 ring-1 ring-green-200",
   };
@@ -413,7 +413,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                 <ValidatedField
                   icon={<ShieldCheck size={13} className="text-blue-500" />}
                   label="Role" value={user?.role ?? ""} error=""
-                  editing={false} onChange={() => {}} onBlur={() => {}}
+                  editing={false} onChange={() => { }} onBlur={() => { }}
                 />
 
                 {/* Password — edit mode only */}
@@ -511,11 +511,10 @@ const ValidatedField: React.FC<ValidatedFieldProps> = ({
           <input
             type={type} value={value} maxLength={maxLength} placeholder={placeholder}
             onChange={(e) => onChange(e.target.value)} onBlur={onBlur}
-            className={`w-full text-xs font-medium text-gray-800 bg-gray-50 rounded-lg px-2 py-1.5 outline-none transition-all border ${
-              error
-                ? "border-red-300 focus:ring-2 focus:ring-red-200 focus:border-red-400"
-                : "border-blue-200 focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
-            }`}
+            className={`w-full text-xs font-medium text-gray-800 bg-gray-50 rounded-lg px-2 py-1.5 outline-none transition-all border ${error
+              ? "border-red-300 focus:ring-2 focus:ring-red-200 focus:border-red-400"
+              : "border-blue-200 focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
+              }`}
           />
           <AnimatePresence>
             {error && <FieldError msg={error} />}

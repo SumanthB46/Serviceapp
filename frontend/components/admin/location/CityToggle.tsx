@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, Search, Plus, Filter, RefreshCw, Navigation } from 'lucide-react';
+import { MapPin, Search, Plus, Filter, RefreshCw, Navigation, Edit2, Trash2 } from 'lucide-react';
 import Button from '../common/Button';
 import LocationModal from './LocationModal';
+import ConfirmationModal from '../common/ConfirmationModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ILocation } from '../types';
 
@@ -28,6 +29,11 @@ const CityToggleRegistry: React.FC = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<ILocation | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [locationToDelete, setLocationToDelete] = useState<ILocation | null>(null);
+
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [locationToToggle, setLocationToToggle] = useState<ILocation | null>(null);
 
   useEffect(() => {
     fetchLocations();
@@ -63,17 +69,47 @@ const CityToggleRegistry: React.FC = () => {
     }
   };
 
-  const toggleStatus = async (loc: ILocation) => {
+  const handleToggleRequest = (loc: ILocation) => {
+    setLocationToToggle(loc);
+    setIsStatusModalOpen(true);
+  };
+
+  const confirmToggle = async () => {
+    if (!locationToToggle) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API_URL}/locations/${loc._id}`, {
-        status: loc.status === 'active' ? 'inactive' : 'active'
+      await axios.put(`${API_URL}/locations/${locationToToggle._id}`, {
+        status: locationToToggle.status === 'active' ? 'inactive' : 'active'
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchLocations();
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsStatusModalOpen(false);
+      setLocationToToggle(null);
+    }
+  };
+
+  const handleDeleteRequest = (loc: ILocation) => {
+    setLocationToDelete(loc);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!locationToDelete) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/locations/${locationToDelete._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchLocations();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsDeleteModalOpen(false);
+      setLocationToDelete(null);
     }
   };
 
@@ -173,7 +209,7 @@ const CityToggleRegistry: React.FC = () => {
                 <p className="text-[10px] font-black text-[#2563eb] uppercase tracking-wider">Spatial Sync Active</p>
               </div>
               <button
-                onClick={() => bangaloreHub && toggleStatus(bangaloreHub)}
+                onClick={() => bangaloreHub && handleToggleRequest(bangaloreHub)}
                 className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 ${bangaloreHub?.status === 'active' ? 'bg-[#2563eb] text-white hover:bg-blue-700' : 'bg-red-500 text-white hover:bg-red-600'}`}
               >
                 {bangaloreHub?.status === 'active' ? 'ACTIVE' : 'OFFLINE'}
@@ -205,8 +241,16 @@ const CityToggleRegistry: React.FC = () => {
                   <button
                     onClick={() => { setEditingLocation(area); setIsModalOpen(true); }}
                     className="p-1.5 hover:bg-gray-50 rounded-lg text-gray-400 hover:text-blue-600 transition-all"
+                    title="Edit Location"
                   >
-                    <RefreshCw size={10} />
+                    <Edit2 size={12} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteRequest(area)}
+                    className="p-1.5 hover:bg-gray-50 rounded-lg text-gray-400 hover:text-red-500 transition-all"
+                    title="Delete Location"
+                  >
+                    <Trash2 size={12} />
                   </button>
                 </div>
               </div>
@@ -239,7 +283,7 @@ const CityToggleRegistry: React.FC = () => {
                     <span className="text-[7px] font-black text-gray-500 uppercase">Tier 1</span>
                   </div>
                   <button
-                    onClick={() => toggleStatus(area)}
+                    onClick={() => handleToggleRequest(area)}
                     className={`w-8 h-4.5 rounded-full relative p-0.5 transition-colors ${area.status === 'active' ? 'bg-blue-600' : 'bg-gray-200'}`}
                   >
                     <div className={`w-3.5 h-3.5 bg-white rounded-full transition-transform duration-300 ${area.status === 'active' ? 'translate-x-3' : 'translate-x-0'}`} />
@@ -268,6 +312,26 @@ const CityToggleRegistry: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         locationState={editingLocation}
         onSave={handleSave}
+      />
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Location"
+        message={`Are you sure you want to delete ${locationToDelete?.name}? This action will perform a soft delete.`}
+        confirmLabel="Delete Node"
+        variant="danger"
+      />
+
+      <ConfirmationModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        onConfirm={confirmToggle}
+        title="Confirm Status Change"
+        message={`Are you sure you want to change the status of ${locationToToggle?.name} to ${locationToToggle?.status === 'active' ? 'Offline' : 'Active'}?`}
+        confirmLabel="Confirm Change"
+        variant="primary"
       />
     </div>
   );

@@ -10,10 +10,22 @@ const FinalCTA = () => {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
         {/* Horizontal Banner matches the requested design */}
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-[#1D2B83] p-8 md:p-16 text-white flex flex-col md:flex-row items-center justify-between gap-12 shadow-2xl">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="relative overflow-hidden rounded-[2.5rem] bg-[#1D2B83] p-8 md:p-16 text-white flex flex-col md:flex-row items-center justify-between gap-12 shadow-2xl"
+        >
 
           {/* Left Column: Content */}
-          <div className="flex-1 space-y-8 text-center md:text-left z-10">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex-1 space-y-8 text-center md:text-left z-10"
+          >
             <div className="space-y-4">
               <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.25em] text-blue-200/80">
                 Get Started Now
@@ -54,10 +66,16 @@ const FinalCTA = () => {
                 <span className="text-[10px] font-medium text-blue-200/50 uppercase tracking-widest">Pay after service</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right Column: Image in Rounded Box - Larger Width to fill space */}
-          <div className="flex-1 flex justify-center md:justify-end z-10">
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex-1 flex justify-center md:justify-end z-10"
+          >
             <div className="relative w-full max-w-[550px] aspect-square md:aspect-video rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white/5">
               <img
                 src="/images/banner/book.jpeg"
@@ -67,12 +85,12 @@ const FinalCTA = () => {
               {/* Subtle overlay to blend if needed, but the requested design shows full image */}
               <div className="absolute inset-0 bg-gradient-to-t from-[#1D2B83]/10 to-transparent pointer-events-none" />
             </div>
-          </div>
+          </motion.div>
 
           {/* Background Decorative Element (matching the high-end look) */}
           <div className="absolute top-0 right-0 h-full w-1/2 bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />
           <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
-        </div>
+        </motion.div>
 
       </div>
     </section>
