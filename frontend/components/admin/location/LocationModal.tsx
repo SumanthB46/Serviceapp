@@ -23,10 +23,12 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, location
     parent_id: '',
     state: 'Karnataka',
     country: 'India',
+    pincode: '',
     latitude: 12.9716,
     longitude: 77.5946,
     status: 'active' as 'active' | 'inactive'
   });
+
   const [cities, setCities] = useState<any[]>([]);
 
   useEffect(() => {
@@ -53,10 +55,12 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, location
           parent_id: typeof locationState.parent_id === 'object' ? locationState.parent_id?._id : (locationState.parent_id || ''),
           state: locationState.state || 'Karnataka',
           country: locationState.country || 'India',
-          latitude: locationState.latitude || 12.9716,
-          longitude: locationState.longitude || 77.5946,
+          pincode: locationState.pincode || '',
+          latitude: locationState.coordinates?.coordinates[1] || locationState.latitude || 12.9716,
+          longitude: locationState.coordinates?.coordinates[0] || locationState.longitude || 77.5946,
           status: locationState.status || 'active'
         });
+
       } else {
         setFormData({
           name: '',
@@ -64,10 +68,12 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, location
           parent_id: '',
           state: 'Karnataka',
           country: 'India',
+          pincode: '',
           latitude: 12.9716,
           longitude: 77.5946,
           status: 'active'
         });
+
       }
     } else {
       document.body.style.overflow = 'unset';
@@ -183,6 +189,20 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, location
                     )}
                   </div>
                 )}
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                    Strategic Pincode
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 560001"
+                    value={formData.pincode}
+                    onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                    className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:border-blue-200 transition-all"
+                  />
+                </div>
+
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">

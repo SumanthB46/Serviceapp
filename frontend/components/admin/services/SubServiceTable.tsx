@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Zap, Droplets, Wind, Hammer, Paintbrush, Trash2, Plus, Pencil, Power,
-    Search, Filter, RefreshCw, BarChart3, ChevronLeft, LayoutGrid, Layers, ArrowLeft
+    Search, Filter, RefreshCw, BarChart3, ChevronLeft, LayoutGrid, Layers, ArrowLeft, ChevronRight
 } from 'lucide-react';
 import Table from '../common/Table';
 import Button from '../common/Button';
@@ -11,34 +11,20 @@ import Badge from '../common/Badge';
 import SubServiceModal from './SubServiceModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConfirmationModal from '../common/ConfirmationModal';
-import CategoryCard from './CategoryCard';
+import CategorySelectCard from './CategorySelectCard';
 import axios from 'axios';
+
 import { API_URL } from '@/config/api';
-
-const CATEGORIES = [
-    { name: 'Electrician', icon: Zap, serviceCount: 8, color: 'text-yellow-600', bg: 'bg-yellow-50', desc: 'Electrical repairs, wiring & installations' },
-    { name: 'Plumber', icon: Droplets, serviceCount: 6, color: 'text-blue-600', bg: 'bg-blue-50', desc: 'Leak fixes, pipe installs & basic plumbing' },
-    { name: 'AC Repair', icon: Wind, serviceCount: 5, color: 'text-cyan-600', bg: 'bg-cyan-50', desc: 'Cooling systems, gas refilling & cleaning' },
-    { name: 'Carpenter', icon: Hammer, serviceCount: 7, color: 'text-orange-600', bg: 'bg-orange-50', desc: 'Furniture repair, wood works & installations' },
-    { name: 'Cleaning', icon: Trash2, serviceCount: 9, color: 'text-red-600', bg: 'bg-red-50', desc: 'Full home cleaning, sofa & carpet wash' },
-    { name: 'Painting', icon: Paintbrush, serviceCount: 4, color: 'text-purple-600', bg: 'bg-purple-50', desc: 'Interior, exterior & texture painting' },
-];
-
-const SUB_SERVICES_DATA = [
-    { id: 1, name: 'Fan Installation', category: 'Electrician', price: '₹299', status: 'Active' },
-    { id: 2, name: 'Pipe Leak Fix', category: 'Plumber', price: '₹499', status: 'Active' },
-    { id: 3, name: 'AC Gas Refill', category: 'AC Repair', price: '₹799', status: 'Inactive' },
-    { id: 4, name: 'Door Hinge Repair', category: 'Carpenter', price: '₹349', status: 'Active' },
-    { id: 5, name: 'Interior Painting', category: 'Painting', price: '₹2499', status: 'Active' },
-    { id: 6, name: 'Kitchen Deep Clean', category: 'Cleaning', price: '₹699', status: 'Active' },
-    { id: 7, name: 'Sofa Shampooing', category: 'Cleaning', price: '₹1299', status: 'Active' },
-    { id: 8, name: 'Switchboard Fixing', category: 'Electrician', price: '₹199', status: 'Active' },
-];
 
 const SubServiceTable: React.FC = () => {
     const [categories, setCategories] = useState<any[]>([]);
+    const [services, setServices] = useState<any[]>([]);
+    const [subServices, setSubServices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    
     const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
+    const [selectedService, setSelectedService] = useState<any | null>(null);
+    
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
@@ -56,23 +42,40 @@ const SubServiceTable: React.FC = () => {
             setLoading(false);
         }
     };
-    
-    // Core data state
-    const [subServices, setSubServices] = useState<any[]>([]);
 
     useEffect(() => {
         if (selectedCategory) {
-            fetchSubServices();
+            fetchServices();
+        } else {
+            setServices([]);
+            setSelectedService(null);
         }
     }, [selectedCategory]);
+
+    const fetchServices = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.get(`${API_URL}/services?category_id=${selectedCategory._id}`);
+            setServices(response.data);
+        } catch (error) {
+            console.error('Error fetching services:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (selectedService) {
+            fetchSubServices();
+        } else {
+            setSubServices([]);
+        }
+    }, [selectedService]);
 
     const fetchSubServices = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
-            const response = await axios.get(`${API_URL}/services?category_id=${selectedCategory._id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await axios.get(`${API_URL}/sub-services?service_id=${selectedService._id}`);
             setSubServices(response.data);
         } catch (error) {
             console.error('Error fetching sub-services:', error);
@@ -82,11 +85,10 @@ const SubServiceTable: React.FC = () => {
     };
     
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingService, setEditingService] = useState<any>(null);
+    const [editingSubService, setEditingSubService] = useState<any>(null);
     const [subServiceToDelete, setSubServiceToDelete] = useState<any>(null);
     const [subServiceChangingStatus, setSubServiceChangingStatus] = useState<any>(null);
     
-    // Filter dropdown state
     const [filterStatus, setFilterStatus] = useState('All');
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
 
@@ -94,11 +96,9 @@ const SubServiceTable: React.FC = () => {
         if (!subServiceChangingStatus) return;
         try {
             const token = localStorage.getItem('token');
-            const config = {
-                headers: { Authorization: `Bearer ${token}` }
-            };
+            const config = { headers: { Authorization: `Bearer ${token}` } };
             const newStatus = subServiceChangingStatus.status === 'active' ? 'inactive' : 'active';
-            await axios.put(`${API_URL}/services/${subServiceChangingStatus._id}`, {
+            await axios.put(`${API_URL}/sub-services/${subServiceChangingStatus._id}`, {
                 ...subServiceChangingStatus,
                 status: newStatus
             }, config);
@@ -114,77 +114,94 @@ const SubServiceTable: React.FC = () => {
         if (!subServiceToDelete) return;
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`${API_URL}/services/${subServiceToDelete._id}`, {
+            await axios.delete(`${API_URL}/sub-services/${subServiceToDelete._id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchSubServices();
         } catch (error) {
             console.error('Error deleting sub-service:', error);
-            alert('Failed to delete offering.');
+            alert('Failed to delete sub-service.');
         } finally {
             setSubServiceToDelete(null);
         }
     };
 
     const filteredSubServices = subServices.filter(s =>
-        (s.service_name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (s.subservice_name.toLowerCase().includes(searchTerm.toLowerCase())) &&
         (filterStatus === 'All' || s.status.toLowerCase() === filterStatus.toLowerCase())
     );
 
     const handleOpenAdd = () => {
-        setEditingService(null);
+        setEditingSubService(null);
         setIsModalOpen(true);
     };
 
     const handleOpenEdit = (subService: any) => {
-        setEditingService(subService);
+        setEditingSubService(subService);
         setIsModalOpen(true);
     };
 
-    const handleSave = async (savedService: any) => {
+    const handleSave = async (savedSubService: any) => {
         try {
             const token = localStorage.getItem('token');
-            const config = {
-                headers: { Authorization: `Bearer ${token}` }
-            };
+            const config = { headers: { Authorization: `Bearer ${token}` } };
 
-            if (editingService) {
-                await axios.put(`${API_URL}/services/${editingService._id}`, savedService, config);
+            if (editingSubService) {
+                await axios.put(`${API_URL}/sub-services/${editingSubService._id}`, savedSubService, config);
             } else {
-                await axios.post(`${API_URL}/services`, savedService, config);
+                await axios.post(`${API_URL}/sub-services`, savedSubService, config);
             }
             fetchSubServices();
             setIsModalOpen(false);
         } catch (error) {
             console.error('Error saving sub-service:', error);
-            alert('Failed to save offering.');
+            alert('Failed to save sub-service.');
         }
     };
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
-            {/* Header Evolution */}
+            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-
-                        <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-                        {selectedCategory ? (
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+                        {selectedService ? (
+                            <span className="flex items-center gap-2 flex-wrap">
+                                Sub-Services<span className="text-blue-600">.</span>
+                                <span className="text-gray-300 text-xl font-light">/</span>
+                                <span className="text-gray-400 text-lg">{selectedCategory.category_name.toLowerCase()}</span>
+                                <span className="text-gray-300 text-xl font-light">/</span>
+                                <span className="text-blue-600">{selectedService.service_name.toLowerCase()}</span>
+                            </span>
+                        ) : selectedCategory ? (
                             <span className="flex items-center gap-2">
-                                Catalog<span className="text-blue-600">.</span>
+                                Select<span className="text-blue-600"> Service</span>
                                 <span className="text-gray-300 text-2xl font-light">/</span>
                                 <span className="text-blue-600">{selectedCategory.category_name.toLowerCase()}</span>
                             </span>
                         ) : (
-                            <>Sub-services<span className="text-blue-600">.</span></>
+                            <>Sub-Services<span className="text-blue-600">.</span></>
                         )}
                     </h1>
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1 italic">
-                        {selectedCategory?.category_name}
+                        {selectedService ? `Manage specific offerings in ${selectedService.service_name}` : 
+                         selectedCategory ? 'Choose a service to manage its sub-offerings' : 
+                         'Select a category to begin'}
                     </p>
                 </div>
 
-                {selectedCategory && (
-                    <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
+                    {selectedService ? (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            icon={ArrowLeft}
+                            onClick={() => setSelectedService(null)}
+                            className="text-[10px] bg-white border-gray-100 uppercase tracking-widest shadow-sm px-4 rounded-xl"
+                        >
+                            Back to Services
+                        </Button>
+                    ) : selectedCategory ? (
                         <Button
                             variant="outline"
                             size="sm"
@@ -192,8 +209,11 @@ const SubServiceTable: React.FC = () => {
                             onClick={() => setSelectedCategory(null)}
                             className="text-[10px] bg-white border-gray-100 uppercase tracking-widest shadow-sm px-4 rounded-xl"
                         >
-                            Domains
+                            Back to Categories
                         </Button>
+                    ) : null}
+
+                    {selectedService && (
                         <Button 
                             variant="primary" 
                             size="sm" 
@@ -201,10 +221,10 @@ const SubServiceTable: React.FC = () => {
                             onClick={handleOpenAdd}
                             className="shadow-lg bg-blue-600 text-[11px] py-3 rounded-2xl px-5"
                         >
-                            Add Option
+                            Add Sub-Service
                         </Button>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             <AnimatePresence mode="wait">
@@ -214,15 +234,81 @@ const SubServiceTable: React.FC = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
                     >
+
+
                         {categories.map((cat) => (
-                            <CategoryCard 
+                            <CategorySelectCard 
                                 key={cat._id} 
                                 category={cat} 
                                 onClick={() => setSelectedCategory(cat)}
                             />
                         ))}
+
+                    </motion.div>
+                ) : !selectedService ? (
+                    <motion.div
+                        key="service-grid"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+                    >
+
+                        {services.map((svc) => (
+                            <motion.div
+                                key={svc._id}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                whileHover={{ 
+                                    y: -8, 
+                                    scale: 1.02,
+                                    boxShadow: "0 20px 25px -5px rgba(59, 130, 246, 0.1), 0 10px 10px -5px rgba(59, 130, 246, 0.04)"
+                                }}
+                                whileTap={{ scale: 0.98 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                                onClick={() => setSelectedService(svc)}
+                                className="bg-white rounded-[2rem] overflow-hidden shadow-sm hover:border-blue-200 transition-colors duration-300 flex flex-col cursor-pointer group border border-gray-50 scale-[0.98] min-h-[280px]"
+                            >
+                                {/* Top Image Section */}
+                                <div className="h-32 w-full bg-gray-50 overflow-hidden relative border-b border-gray-50">
+                                    {svc.image && svc.image.startsWith('http') ? (
+                                        <img 
+                                            src={svc.image} 
+                                            alt={svc.service_name} 
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-200">
+                                            <Layers size={40} strokeWidth={1} />
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                </div>
+
+                                {/* Content Section */}
+                                <div className="p-5 flex flex-col items-center text-center flex-1 justify-center">
+                                    <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.15em] leading-tight transition-colors group-hover:text-blue-600 mb-2">
+                                        {svc.service_name}
+                                    </h3>
+                                    <p className="text-[8px] text-gray-400 font-bold leading-relaxed line-clamp-2 uppercase tracking-wider opacity-80">
+                                        {svc.description || 'Professional service offering with expert care'}
+                                    </p>
+                                    
+                                    <div className="mt-4 w-6 h-0.5 bg-blue-600 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                                </div>
+                            </motion.div>
+
+
+                        ))}
+
+                        {services.length === 0 && (
+                            <div className="col-span-full py-20 flex flex-col items-center justify-center text-gray-400 gap-3">
+                                <Layers size={40} strokeWidth={1} className="opacity-20" />
+                                <p className="text-[10px] font-black uppercase tracking-widest">No services found in this category</p>
+                            </div>
+                        )}
                     </motion.div>
                 ) : (
                     <motion.div
@@ -238,7 +324,7 @@ const SubServiceTable: React.FC = () => {
                                 <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                                 <input
                                     type="text"
-                                    placeholder={`Search in ${selectedCategory}...`}
+                                    placeholder={`Search in ${selectedService.service_name}...`}
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-100 focus:border-blue-200 focus:bg-white focus:ring-4 focus:ring-blue-100/50 rounded-xl text-[11px] font-bold text-gray-800 transition-all duration-300 shadow-sm"
@@ -254,126 +340,77 @@ const SubServiceTable: React.FC = () => {
                                 >
                                     {filterStatus !== 'All' ? filterStatus : 'Filters'}
                                 </Button>
-                                
-                                <AnimatePresence>
-                                    {isFilterDropdownOpen && (
-                                        <motion.div 
-                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            className="absolute top-full right-8 mt-2 w-40 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden"
-                                        >
-                                            {['All', 'Active', 'Inactive'].map(status => (
-                                                <button
-                                                    key={status}
-                                                    onClick={() => { setFilterStatus(status); setIsFilterDropdownOpen(false); }}
-                                                    className={`w-full px-4 py-2.5 text-left text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 transition-colors ${filterStatus === status ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
-                                                >
-                                                    {status === 'All' ? 'Show All' : status}
-                                                </button>
-                                            ))}
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-
                                 <button
                                     onClick={() => { setSearchTerm(''); setFilterStatus('All'); }}
                                     className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100"
-                                    title="Reset view"
                                 >
                                     <RefreshCw size={16} />
                                 </button>
                             </div>
                         </div>
 
-                        <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden group min-h-[460px] flex flex-col">
-                            <div className="flex-1">
-                                <Table
-                                    headers={['Service Name', 'Description', 'Base Price', 'Duration', 'Image', 'Status', 'Actions']}
-                                    className="relative z-10"
-                                >
-                                    <AnimatePresence mode="popLayout" initial={false}>
-                                        {filteredSubServices.map((s) => (
-                                            <motion.tr
-                                                layout
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                key={s._id}
-                                                className="hover:bg-blue-50/20 transition-all group/row border-b border-gray-50 last:border-0 text-[11px]"
-                                            >
-                                                <td className="px-6 py-4">
-                                                    <span className="font-black text-gray-900 tracking-tight uppercase tracking-widest text-[10px]">{s.service_name}</span>
-                                                </td>
-                                                <td className="px-6 py-4 max-w-[200px]">
-                                                    <span className="text-[10px] text-gray-500 font-medium line-clamp-2 leading-relaxed">{s.description}</span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-baseline gap-1">
-                                                        <span className="text-[8px] font-bold text-gray-400">INR</span>
-                                                        <span className="font-black text-gray-900 tracking-tighter text-[13px]">{s.base_price}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="text-[10px] text-blue-600 font-black uppercase tracking-widest">{s.duration} Mins</span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 shadow-sm transition-transform group-hover/row:scale-110 overflow-hidden">
-                                                        {s.image && s.image.startsWith('http') ? (
-                                                            <img src={s.image} alt={s.service_name} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <BarChart3 size={16} />
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center">
-                                                        <button
-                                                            onClick={() => setSubServiceChangingStatus(s)}
-                                                            className={`relative w-12 h-6 flex items-center p-0.5 rounded-full transition-all duration-300 shadow-inner group/toggle ${s.status === 'active' ? 'bg-green-600' : 'bg-red-600'}`}
-                                                            title={s.status === 'active' ? 'Offering Live' : 'Offering Offline'}
-                                                        >
-                                                            {/* Sliding Indicator */}
-                                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 z-10 ${s.status === 'active' ? 'translate-x-6' : 'translate-x-0'}`} />
+                        <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden min-h-[400px]">
+                            <Table
+                                headers={['Sub-Service Name', 'Base Price', 'Duration', 'Variants', 'Status', 'Actions']}
+                            >
 
-                                                            {/* ON/OFF Labels */}
-                                                            <div className="absolute inset-0 flex items-center justify-between px-1.5 text-[7px] font-black uppercase tracking-tighter text-white pointer-events-none">
-                                                                <span className={`transition-opacity duration-300 ${s.status === 'active' ? 'opacity-100' : 'opacity-0'}`}>ON</span>
-                                                                <span className={`transition-opacity duration-300 ${s.status === 'active' ? 'opacity-0' : 'opacity-100'}`}>OFF</span>
-                                                            </div>
-                                                        </button>
+                                <AnimatePresence mode="popLayout" initial={false}>
+                                    {filteredSubServices.map((s) => (
+                                        <motion.tr
+                                            layout
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            key={s._id}
+                                            className="hover:bg-blue-50/20 transition-all border-b border-gray-50 last:border-0 text-[11px]"
+                                        >
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-50">
+                                                        {s.image ? <img src={s.image} alt={s.subservice_name} className="w-full h-full object-cover" /> : <BarChart3 size={16} />}
                                                     </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex justify-end gap-1.5 transition-opacity">
-                                                        <button 
-                                                            onClick={() => handleOpenEdit(s)}
-                                                            className="p-1 px-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100 active:scale-95" 
-                                                            title="Edit Catalog"
-                                                        >
-                                                            <Pencil size={12} />
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => setSubServiceToDelete(s)}
-                                                            className="p-1 px-3 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95" 
-                                                            title="Remove Entry"
-                                                        >
-                                                            <Trash2 size={12} />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </motion.tr>
-                                        ))}
-                                    </AnimatePresence>
-                                </Table>
+                                                    <span className="font-black text-gray-900 tracking-tight uppercase text-[10px]">{s.subservice_name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-[8px] font-bold text-gray-400">INR</span>
+                                                    <span className="font-black text-gray-900 tracking-tighter text-[13px]">{s.base_price}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="text-[10px] text-blue-600 font-black uppercase tracking-widest">{s.duration} Mins</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-[8px] font-black tracking-widest border border-blue-100 uppercase">
+                                                    {(s.variants || []).length} Packages
+                                                </span>
+                                            </td>
 
-                                {filteredSubServices.length === 0 && (
-                                    <div className="py-20 flex flex-col items-center justify-center text-gray-400 gap-3">
-                                        <Layers size={40} strokeWidth={1} className="opacity-20" />
-                                        <p className="text-[10px] font-black uppercase tracking-widest">No options cataloged for this vertical</p>
-                                    </div>
-                                )}
-                            </div>
+                                            <td className="px-6 py-4">
+                                                <button
+                                                    onClick={() => setSubServiceChangingStatus(s)}
+                                                    className={`relative w-12 h-6 flex items-center p-0.5 rounded-full transition-all duration-300 ${s.status === 'active' ? 'bg-green-600' : 'bg-red-600'}`}
+                                                >
+                                                    <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${s.status === 'active' ? 'translate-x-6' : 'translate-x-0'}`} />
+                                                </button>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex justify-end gap-1.5">
+                                                    <button onClick={() => handleOpenEdit(s)} className="p-1 px-3 text-blue-600 hover:bg-blue-50 rounded-lg"><Pencil size={12} /></button>
+                                                    <button onClick={() => setSubServiceToDelete(s)} className="p-1 px-3 text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={12} /></button>
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                    ))}
+                                </AnimatePresence>
+                            </Table>
+                            {filteredSubServices.length === 0 && (
+                                <div className="py-20 flex flex-col items-center justify-center text-gray-400 gap-3">
+                                    <Layers size={40} strokeWidth={1} className="opacity-20" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest">No sub-services found</p>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 )}
@@ -382,8 +419,8 @@ const SubServiceTable: React.FC = () => {
             <SubServiceModal 
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                subService={editingService}
-                category={selectedCategory || ''}
+                subService={editingSubService}
+                service={selectedService || ''}
                 onSave={handleSave}
             />
 
@@ -391,20 +428,18 @@ const SubServiceTable: React.FC = () => {
                 isOpen={!!subServiceToDelete}
                 onClose={() => setSubServiceToDelete(null)}
                 onConfirm={handleDelete}
-                title="Offering Removal"
-                message={`Are you sure you want to permanently delete "${subServiceToDelete?.service_name}"? Action cannot be reversed.`}
-                confirmLabel="Confirm Delete"
-                cancelLabel="Keep Offering"
+                title="Sub-Service Removal"
+                message={`Are you sure you want to permanently delete "${subServiceToDelete?.subservice_name}"?`}
+                confirmLabel="Delete"
                 variant="danger"
             />
             <ConfirmationModal
                 isOpen={!!subServiceChangingStatus}
                 onClose={() => setSubServiceChangingStatus(null)}
                 onConfirm={handleStatusToggle}
-                title="Status Transition"
-                message={`Are you sure you want to change the status of "${subServiceChangingStatus?.service_name}" from ${subServiceChangingStatus?.status} to ${subServiceChangingStatus?.status === 'active' ? 'inactive' : 'active'}?`}
-                confirmLabel="Update Status"
-                cancelLabel="Maintain State"
+                title="Status Change"
+                message={`Change status for "${subServiceChangingStatus?.subservice_name}"?`}
+                confirmLabel="Update"
                 variant="info"
             />
         </div>

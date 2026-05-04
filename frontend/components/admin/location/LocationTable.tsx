@@ -10,31 +10,49 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, Filter, RefreshCw } from 'lucide-react';
 import ConfirmationModal from '../common/ConfirmationModal';
 
-const CITIES_INIT = [
-  { city: 'Mumbai', active: true, stateRegion: 'MH, IN' },
-  { city: 'Delhi', active: true, stateRegion: 'DL, IN' },
-  { city: 'Bangalore', active: true, stateRegion: 'KA, IN' },
-  { city: 'Chennai', active: false, stateRegion: 'TN, IN' },
-  { city: 'Hyderabad', active: true, stateRegion: 'TG, IN' },
-  { city: 'Pune', active: false, stateRegion: 'MH, IN' },
-  { city: 'Kolkata', active: true, stateRegion: 'WB, IN' },
-  { city: 'Ahmedabad', active: false, stateRegion: 'GJ, IN' },
-  { city: 'Chandigarh', active: true, stateRegion: 'CH, IN' },
-  { city: 'Jaipur', active: true, stateRegion: 'RJ, IN' },
-];
+import axios from 'axios';
+import { API_URL } from '@/config/api';
+import { ILocation } from '../types';
+
 
 const LocationTable: React.FC = () => {
-  const [cities, setCities] = useState(CITIES_INIT);
+  const [locations, setLocations] = useState<ILocation[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingLocation, setEditingLocation] = useState<any>(null);
-  const [locationToDelete, setLocationToDelete] = useState<any>(null);
+  const [editingLocation, setEditingLocation] = useState<ILocation | null>(null);
+  const [locationToDelete, setLocationToDelete] = useState<ILocation | null>(null);
 
-  const handleDelete = () => {
+  React.useEffect(() => {
+    fetchLocations();
+  }, []);
+
+  const fetchLocations = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/locations`);
+      setLocations(response.data);
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
     if (!locationToDelete) return;
-    setCities(cities.filter(c => c.city !== locationToDelete.city));
-    setLocationToDelete(null);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_URL}/locations/${locationToDelete._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchLocations();
+    } catch (error) {
+      console.error('Error deleting location:', error);
+    } finally {
+      setLocationToDelete(null);
+    }
   };
 
   // Filter State
@@ -45,9 +63,20 @@ const LocationTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 6;
 
-  const handleToggle = (cityName: string, value: boolean) => {
-    setCities(prev => prev.map(c => c.city === cityName ? { ...c, active: value } : c));
+  const handleToggle = async (location: ILocation, value: boolean) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API_URL}/locations/${location._id}`, {
+        status: value ? 'active' : 'inactive'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchLocations();
+    } catch (error) {
+      console.error('Error toggling status:', error);
+    }
   };
+
 
   const handleOpenAdd = () => {
     setEditingLocation(null);
@@ -59,27 +88,38 @@ const LocationTable: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSave = (locationData: any) => {
-    if (editingLocation) {
-        setCities(cities.map(c => c.city === editingLocation.city ? locationData : c));
-    } else {
-        setCities([locationData, ...cities]);
+  const handleSave = async (locationData: any) => {
+    try {
+        const token = localStorage.getItem('token');
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        if (editingLocation) {
+            await axios.put(`${API_URL}/locations/${editingLocation._id}`, locationData, config);
+        } else {
+            await axios.post(`${API_URL}/locations`, locationData, config);
+        }
+        fetchLocations();
+        setIsModalOpen(false);
+    } catch (error) {
+        console.error('Error saving location:', error);
+        alert('Failed to save location.');
     }
   };
 
   // Derived filtered data
-  const filteredCities = cities.filter(c => {
+  const filteredLocations = locations.filter(l => {
       if (filterStatus === 'All') return true;
-      if (filterStatus === 'Active') return c.active;
-      if (filterStatus === 'Halted') return !c.active;
+      if (filterStatus === 'Active') return l.status === 'active';
+      if (filterStatus === 'Halted') return l.status === 'inactive';
       return true;
   });
 
+
   // Calculate slices
-  const totalPages = Math.ceil(filteredCities.length / rowsPerPage);
+  const totalPages = Math.ceil(filteredLocations.length / rowsPerPage);
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-  const currentCities = filteredCities.slice(indexOfFirstRow, indexOfLastRow);
+  const currentLocations = filteredLocations.slice(indexOfFirstRow, indexOfLastRow);
+
 
   const handlePrev = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
@@ -113,17 +153,19 @@ const LocationTable: React.FC = () => {
       <div className="space-y-3">
         <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Quick Status Rail</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-          {cities.map(({ city, active }) => (
-            <CityToggle key={city} city={city} isActive={active} onChange={handleToggle} />
+          {locations.slice(0, 8).map((loc) => (
+            <CityToggle key={loc._id} city={loc.name} isActive={loc.status === 'active'} onChange={(_, val) => handleToggle(loc, val)} />
           ))}
         </div>
+
       </div>
 
       {/* Filter and Table Control Rail */}
       <div className="bg-white/40 backdrop-blur-xl p-3 px-5 rounded-2xl border border-white/60 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4 relative z-20">
           <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-              Total Result: {filteredCities.length} Hubs
+              Total Result: {filteredLocations.length} Hubs
           </div>
+
           
           <div className="flex items-center gap-2 relative">
               <Button 
@@ -171,30 +213,37 @@ const LocationTable: React.FC = () => {
       <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden group min-h-[380px] flex flex-col relative z-10">
         <div className="flex-1">
           <Table
-            headers={['Hub City', 'State', 'Operational', 'Agents', 'Volume', 'Manage']}
+            headers={['Hub Identity', 'State/Region', 'Pincode', 'Operational', 'Volume', 'Manage']}
           >
-            {currentCities.map((c) => (
-              <tr key={c.city} className="hover:bg-blue-50/20 transition-all text-[11px] group text-gray-700 border-b border-gray-50 last:border-0">
-                <td className="px-6 py-3 font-black text-gray-900 group-hover:text-blue-600 uppercase tracking-tight">{c.city}</td>
-                <td className="px-6 py-3 text-gray-500 font-bold uppercase text-[9px] tracking-widest leading-none">{c.stateRegion || 'MH, IN'}</td>
+
+            {currentLocations.map((l) => (
+              <tr key={l._id} className="hover:bg-blue-50/20 transition-all text-[11px] group text-gray-700 border-b border-gray-50 last:border-0">
+                <td className="px-6 py-3 font-black text-gray-900 group-hover:text-blue-600 uppercase tracking-tight">
+                    <div className="flex flex-col">
+                        <span>{l.name}</span>
+                        <span className="text-[8px] text-gray-400 font-bold lowercase tracking-tight opacity-60">ID: {l._id.slice(-6)}</span>
+                    </div>
+                </td>
+                <td className="px-6 py-3 text-gray-500 font-bold uppercase text-[9px] tracking-widest leading-none">{l.state || '-'}, {l.country || 'IN'}</td>
+                <td className="px-6 py-3 text-gray-900 font-black">{l.pincode || '-'}</td>
                 <td className="px-6 py-3">
                   <div className="scale-75 origin-left">
-                    <Badge variant={c.active ? 'success' : 'neutral'}>{c.active ? 'Active' : 'Halted'}</Badge>
+                    <Badge variant={l.status === 'active' ? 'success' : 'neutral'}>{l.status === 'active' ? 'Active' : 'Halted'}</Badge>
                   </div>
                 </td>
-                <td className="px-6 py-3 text-gray-900 font-black">{Math.floor(Math.random() * 50) + 10}</td>
                 <td className="px-6 py-3 text-gray-600 font-bold">{Math.floor(Math.random() * 200) + 30}</td>
                 <td className="px-6 py-3">
                   <div className="flex justify-center gap-1">
                     <button 
-                       onClick={() => handleOpenEdit(c)}
+                       onClick={() => handleOpenEdit(l)}
                        className="p-1 px-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100 active:scale-95"
                     ><Pencil size={12} /></button>
-                    <button onClick={() => setLocationToDelete(c)} className="p-1 px-2 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95"><Trash2 size={12} /></button>
+                    <button onClick={() => setLocationToDelete(l)} className="p-1 px-2 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95"><Trash2 size={12} /></button>
                   </div>
                 </td>
               </tr>
             ))}
+
           </Table>
         </div>
 
@@ -253,7 +302,7 @@ const LocationTable: React.FC = () => {
          onClose={() => setLocationToDelete(null)}
          onConfirm={handleDelete}
          title="Hub Shutdown"
-         message={`Are you sure you want to shut down operations in "${locationToDelete?.city}"? Strategic assets will be moved to standby.`}
+         message={`Are you sure you want to shut down operations in "${locationToDelete?.name}"? Strategic assets will be moved to standby.`}
          confirmLabel="Confirm Shutdown"
          cancelLabel="Maintain Mission"
          variant="danger"

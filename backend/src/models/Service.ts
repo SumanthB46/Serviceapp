@@ -3,12 +3,17 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 export interface IService extends Document {
   category_id: Types.ObjectId;
   service_name: string;
+  slug: string;
   description: string;
   base_price: number;
-  duration: number;       // duration in minutes
-  image: string;
+  duration: number;
+  images: string[];
+  is_featured: boolean;
+  avg_rating: number;
+  total_reviews: number;
   status: 'active' | 'inactive';
   isDeleted: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +30,15 @@ const serviceSchema = new Schema<IService>(
       required: true,
       trim: true,
     },
+    slug: {
+
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+
     description: {
       type: String,
       required: true,
@@ -40,11 +54,29 @@ const serviceSchema = new Schema<IService>(
       required: true,
       min: 1,
     },
-    image: {
-      type: String,
-      required: true,
-      trim: true,
+    images: [
+      {
+        type: String,
+        required: false,
+
+        trim: true,
+      },
+    ],
+    is_featured: {
+      type: Boolean,
+      default: false,
     },
+    avg_rating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    total_reviews: {
+      type: Number,
+      default: 0,
+    },
+
     status: {
       type: String,
       enum: ['active', 'inactive'],

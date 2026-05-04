@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ArchitecturalService - Your trusted partner for home services",
+  title: "FIXVO - Your trusted partner for home services",
   description: "Modern, responsive home service marketplace UI",
 };
 
