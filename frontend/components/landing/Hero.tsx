@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Button, Carousel } from "antd";
 import { Search, Check, MapPin, Navigation } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import Link from "next/link";
 
 const heroImages = [
   "/images/hero/p1.jpeg",
@@ -71,11 +72,48 @@ const Hero = () => {
               </div>
             </div>
 
-            {/* Link to Booking / Services */}
             <div className="mt-10">
-              <button className="bg-[#1D2B83] hover:bg-[#16226b] active:scale-95 text-white text-[12px] font-bold uppercase tracking-[0.2em] px-12 py-4 rounded-2xl shadow-xl shadow-blue-100 transition-all duration-300">
-                Book Now
-              </button>
+              <motion.div
+                whileHover="hover"
+                whileTap={{ scale: 0.95 }}
+                initial="initial"
+                variants={{
+                  initial: { scale: 1 },
+                  hover: { scale: 1.05 }
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                className="w-fit"
+              >
+                <Link
+                  href="/services"
+                  className="relative overflow-hidden bg-[#1D2B83] text-white text-[12px] font-bold uppercase tracking-[0.2em] px-12 py-5 rounded-[40px] shadow-2xl flex items-center gap-3 isolate w-fit border-2 border-[#1D2B83] transition-all duration-400 hover:border-[#1D2B83] hover:bg-[#1D2B83]"
+                >
+                  {/* Radial Highlight Effect from Boton Elegante */}
+                  <motion.div
+                    variants={{
+                      initial: { scale: 0 },
+                      hover: { scale: 4 }
+                    }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="absolute inset-0 pointer-events-none -z-10"
+                    style={{
+                      background: "radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 70%)",
+                    }}
+                  />
+
+                  <span className="relative z-10">Book Now</span>
+
+                  <motion.div
+                    variants={{
+                      initial: { x: 0 },
+                      hover: { x: 6 }
+                    }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                    className="relative z-10"
+                  >
+                  </motion.div>
+                </Link>
+              </motion.div>
             </div>
           </motion.div>
 

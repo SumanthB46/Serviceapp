@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { DollarSign, Bookings, Users, Star, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { DollarSign, Users, Star, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface KPICardProps {
