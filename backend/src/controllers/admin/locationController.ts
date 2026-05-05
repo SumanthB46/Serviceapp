@@ -37,7 +37,8 @@ export const getLocationById = async (req: Request, res: Response): Promise<void
 // @access  Private/Admin
 export const createLocation = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, type, parent_id, state, country, status, latitude, longitude } = req.body;
+    const { name, type, parent_id, state, country, pincode, status, latitude, longitude } = req.body;
+
 
     // Validate type
     if (!['city', 'area'].includes(type)) {
@@ -51,10 +52,14 @@ export const createLocation = async (req: Request, res: Response): Promise<void>
       parent_id: parent_id || null, // For cities, this will be null
       state,
       country,
+      pincode,
       status: status || 'active',
-      latitude: latitude || 0,
-      longitude: longitude || 0,
+      coordinates: {
+        type: 'Point',
+        coordinates: [longitude || 0, latitude || 0] // GeoJSON is [lng, lat]
+      }
     });
+
 
     res.status(201).json(location);
   } catch (error: any) {
@@ -74,16 +79,26 @@ export const updateLocation = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const { name, type, parent_id, state, country, status, latitude, longitude } = req.body;
+    const { name, type, parent_id, state, country, pincode, status, latitude, longitude } = req.body;
+
 
     location.name = name ?? location.name;
     location.type = type ?? location.type;
     location.parent_id = parent_id !== undefined ? parent_id : location.parent_id;
     location.state = state ?? location.state;
     location.country = country ?? location.country;
+    location.pincode = pincode ?? location.pincode;
     location.status = status ?? location.status;
-    location.latitude = latitude ?? location.latitude;
-    location.longitude = longitude ?? location.longitude;
+    
+    if (latitude !== undefined || longitude !== undefined) {
+      const lng = longitude ?? (location.coordinates?.coordinates[0] || 0);
+      const lat = latitude  ?? (location.coordinates?.coordinates[1] || 0);
+      location.coordinates = {
+        type: 'Point',
+        coordinates: [lng, lat]
+      };
+    }
+
 
     const updatedLocation = await location.save();
     res.json(updatedLocation);

@@ -95,8 +95,8 @@ export default function ProviderProfileForm() {
         profile_image: data.profile_image,
       }));
       
-      // Redirect Provider to their specific dashboard or root
-      router.push("/");
+      // Redirect Provider to their specific service selection page
+      router.push("/provider_register/services");
     } catch (err: any) {
       setError(err.message);
     } finally {

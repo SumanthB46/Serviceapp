@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import twilio from 'twilio';
 import { AuthRequest } from '../../middleware/authMiddleware';
+import { Provider } from '../../models/Provider';
 
 // @desc    Register a new user
 // @route   POST /api/users/register
@@ -48,6 +49,18 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     });
 
     if (user) {
+      // If the registered user is a provider, create an entry in the Provider table
+      if (user.role === 'provider') {
+        await Provider.create({
+          user_id: user._id,
+          availability_status: 'offline',
+          kyc_status: 'pending',
+          overall_rating: 0,
+          is_verified: false,
+        });
+
+      }
+
       res.status(201).json({
         _id: user._id,
         name: user.name,
@@ -347,4 +360,3 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ message: error.message });
   }
 };
-

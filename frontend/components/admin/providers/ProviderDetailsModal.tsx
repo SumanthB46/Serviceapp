@@ -19,6 +19,7 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
    const [loading, setLoading] = useState(false);
    const [errors, setErrors] = useState<Record<string, string>>({});
    const [mounted, setMounted] = useState(false);
+   const [locations, setLocations] = useState<any[]>([]);
 
    // User Fields
    const [userForm, setUserForm] = useState({
@@ -31,13 +32,35 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
 
    // Provider Fields
    const [providerForm, setProviderForm] = useState({
-      location: '',
+      location_id: '',
       availability_status: 'offline',
+      kyc_status: 'pending',
+      total_jobs: 0,
+      completed_jobs: 0,
+      cancelled_jobs: 0,
+      acceptance_rate: 0,
+      completion_rate: 0,
+      years_of_experience: 0,
+      bio: '',
+      languages: [] as string[],
+      rejection_reason: '',
+      penalty_amount: 0
    });
+
 
    useEffect(() => {
       setMounted(true);
+      fetchLocations();
    }, []);
+
+   const fetchLocations = async () => {
+      try {
+         const response = await axios.get(`${API_URL}/locations`);
+         setLocations(response.data);
+      } catch (error) {
+         console.error('Error fetching locations:', error);
+      }
+   };
 
    useEffect(() => {
       if (isOpen && provider) {
@@ -53,9 +76,22 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
 
          // Populate Provider
          setProviderForm({
-            location: provider.location || 'Unassigned',
+            location_id: provider.location_id?._id || '',
             availability_status: provider.availability_status || 'offline',
+            kyc_status: provider.kyc_status || 'pending',
+            total_jobs: provider.total_jobs || 0,
+            completed_jobs: provider.completed_jobs || 0,
+            cancelled_jobs: provider.cancelled_jobs || 0,
+            acceptance_rate: provider.acceptance_rate || 0,
+            completion_rate: provider.completion_rate || 0,
+            years_of_experience: provider.years_of_experience || 0,
+            bio: provider.bio || '',
+            languages: provider.languages || [],
+            rejection_reason: provider.rejection_reason || '',
+            penalty_amount: provider.penalty_amount || 0
          });
+
+
 
          setErrors({});
          setActiveTab('user');
@@ -87,7 +123,7 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
       if (!userForm.email.trim()) newErrors.email = "Email is required";
       if (!userForm.phone.trim()) newErrors.phone = "Phone is required";
 
-      if (!providerForm.location.trim()) newErrors.location = "Location is required";
+      if (!providerForm.location_id) newErrors.location_id = "Location is required";
 
       setErrors(newErrors);
       if (Object.keys(newErrors).length > 0 && (newErrors.name || newErrors.email || newErrors.phone)) {
@@ -168,7 +204,7 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
                         onClick={() => setActiveTab('provider')}
                         className={`pb-4 px-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'provider' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
                      >
-                        Provider Specs
+                        Professional Specs
                         {activeTab === 'provider' && <motion.div layoutId="tabMarker" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />}
                      </button>
                   </div>
@@ -243,34 +279,105 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
                      {/* Provider Specs Tab */}
                      {activeTab === 'provider' && (
                         <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                           <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
-                                 <MapPin size={12} className="text-blue-500" /> Operating Location
-                              </label>
-                              <input
-                                 type="text"
-                                 value={providerForm.location}
-                                 onChange={(e) => setProviderForm({ ...providerForm, location: e.target.value })}
-                                 className={`w-full px-4 py-3 bg-white border ${errors.location ? 'border-red-500 ring-4 ring-red-500/10' : 'border-gray-100'} rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all`}
-                                 placeholder="e.g. Mumbai, Unassigned"
-                              />
-                              {errors.location && <p className="text-[9px] font-bold text-red-500 ml-2 mt-1 uppercase tracking-widest">{errors.location}</p>}
+                           <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                 <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                                    <MapPin size={12} className="text-blue-500" /> Location
+                                 </label>
+                                 <select
+                                    value={providerForm.location_id}
+                                    onChange={(e) => setProviderForm({ ...providerForm, location_id: e.target.value })}
+                                    className={`w-full px-4 py-3 bg-white border ${errors.location_id ? 'border-red-500 ring-4 ring-red-500/10' : 'border-gray-100'} rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all`}
+                                 >
+                                    <option value="">Select Location</option>
+                                    {locations.map(loc => (
+                                       <option key={loc._id} value={loc._id}>{loc.name} ({loc.type})</option>
+                                    ))}
+                                 </select>
+                              </div>
+                              <div className="space-y-1">
+                                 <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                                    <Activity size={12} className="text-blue-500" /> Availability
+                                 </label>
+                                 <select
+                                    value={providerForm.availability_status}
+                                    onChange={(e) => setProviderForm({ ...providerForm, availability_status: e.target.value })}
+                                    className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                                 >
+                                    <option value="available">Available</option>
+                                    <option value="busy">Busy</option>
+                                    <option value="offline">Offline</option>
+                                 </select>
+                              </div>
+                           </div>
+
+                           <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                 <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                                    <Activity size={12} className="text-blue-500" /> Completed Jobs
+                                 </label>
+                                 <input
+                                    type="number"
+                                    value={providerForm.completed_jobs}
+                                    onChange={(e) => setProviderForm({ ...providerForm, completed_jobs: Number(e.target.value) })}
+                                    className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                                 />
+                              </div>
+                              <div className="space-y-1">
+                                 <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                                    <Activity size={12} className="text-blue-500" /> Success Rate (%)
+                                 </label>
+                                 <input
+                                    type="number"
+                                    value={providerForm.completion_rate}
+                                    onChange={(e) => setProviderForm({ ...providerForm, completion_rate: Number(e.target.value) })}
+                                    className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                                 />
+                              </div>
                            </div>
 
                            <div className="space-y-1">
                               <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
-                                 <Activity size={12} className="text-blue-500" /> Current Availability
+                                 <Activity size={12} className="text-blue-500" /> Professional Bio
+                              </label>
+                              <textarea
+                                 value={providerForm.bio}
+                                 onChange={(e) => setProviderForm({ ...providerForm, bio: e.target.value })}
+                                 rows={3}
+                                 className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all resize-none"
+                                 placeholder="Brief overview of the expert's professional background..."
+                              />
+                           </div>
+
+                           <div className="space-y-1">
+                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                                 <UserCheck size={12} className="text-blue-500" /> KYC Status
                               </label>
                               <select
-                                 value={providerForm.availability_status}
-                                 onChange={(e) => setProviderForm({ ...providerForm, availability_status: e.target.value })}
-                                 className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all appearance-none"
+                                 value={providerForm.kyc_status}
+                                 onChange={(e) => setProviderForm({ ...providerForm, kyc_status: e.target.value })}
+                                 className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
                               >
-                                 <option value="available">Available</option>
-                                 <option value="busy">Busy</option>
-                                 <option value="offline">Offline</option>
+                                 <option value="pending">Pending</option>
+                                 <option value="verified">Verified</option>
+                                 <option value="rejected">Rejected</option>
                               </select>
                            </div>
+
+                           {providerForm.kyc_status === 'rejected' && (
+                              <div className="space-y-1">
+                                 <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                                    <Activity size={12} className="text-red-500" /> Rejection Reason
+                                 </label>
+                                 <textarea
+                                    value={providerForm.rejection_reason}
+                                    onChange={(e) => setProviderForm({ ...providerForm, rejection_reason: e.target.value })}
+                                    rows={3}
+                                    className="w-full px-4 py-3 bg-white border border-red-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-200 transition-all resize-none"
+                                    placeholder="Specify why the application was rejected..."
+                                 />
+                              </div>
+                           )}
                         </motion.div>
                      )}
                   </form>

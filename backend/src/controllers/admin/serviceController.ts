@@ -41,7 +41,17 @@ export const getServiceById = async (req: Request, res: Response): Promise<void>
 // @access  Private/Admin
 export const createService = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { category_id, service_name, description, base_price, duration, image, status } = req.body;
+    const { 
+      category_id, 
+      service_name, 
+      slug,
+      description, 
+      base_price, 
+      duration, 
+      images, 
+      is_featured,
+      status 
+    } = req.body;
 
     // Verify category exists
     const categoryExists = await Category.findById(category_id);
@@ -53,12 +63,15 @@ export const createService = async (req: Request, res: Response): Promise<void> 
     const service = await Service.create({
       category_id,
       service_name,
+      slug: slug || service_name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
       description,
       base_price,
       duration,
-      image,
+      images: Array.isArray(images) ? images : [images],
+      is_featured,
       status,
     });
+
 
     const populated = await service.populate('category_id', 'category_name icon');
     res.status(201).json(populated);
@@ -78,7 +91,17 @@ export const updateService = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const { category_id, service_name, description, base_price, duration, image, status } = req.body;
+    const { 
+      category_id, 
+      service_name, 
+      slug,
+      description, 
+      base_price, 
+      duration, 
+      images, 
+      is_featured,
+      status 
+    } = req.body;
 
     // Verify new category exists if being changed
     if (category_id) {
@@ -91,11 +114,14 @@ export const updateService = async (req: Request, res: Response): Promise<void> 
     }
 
     service.service_name = service_name ?? service.service_name;
+    service.slug         = slug         ?? service.slug;
     service.description  = description  ?? service.description;
     service.base_price   = base_price   ?? service.base_price;
     service.duration     = duration     ?? service.duration;
-    service.image        = image        ?? service.image;
+    if (images) service.images = Array.isArray(images) ? images : [images];
+    service.is_featured  = is_featured  ?? service.is_featured;
     service.status       = status       ?? service.status;
+
 
     const updated = await service.save();
     const populated = await updated.populate('category_id', 'category_name icon');

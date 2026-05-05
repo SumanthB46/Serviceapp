@@ -34,15 +34,22 @@ export const getCategoryById = async (req: Request, res: Response): Promise<void
 // @access  Private/Admin
 export const createCategory = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { category_name, icon, description, status } = req.body;
+    const { category_name, slug, icon, description, status } = req.body;
 
-    const exists = await Category.findOne({ category_name });
+    const exists = await Category.findOne({ $or: [{ category_name }, { slug }] });
     if (exists) {
-      res.status(400).json({ message: 'Category with this name already exists' });
+      res.status(400).json({ message: 'Category with this name or slug already exists' });
       return;
     }
 
-    const category = await Category.create({ category_name, icon, description, status });
+    const category = await Category.create({ 
+      category_name, 
+      slug: slug || category_name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
+      icon, 
+      description, 
+      status 
+    });
+
     res.status(201).json(category);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -60,14 +67,16 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const { category_name, icon, description, status } = req.body;
+    const { category_name, slug, icon, description, status } = req.body;
 
     category.category_name = category_name ?? category.category_name;
+    category.slug          = slug          ?? category.slug;
     category.icon          = icon          ?? category.icon;
     category.description   = description   ?? category.description;
     category.status        = status        ?? category.status;
 
     const updated = await category.save();
+
     res.json(updated);
   } catch (error: any) {
     res.status(500).json({ message: error.message });

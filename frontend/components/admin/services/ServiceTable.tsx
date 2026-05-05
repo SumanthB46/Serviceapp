@@ -2,326 +2,407 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Zap, Droplets, Wind, Hammer, Paintbrush, Scissors, ShieldCheck, Trash2, Plus, Pencil, Power,
-  Layers, LayoutGrid, Search, Filter, RefreshCw, BarChart3, ChevronRight, ChevronLeft, ChevronRight as ChevronRightIcon
+    Zap, Droplets, Wind, Hammer, Paintbrush, Trash2, Plus, Pencil, Power,
+    Search, Filter, RefreshCw, BarChart3, ChevronLeft, LayoutGrid, Layers, ArrowLeft
 } from 'lucide-react';
-import CategoryCard from './CategoryCard';
 import Table from '../common/Table';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
-import CategoryModal from './CategoryModal';
+import ServiceModal from './ServiceModal';
 import { motion, AnimatePresence } from 'framer-motion';
-
-import axios from 'axios';
 import ConfirmationModal from '../common/ConfirmationModal';
+import CategoryCard from './CategoryCard';
+import axios from 'axios';
 import { API_URL } from '@/config/api';
 
 const ServiceTable: React.FC = () => {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<any>(null);
-  const [categoryToDelete, setCategoryToDelete] = useState<any>(null);
-  const [categoryChangingStatus, setCategoryChangingStatus] = useState<any>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 6;
+    const [categories, setCategories] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+    useEffect(() => {
+        fetchCategories();
+    }, []);
 
-  const fetchCategories = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_URL}/categories`);
-      setCategories(response.data);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchCategories = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.get(`${API_URL}/categories`);
+            setCategories(response.data);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // Core data state
+    const [services, setServices] = useState<any[]>([]);
 
-  // Logic for search and pagination
-  const filteredCategories = categories.filter(cat => 
-    cat.category_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (cat.description && cat.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    cat.status.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    useEffect(() => {
+        if (selectedCategory) {
+            fetchServices();
+        }
+    }, [selectedCategory]);
 
-  const totalPages = Math.ceil(filteredCategories.length / rowsPerPage);
-  const indexOfLastRow = currentPage * rowsPerPage;
-  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-  const currentCategories = filteredCategories.slice(indexOfFirstRow, indexOfLastRow);
+    const fetchServices = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${API_URL}/services?category_id=${selectedCategory._id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setServices(response.data);
+        } catch (error) {
+            console.error('Error fetching services:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingService, setEditingService] = useState<any>(null);
+    const [serviceToDelete, setServiceToDelete] = useState<any>(null);
+    const [serviceChangingStatus, setServiceChangingStatus] = useState<any>(null);
+    
+    // Filter dropdown state
+    const [filterStatus, setFilterStatus] = useState('All');
+    const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
 
-  const handlePrev = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
+    const handleStatusToggle = async () => {
+        if (!serviceChangingStatus) return;
+        try {
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: { Authorization: `Bearer ${token}` }
+            };
+            const newStatus = serviceChangingStatus.status === 'active' ? 'inactive' : 'active';
+            await axios.put(`${API_URL}/services/${serviceChangingStatus._id}`, {
+                ...serviceChangingStatus,
+                status: newStatus
+            }, config);
+            fetchServices();
+        } catch (error) {
+            console.error('Error updating status:', error);
+        } finally {
+            setServiceChangingStatus(null);
+        }
+    };
 
-  const handleNext = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
+    const handleDelete = async () => {
+        if (!serviceToDelete) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_URL}/services/${serviceToDelete._id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchServices();
+        } catch (error) {
+            console.error('Error deleting service:', error);
+            alert('Failed to delete service.');
+        } finally {
+            setServiceToDelete(null);
+        }
+    };
 
-  // Reset to page 1 on search
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
+    const filteredServices = services.filter(s =>
+        (s.service_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+         (s.slug && s.slug.toLowerCase().includes(searchTerm.toLowerCase()))) &&
+        (filterStatus === 'All' || s.status.toLowerCase() === filterStatus.toLowerCase())
+    );
 
-  const handleOpenAdd = () => {
-    setSelectedCategory(null);
-    setIsModalOpen(true);
-  };
 
-  const handleOpenEdit = (cat: any) => {
-    setSelectedCategory(cat);
-    setIsModalOpen(true);
-  };
+    const handleOpenAdd = () => {
+        setEditingService(null);
+        setIsModalOpen(true);
+    };
 
-  const handleSave = async (categoryData: any) => {
-    try {
-      if (selectedCategory) {
-        // Update existing category
-        await axios.put(`${API_URL}/categories/${selectedCategory._id}`, categoryData);
-      } else {
-        // Create new category
-        await axios.post(`${API_URL}/categories`, categoryData);
-      }
-      fetchCategories(); // Refresh list
-    } catch (error) {
-      console.error('Error saving category:', error);
-      alert('Failed to save category. Please check your connection or permissions.');
-    }
-  };
+    const handleOpenEdit = (service: any) => {
+        setEditingService(service);
+        setIsModalOpen(true);
+    };
 
-  const handleStatusToggle = async () => {
-    if (!categoryChangingStatus) return;
-    try {
-      const newStatus = categoryChangingStatus.status === 'active' ? 'inactive' : 'active';
-      await axios.put(`${API_URL}/categories/${categoryChangingStatus._id}`, {
-        ...categoryChangingStatus,
-        status: newStatus
-      });
-      fetchCategories();
-    } catch (error) {
-      console.error('Error updating status:', error);
-    } finally {
-      setCategoryChangingStatus(null);
-    }
-  };
+    const handleSave = async (savedService: any) => {
+        try {
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: { Authorization: `Bearer ${token}` }
+            };
 
-  const handleDelete = async () => {
-    if (!categoryToDelete) return;
-    try {
-      await axios.delete(`${API_URL}/categories/${categoryToDelete._id}`);
-      fetchCategories();
-    } catch (error) {
-      console.error('Error deleting category:', error);
-    } finally {
-      setCategoryToDelete(null);
-    }
-  };
+            if (editingService) {
+                await axios.put(`${API_URL}/services/${editingService._id}`, savedService, config);
+            } else {
+                await axios.post(`${API_URL}/services`, savedService, config);
+            }
+            fetchServices();
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error('Error saving service:', error);
+            alert('Failed to save service.');
+        }
+    };
 
-  return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
-      {/* Simplified Modern Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Service <span className="text-blue-600">Categories</span></h1>
-        </div>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full max-w-md group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={18} />
-          <input 
-            type="text"
-            placeholder="Search categories..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-white/50 border border-gray-100 rounded-2xl text-[11px] font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all shadow-sm"
-          />
-        </div>
-
-        <Button 
-          variant="primary" 
-          size="sm" 
-          icon={Plus} 
-          onClick={handleOpenAdd}
-          className="shadow-lg bg-blue-600 text-[11px] py-3.5 rounded-2xl px-6 whitespace-nowrap"
-        >
-          Add Category
-        </Button>
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key="categories"
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 10 }}
-          className="space-y-6"
-        >
-          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden group min-h-[460px] flex flex-col">
-            <div className="flex-1">
-              <Table
-                headers={['Category Identity', 'Visual Icon', 'Description', 'Status', 'Actions']}
-                className="relative z-10"
-              >
-                <AnimatePresence mode="popLayout" initial={false}>
-                  {loading ? (
-                    <tr key="loading">
-                      <td colSpan={5} className="px-6 py-24 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <RefreshCw size={24} className="text-blue-600 animate-spin" />
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fetching Categories...</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : currentCategories.length > 0 ? (
-                    currentCategories.map((cat, i) => (
-                      <motion.tr
-                        layout
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        key={cat._id || `cat-${i}`}
-                        className="hover:bg-blue-50/20 transition-all group/row border-b border-gray-50 last:border-0 text-[11px]"
-                      >
-                        <td className="px-6 py-4">
-                          <span className="font-black text-gray-900 uppercase tracking-tight text-[10px]">{cat.category_name}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 shadow-sm group-hover/row:scale-110 transition-transform overflow-hidden">
-                            {cat.icon && cat.icon.startsWith('http') ? (
-                              <img src={cat.icon} alt={cat.category_name} className="w-full h-full object-cover" />
-                            ) : (
-                              <Layers size={16} />
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 max-w-xs">
-                          <p className="text-[10px] font-medium text-gray-500 line-clamp-1 leading-relaxed capitalize">
-                            {cat.description || 'No description available'}
-                          </p>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center">
-                            <button
-                              onClick={() => setCategoryChangingStatus(cat)}
-                              className={`relative w-12 h-6 flex items-center p-0.5 rounded-full transition-all duration-300 shadow-inner group/toggle ${cat.status === 'inactive' ? 'bg-red-600' : 'bg-green-600'}`}
-                              title={cat.status === 'inactive' ? 'Domain Offline' : 'Domain Operational'}
-                            >
-                              <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 z-10 ${cat.status === 'inactive' ? 'translate-x-0' : 'translate-x-6'}`} />
-                              <div className="absolute inset-0 flex items-center justify-between px-1.5 text-[7px] font-black uppercase tracking-tighter text-white pointer-events-none">
-                                <span className={`transition-opacity duration-300 ${cat.status === 'inactive' ? 'opacity-0' : 'opacity-100'}`}>ON</span>
-                                <span className={`transition-opacity duration-300 ${cat.status === 'inactive' ? 'opacity-100' : 'opacity-0'}`}>OFF</span>
-                              </div>
-                            </button>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex justify-center gap-1.5">
-                            <button 
-                              onClick={() => handleOpenEdit(cat)}
-                              className="p-1 px-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100 active:scale-95" 
-                              title="Edit Domain"
-                            >
-                              <Pencil size={12} />
-                            </button>
-                            <button 
-                              onClick={() => setCategoryToDelete(cat)}
-                              className="p-1 px-3 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95" 
-                              title="Remove Vertical"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    ))
-                  ) : (
-                    <tr key="empty">
-                      <td colSpan={5} className="px-6 py-32 text-center text-gray-400">
-                        <div className="flex flex-col items-center gap-4 py-10 opacity-60">
-                          <Layers size={48} strokeWidth={1} />
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em]">No category details found</p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </AnimatePresence>
-              </Table>
-            </div>
-
-            {/* Pagination Footer */}
-            <div className="p-5 border-t border-white/20 flex flex-col items-center gap-6 bg-white/10">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePrev}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-
-                <div className="flex items-center gap-1.5">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`min-w-[32px] h-8 px-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-sm border ${currentPage === page
-                        ? "bg-blue-600 text-white border-blue-600 shadow-blue-600/20"
-                        : "bg-white text-gray-500 border-gray-100 hover:border-blue-200 hover:bg-blue-50"
-                        }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+    return (
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
+            {/* Header Evolution */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div>
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+                        {selectedCategory ? (
+                            <span className="flex items-center gap-2">
+                                Services<span className="text-blue-600">.</span>
+                                <span className="text-gray-300 text-2xl font-light">/</span>
+                                <span className="text-blue-600">{selectedCategory.category_name.toLowerCase()}</span>
+                            </span>
+                        ) : (
+                            <>Services<span className="text-blue-600">.</span></>
+                        )}
+                    </h1>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1 italic">
+                        {selectedCategory ? `Manage services in ${selectedCategory.category_name}` : 'Select a category to manage services'}
+                    </p>
                 </div>
 
-                <button
-                  onClick={handleNext}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  className="p-2 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+                {selectedCategory && (
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            icon={ArrowLeft}
+                            onClick={() => setSelectedCategory(null)}
+                            className="text-[10px] bg-white border-gray-100 uppercase tracking-widest shadow-sm px-4 rounded-xl"
+                        >
+                            Categories
+                        </Button>
+                        <Button 
+                            variant="primary" 
+                            size="sm" 
+                            icon={Plus} 
+                            onClick={handleOpenAdd}
+                            className="shadow-lg bg-blue-600 text-[11px] py-3 rounded-2xl px-5"
+                        >
+                            Add Service
+                        </Button>
+                    </div>
+                )}
             </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
 
-      <CategoryModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        category={selectedCategory}
-        onSave={handleSave}
-      />
+            <AnimatePresence mode="wait">
+                {!selectedCategory ? (
+                    <motion.div
+                        key="category-grid"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                    >
+                        {categories.map((cat) => (
+                            <CategoryCard 
+                                key={cat._id} 
+                                category={cat} 
+                                onClick={() => setSelectedCategory(cat)}
+                            />
+                        ))}
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="service-table"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-6"
+                    >
+                        {/* Table Control Rail */}
+                        <div className="bg-white/40 backdrop-blur-xl p-3 px-5 rounded-2xl border border-white/60 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4 relative z-20">
+                            <div className="relative flex-1 w-full group max-w-sm">
+                                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                                <input
+                                    type="text"
+                                    placeholder={`Search in ${selectedCategory.category_name}...`}
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2.5 bg-white/50 border border-gray-100 focus:border-blue-200 focus:bg-white focus:ring-4 focus:ring-blue-100/50 rounded-xl text-[11px] font-bold text-gray-800 transition-all duration-300 shadow-sm"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 relative">
+                                <Button 
+                                    variant={filterStatus !== 'All' ? "primary" : "outline"} 
+                                    size="sm" 
+                                    icon={Filter} 
+                                    onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                                    className={`text-[10px] uppercase tracking-widest shadow-sm px-4 ${filterStatus !== 'All' ? 'bg-blue-600' : 'bg-white border-gray-100'}`}
+                                >
+                                    {filterStatus !== 'All' ? filterStatus : 'Filters'}
+                                </Button>
+                                
+                                <AnimatePresence>
+                                    {isFilterDropdownOpen && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            className="absolute top-full right-8 mt-2 w-40 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden"
+                                        >
+                                            {['All', 'Active', 'Inactive'].map(status => (
+                                                <button
+                                                    key={status}
+                                                    onClick={() => { setFilterStatus(status); setIsFilterDropdownOpen(false); }}
+                                                    className={`w-full px-4 py-2.5 text-left text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 transition-colors ${filterStatus === status ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
+                                                >
+                                                    {status === 'All' ? 'Show All' : status}
+                                                </button>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
 
-      <ConfirmationModal
-        isOpen={!!categoryToDelete}
-        onClose={() => setCategoryToDelete(null)}
-        onConfirm={handleDelete}
-        title="Category Removal"
-        message={`Are you sure you want to permanently delete the "${categoryToDelete?.category_name}" category? This action cannot be undone and will affect all related services.`}
-        confirmLabel="Confirm Delete"
-        cancelLabel="Keep Category"
-        variant="danger"
-      />
-      <ConfirmationModal
-        isOpen={!!categoryChangingStatus}
-        onClose={() => setCategoryChangingStatus(null)}
-        onConfirm={handleStatusToggle}
-        title="Status Transition"
-        message={`Are you sure you want to change the status of "${categoryChangingStatus?.category_name}" from ${categoryChangingStatus?.status} to ${categoryChangingStatus?.status === 'active' ? 'inactive' : 'active'}?`}
-        confirmLabel="Update Status"
-        cancelLabel="Maintain State"
-        variant="info"
-      />
-    </div>
-  );
+                                <button
+                                    onClick={() => { setSearchTerm(''); setFilterStatus('All'); }}
+                                    className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100"
+                                    title="Reset view"
+                                >
+                                    <RefreshCw size={16} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden group min-h-[460px] flex flex-col">
+                            <div className="flex-1">
+                                <Table
+                                    headers={['Service Identity', 'Slug', 'Price/Time', 'Featured', 'Status', 'Actions']}
+                                >
+
+                                    <AnimatePresence mode="popLayout" initial={false}>
+                                        {filteredServices.map((s) => (
+                                            <motion.tr
+                                                layout
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                key={s._id}
+                                                className="hover:bg-blue-50/20 transition-all group/row border-b border-gray-50 last:border-0 text-[11px]"
+                                            >
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 shadow-sm transition-transform group-hover/row:scale-110 overflow-hidden border border-gray-50">
+                                                            {s.images && s.images[0] ? (
+                                                                <img src={s.images[0]} alt={s.service_name} className="w-full h-full object-cover" />
+                                                            ) : s.image ? (
+                                                                <img src={s.image} alt={s.service_name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <BarChart3 size={16} />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-black text-gray-900 tracking-tight uppercase tracking-widest text-[10px]">{s.service_name}</span>
+                                                            <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest line-clamp-1">{s.description}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="font-bold text-blue-500 text-[10px] lowercase tracking-tight">/{s.slug || '-'}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex flex-col">
+                                                        <div className="flex items-baseline gap-1">
+                                                            <span className="text-[8px] font-bold text-gray-400">₹</span>
+                                                            <span className="font-black text-gray-900 tracking-tighter text-[13px]">{s.base_price}</span>
+                                                        </div>
+                                                        <span className="text-[8px] text-blue-600 font-black uppercase tracking-widest">{s.duration} Mins</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {s.is_featured ? (
+                                                        <span className="px-2 py-0.5 bg-amber-100 text-amber-600 rounded-md text-[8px] font-black tracking-widest border border-amber-200 uppercase">Featured</span>
+                                                    ) : (
+                                                        <span className="text-gray-300 text-[8px] font-black uppercase tracking-widest">Regular</span>
+                                                    )}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center">
+                                                        <button
+                                                            onClick={() => setServiceChangingStatus(s)}
+                                                            className={`relative w-12 h-6 flex items-center p-0.5 rounded-full transition-all duration-300 shadow-inner group/toggle ${s.status === 'active' ? 'bg-green-600' : 'bg-red-600'}`}
+                                                            title={s.status === 'active' ? 'Service Live' : 'Service Offline'}
+                                                        >
+                                                            {/* Sliding Indicator */}
+                                                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 z-10 ${s.status === 'active' ? 'translate-x-6' : 'translate-x-0'}`} />
+
+                                                            {/* ON/OFF Labels */}
+                                                            <div className="absolute inset-0 flex items-center justify-between px-1.5 text-[7px] font-black uppercase tracking-tighter text-white pointer-events-none">
+                                                                <span className={`transition-opacity duration-300 ${s.status === 'active' ? 'opacity-100' : 'opacity-0'}`}>ON</span>
+                                                                <span className={`transition-opacity duration-300 ${s.status === 'active' ? 'opacity-0' : 'opacity-100'}`}>OFF</span>
+                                                            </div>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-1.5 transition-opacity">
+                                                        <button 
+                                                            onClick={() => handleOpenEdit(s)}
+                                                            className="p-1 px-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100 active:scale-95" 
+                                                            title="Edit Service"
+                                                        >
+                                                            <Pencil size={12} />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => setServiceToDelete(s)}
+                                                            className="p-1 px-3 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 active:scale-95" 
+                                                            title="Remove Entry"
+                                                        >
+                                                            <Trash2 size={12} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        ))}
+                                    </AnimatePresence>
+                                </Table>
+
+                                {filteredServices.length === 0 && (
+                                    <div className="py-20 flex flex-col items-center justify-center text-gray-400 gap-3">
+                                        <Layers size={40} strokeWidth={1} className="opacity-20" />
+                                        <p className="text-[10px] font-black uppercase tracking-widest">No services cataloged for this category</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <ServiceModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                service={editingService}
+                category={selectedCategory || ''}
+                onSave={handleSave}
+            />
+
+            <ConfirmationModal
+                isOpen={!!serviceToDelete}
+                onClose={() => setServiceToDelete(null)}
+                onConfirm={handleDelete}
+                title="Service Removal"
+                message={`Are you sure you want to permanently delete "${serviceToDelete?.service_name}"? Action cannot be reversed.`}
+                confirmLabel="Confirm Delete"
+                cancelLabel="Keep Service"
+                variant="danger"
+            />
+            <ConfirmationModal
+                isOpen={!!serviceChangingStatus}
+                onClose={() => setServiceChangingStatus(null)}
+                onConfirm={handleStatusToggle}
+                title="Status Transition"
+                message={`Are you sure you want to change the status of "${serviceChangingStatus?.service_name}" from ${serviceChangingStatus?.status} to ${serviceChangingStatus?.status === 'active' ? 'inactive' : 'active'}?`}
+                confirmLabel="Update Status"
+                cancelLabel="Maintain State"
+                variant="info"
+            />
+        </div>
+    );
 };
 
 export default ServiceTable;

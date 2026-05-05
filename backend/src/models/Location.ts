@@ -6,10 +6,14 @@ export interface ILocation extends Document {
   parent_id?: Types.ObjectId | null;
   state?: string;
   country?: string;
-  latitude?: number;
-  longitude?: number;
+  pincode?: string;
+  coordinates: {
+    type: string;
+    coordinates: number[];
+  };
   status: 'active' | 'inactive';
   isDeleted: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,20 +43,21 @@ const locationSchema = new Schema<ILocation>(
       type: String,
       trim: true,
     },
+    pincode: {
+      type: String,
+      trim: true,
+    },
+    coordinates: {
+      type: { type: String, enum: ['Point'], default: 'Point' },
+      coordinates: { type: [Number], default: [0, 0] },
+    },
     status: {
       type: String,
       enum: ['active', 'inactive'],
       default: 'active',
     },
-    latitude: {
-      type: Number,
-      default: 0,
-    },
-    longitude: {
-      type: Number,
-      default: 0,
-    },
     isDeleted: {
+
       type: Boolean,
       default: false,
     },
@@ -62,4 +67,7 @@ const locationSchema = new Schema<ILocation>(
   }
 );
 
+locationSchema.index({ coordinates: '2dsphere' });
+
 export const Location = mongoose.model<ILocation>('Location', locationSchema);
+

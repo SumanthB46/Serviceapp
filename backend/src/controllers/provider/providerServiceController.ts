@@ -7,17 +7,38 @@ import { AuthRequest } from '../../middleware/authMiddleware';
 // @access  Private/Provider
 export const addProviderService = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { provider_id, service_id, price } = req.body;
-
     // Check if current user is the provider (unless admin)
     // Assuming provider_id is the ID from Provider model, not User model.
-    // Provider model usually has a user_id field.
+    const { 
+      provider_id, service_id, service_name, experience, price, 
+      discount, final_price, currency, service_radius_km,
+      location_ids, skills, documents, availability 
+    } = req.body;
+
     
     const providerService = await ProviderService.create({
       provider_id,
       service_id,
-      price
+      service_name,
+      experience: experience || 0,
+      price: price || 0,
+      min_price: req.body.min_price || 0,
+      max_price: req.body.max_price || 0,
+      discount: discount || 0,
+      final_price: final_price || price || 0,
+      currency: currency || 'INR',
+      service_radius_km: service_radius_km || 10,
+      location_ids: location_ids || [],
+      skills: skills || [],
+      documents: documents || [],
+      availability: availability || [],
+      weekly_off: req.body.weekly_off || [],
+      blocked_dates: req.body.blocked_dates || [],
+      is_featured: req.body.is_featured || false,
+      is_available: req.body.is_available ?? true
+
     });
+
 
     res.status(201).json(providerService);
   } catch (error: any) {
@@ -60,7 +81,11 @@ export const getProviderServices = async (req: Request, res: Response): Promise<
 // @access  Private/Provider
 export const updateProviderService = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { price } = req.body;
+    const { 
+      price, discount, final_price, currency, service_radius_km, 
+      skills, availability, is_active 
+    } = req.body;
+    
     const providerService = await ProviderService.findById(req.params.id);
 
     if (!providerService) {
@@ -68,8 +93,24 @@ export const updateProviderService = async (req: AuthRequest, res: Response): Pr
       return;
     }
 
-    providerService.price = price ?? providerService.price;
+    providerService.price             = price             ?? providerService.price;
+    providerService.min_price         = req.body.min_price ?? providerService.min_price;
+    providerService.max_price         = req.body.max_price ?? providerService.max_price;
+    providerService.discount          = discount          ?? providerService.discount;
+    providerService.final_price       = final_price       ?? providerService.final_price;
+    providerService.currency          = currency          ?? providerService.currency;
+    providerService.service_radius_km = service_radius_km ?? providerService.service_radius_km;
+    providerService.skills            = skills            ?? providerService.skills;
+    providerService.availability      = availability      ?? providerService.availability;
+    providerService.weekly_off        = req.body.weekly_off ?? providerService.weekly_off;
+    providerService.blocked_dates     = req.body.blocked_dates ?? providerService.blocked_dates;
+    providerService.is_featured       = req.body.is_featured ?? providerService.is_featured;
+    providerService.is_available      = req.body.is_available ?? providerService.is_available;
+    providerService.is_active         = is_active         ?? providerService.is_active;
+
+
     await providerService.save();
+
 
     res.json(providerService);
   } catch (error: any) {

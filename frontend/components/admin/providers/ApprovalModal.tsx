@@ -24,7 +24,8 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
     onClose();
   };
 
-  const statusVariant = provider.status === 'Approved' ? 'success' : provider.status === 'Pending' ? 'warning' : provider.status === 'Blocked' ? 'neutral' : 'danger';
+  const statusVariant = provider.kyc_status === 'verified' ? 'success' : provider.kyc_status === 'pending' ? 'warning' : 'danger';
+
 
   return (
     <Modal
@@ -37,19 +38,20 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
            <div className="flex items-center gap-2">
               <button className="text-[10px] text-gray-400 font-black uppercase hover:text-red-600 transition-colors">Terminate Account</button>
            </div>
-           <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={onClose} className="text-[10px] uppercase font-black px-6">Close</Button>
-              {provider.status === 'Pending' && (
-                <>
-                  <Button variant="outline" size="sm" onClick={onClose} className="text-[10px] uppercase font-black text-amber-600 border-amber-100 bg-amber-50 shadow-sm">Request Docs</Button>
-                  <Button variant="danger" size="sm" onClick={() => handleAction('Rejected')} className="text-[10px] uppercase font-black bg-red-600 shadow-lg">Reject Entry</Button>
-                  <Button variant="success" size="sm" onClick={() => handleAction('Approved')} className="text-[10px] uppercase font-black bg-green-600 shadow-lg">Approve Access</Button>
-                </>
-              )}
-              {provider.status === 'Rejected' && (
-                <Button variant="primary" size="sm" onClick={onClose} className="text-[10px] uppercase font-black bg-blue-600 shadow-lg">Reconsider Application</Button>
-              )}
-           </div>
+            <div className="flex items-center gap-2">
+               <Button variant="outline" size="sm" onClick={onClose} className="text-[10px] uppercase font-black px-6">Close</Button>
+               {provider.kyc_status === 'pending' && (
+                 <>
+                   <Button variant="outline" size="sm" onClick={onClose} className="text-[10px] uppercase font-black text-amber-600 border-amber-100 bg-amber-50 shadow-sm">Request Docs</Button>
+                   <Button variant="danger" size="sm" onClick={() => handleAction('rejected')} className="text-[10px] uppercase font-black bg-red-600 shadow-lg">Reject Entry</Button>
+                   <Button variant="success" size="sm" onClick={() => handleAction('verified')} className="text-[10px] uppercase font-black bg-green-600 shadow-lg">Approve Access</Button>
+                 </>
+               )}
+               {provider.kyc_status === 'rejected' && (
+                 <Button variant="primary" size="sm" onClick={() => handleAction('pending')} className="text-[10px] uppercase font-black bg-blue-600 shadow-lg">Reconsider Application</Button>
+               )}
+            </div>
+
         </div>
       }
     >
@@ -72,9 +74,10 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
                     <h3 className="text-xl font-black text-gray-900 tracking-tight">{provider.user_id?.name || 'Pending Identity'}</h3>
                     <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">Registry ID: {provider._id.slice(-6).toUpperCase()}</p>
                  </div>
-                 <div className="scale-90 origin-left">
-                    <Badge variant={statusVariant}>{provider.status}</Badge>
-                 </div>
+                  <div className="scale-90 origin-left">
+                     <Badge variant={statusVariant}>{provider.kyc_status}</Badge>
+                  </div>
+
               </div>
               <div className="grid grid-cols-2 gap-4 mt-6">
                  <div className="flex items-center gap-2 group cursor-pointer">

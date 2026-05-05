@@ -17,6 +17,9 @@ import paymentRoutes   from './routes/user/paymentRoutes';
 import providerServiceRoutes from './routes/provider/providerServiceRoutes';
 import complaintRoutes from './routes/admin/complaintRoutes';
 import locationRoutes from './routes/admin/locationRoutes';
+import subServiceRoutes from './routes/admin/subServiceRoutes';
+
+
 
 dotenv.config();
 
@@ -45,17 +48,38 @@ app.use('/api/payments',   paymentRoutes);
 app.use('/api/provider-services', providerServiceRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/locations', locationRoutes);
+app.use('/api/sub-services', subServiceRoutes);
+
 
 
 app.get('/api/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', message: 'ServiceSwift Backend is active' });
+  res.json({ status: 'ok', message: 'FIXVO Backend is active' });
 });
 // app.get("/", (req, res) => {
 //   res.send("API is working");
 // });
 
-app.listen(Number(port), '0.0.0.0', () => {
+const server = app.listen(Number(port), '0.0.0.0', () => {
   console.log(`🚀 Server ready at http://localhost:${port}`);
+});
+
+server.on('error', (error: any) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${port} is already in use. Attempting to restart...`);
+    process.exit(1);
+  } else {
+    console.error('❌ Server error:', error);
+  }
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('🔥 Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
 
 // Port 5001 - Active

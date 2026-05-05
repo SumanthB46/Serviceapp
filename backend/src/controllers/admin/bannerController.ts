@@ -6,7 +6,7 @@ import { Banner } from '../../models/Banner';
 // @access  Public
 export const getBanners = async (req: Request, res: Response): Promise<void> => {
   try {
-    const banners = await Banner.find({ status: 'active' }).sort({ display_order: 1 });
+    const banners = await Banner.find({ status: 'active', isDeleted: { $ne: true } }).sort({ display_order: 1 });
     res.json(banners);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -18,7 +18,7 @@ export const getBanners = async (req: Request, res: Response): Promise<void> => 
 // @access  Private/Admin
 export const getAllBannersAdmin = async (req: Request, res: Response): Promise<void> => {
   try {
-    const banners = await Banner.find().sort({ display_order: 1 });
+    const banners = await Banner.find({ isDeleted: { $ne: true } }).sort({ display_order: 1 });
     res.json(banners);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -58,7 +58,7 @@ export const updateBanner = async (req: Request, res: Response): Promise<void> =
 // @access  Private/Admin
 export const deleteBanner = async (req: Request, res: Response): Promise<void> => {
   try {
-    const banner = await Banner.findByIdAndDelete(req.params.id);
+    const banner = await Banner.findByIdAndUpdate(req.params.id, { isDeleted: true }, { new: true });
     if (!banner) {
       res.status(404).json({ message: 'Banner not found' });
       return;

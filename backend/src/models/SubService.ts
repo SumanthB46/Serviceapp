@@ -1,44 +1,36 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
-export interface IService extends Document {
-  category_id: Types.ObjectId;
-  service_name: string;
-  slug: string;
+export interface ISubService extends Document {
+  service_id: Types.ObjectId;
+  subservice_name: string;
   description: string;
   base_price: number;
   duration: number;
-  images: string[];
-  is_featured: boolean;
-  avg_rating: number;
-  total_reviews: number;
+  variants: {
+    name: string;
+    price: number;
+    duration: number;
+  }[];
+  image: string;
+
   status: 'active' | 'inactive';
   isDeleted: boolean;
-
   createdAt: Date;
   updatedAt: Date;
 }
 
-const serviceSchema = new Schema<IService>(
+const subServiceSchema = new Schema<ISubService>(
   {
-    category_id: {
+    service_id: {
       type: Schema.Types.ObjectId,
-      ref: 'Category',
+      ref: 'Service',
       required: true,
     },
-    service_name: {
+    subservice_name: {
       type: String,
       required: true,
       trim: true,
     },
-    slug: {
-
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-      lowercase: true,
-    },
-
     description: {
       type: String,
       required: true,
@@ -54,29 +46,20 @@ const serviceSchema = new Schema<IService>(
       required: true,
       min: 1,
     },
-    images: [
+    variants: [
       {
-        type: String,
-        required: false,
-
-        trim: true,
+        name: { type: String, required: true },
+        price: { type: Number, required: true, min: 0 },
+        duration: { type: Number, required: true, min: 1 },
       },
     ],
-    is_featured: {
-      type: Boolean,
-      default: false,
-    },
-    avg_rating: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
-    },
-    total_reviews: {
-      type: Number,
-      default: 0,
-    },
+    image: {
 
+      type: String,
+      required: false,
+
+      trim: true,
+    },
     status: {
       type: String,
       enum: ['active', 'inactive'],
@@ -94,4 +77,4 @@ const serviceSchema = new Schema<IService>(
   }
 );
 
-export const Service = mongoose.model<IService>('Service', serviceSchema);
+export const SubService = mongoose.model<ISubService>('SubService', subServiceSchema);
