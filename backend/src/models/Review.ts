@@ -4,8 +4,11 @@ export interface IReview extends Document {
   booking_id: Types.ObjectId;
   user_id: Types.ObjectId;
   provider_id: Types.ObjectId;
+  service_id: Types.ObjectId;
+  subservice_id: Types.ObjectId;
   rating: number; // 1-5
   comment: string;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +31,17 @@ const reviewSchema = new Schema<IReview>(
       ref: 'Provider',
       required: true,
     },
+    service_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'Service',
+      required: true,
+    },
+    subservice_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'SubService',
+      required: true,
+    },
+
     rating: {
       type: Number,
       required: true,

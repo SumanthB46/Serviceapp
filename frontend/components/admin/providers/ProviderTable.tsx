@@ -21,7 +21,8 @@ import { API_URL } from '@/config/api';
 
 const ProviderTable: React.FC = () => {
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
-  const [activeTab, setActiveTab] = useState<'Pending' | 'Approved' | 'Rejected' | 'All'>('Pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'verified' | 'rejected' | 'All'>('pending');
+
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('All');
   const [serviceFilter, setServiceFilter] = useState('All');
@@ -76,19 +77,22 @@ const ProviderTable: React.FC = () => {
   const rowsPerPage = 6;
 
   const filtered = providers.filter(p => {
-    const matchStatus = activeTab === 'All' || p.status === activeTab;
+    const matchStatus = activeTab === 'All' || p.kyc_status === activeTab;
     const matchSearch = (p.user_id?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
       (p.user_id?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
       (p.user_id?.phone?.includes(searchTerm) ?? false);
-    const matchLocation = locationFilter === 'All' || p.location === locationFilter;
+    const matchLocation = locationFilter === 'All' || p.location_id?.name === locationFilter;
     const matchService = serviceFilter === 'All' || (p.services && p.services.some(s => s.service_name === serviceFilter));
     return matchStatus && matchSearch && matchLocation && matchService;
+
+
   });
 
   // Stats
   const totalProviders = providers.length;
-  const pendingCount = providers.filter(p => p.status === 'Pending').length;
-  const approvedCount = providers.filter(p => p.status === 'Approved').length;
+  const pendingCount = providers.filter(p => p.kyc_status === 'pending').length;
+  const verifiedCount = providers.filter(p => p.kyc_status === 'verified').length;
+
 
   // Calculate slices
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
@@ -97,11 +101,13 @@ const ProviderTable: React.FC = () => {
   const currentProviders = filtered.slice(indexOfFirstRow, indexOfLastRow);
 
   // Dynamic Column Logic
-  const headers = activeTab === 'Pending'
-    ? ['Name', 'Services', 'Location', 'Tenure', 'Compliance', 'Status']
-    : (activeTab === 'Approved' || activeTab === 'Rejected')
-      ? ['Name', 'Services', 'Location', 'Tenure', 'Status', 'Operations']
-      : ['Name', 'Services', 'Location', 'Tenure', 'Compliance', 'Status', 'Operations'];
+  const headers = activeTab === 'pending'
+    ? ['Name', 'Services', 'Location', 'Jobs', 'Success Rate', 'Compliance', 'Status']
+    : (activeTab === 'verified' || activeTab === 'rejected')
+      ? ['Name', 'Services', 'Location', 'Jobs', 'Success Rate', 'Status', 'Operations']
+      : ['Name', 'Services', 'Location', 'Jobs', 'Success Rate', 'Compliance', 'Status', 'Operations'];
+
+
 
   const showCompliance = headers.includes('Compliance');
   const showOperations = headers.includes('Operations');
@@ -126,10 +132,11 @@ const ProviderTable: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.put(`${API_URL}/providers/${id}`,
-        { status: newStatus },
+        { kyc_status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setProviders(providers.map(p => p._id === id ? response.data : p));
+
     } catch (error) {
       console.error('Error updating status:', error);
     }
@@ -244,14 +251,15 @@ const ProviderTable: React.FC = () => {
 
         {/* Workflow Tabs */}
         <div className="flex border-b border-gray-100 items-end gap-1 px-1">
-          {(['Pending', 'Approved', 'Rejected', 'All'] as const).map(tab => (
+          {(['pending', 'verified', 'rejected', 'All'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`pb-4 px-6 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === tab ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
                 }`}
             >
-              {tab === 'Pending' && <span className="mr-2 px-1.5 py-0.5 bg-amber-100 text-amber-600 rounded-md text-[8px]">{pendingCount}</span>}
+              {tab === 'pending' && <span className="mr-2 px-1.5 py-0.5 bg-amber-100 text-amber-600 rounded-md text-[8px]">{pendingCount}</span>}
+              {tab === 'verified' && <span className="mr-2 px-1.5 py-0.5 bg-green-100 text-green-600 rounded-md text-[8px]">{verifiedCount}</span>}
               {tab}
               {activeTab === tab && (
                 <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
@@ -259,6 +267,7 @@ const ProviderTable: React.FC = () => {
             </button>
           ))}
         </div>
+
       </div>
 
       {/* Partner Registry Table */}
@@ -305,13 +314,21 @@ const ProviderTable: React.FC = () => {
                       </Badge>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-500 font-bold uppercase text-[9px] tracking-widest">{provider.location}</td>
+                  <td className="px-6 py-4 text-gray-500 font-bold uppercase text-[9px] tracking-widest">{provider.location_id?.name || 'Unassigned'}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5 text-gray-900 font-black">
-                      <Award size={14} className="text-blue-600" />
-                      <span>{provider.services?.[0]?.experience || 0} Yrs</span>
+                      <CheckCircle2 size={14} className="text-green-600" />
+                      <span>{provider.total_jobs || 0}</span>
                     </div>
                   </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-1.5 text-gray-900 font-black">
+                      <Star size={14} className="text-amber-500 fill-amber-500" />
+                      <span>{provider.completion_rate || 100}%</span>
+                    </div>
+                  </td>
+
+
                   {showCompliance && (
                     <td className="px-6 py-4">
                       <button
@@ -324,30 +341,32 @@ const ProviderTable: React.FC = () => {
                     </td>
                   )}
                   <td className="px-6 py-4">
-                    <Badge variant={provider.status === 'Approved' ? 'success' : provider.status === 'Pending' ? 'warning' : provider.status === 'Blocked' ? 'neutral' : 'danger'}>
-                      {provider.status}
+                    <Badge variant={provider.kyc_status === 'verified' ? 'success' : provider.kyc_status === 'pending' ? 'warning' : 'danger'}>
+                      {provider.kyc_status}
                     </Badge>
                   </td>
+
                   {showOperations && (
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-1">
-                        {provider.status !== 'Pending' && (
+                        {provider.kyc_status !== 'pending' && (
                           <>
-                            {provider.status === 'Approved' ? (
+                            {provider.kyc_status === 'verified' ? (
                               <>
                                 <button onClick={() => setSelectedProvider(provider)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View"><Eye size={14} /></button>
-                                <button onClick={() => handleUpdateStatus(provider._id, 'Blocked')} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-all" title="Deactivate"><Power size={14} /></button>
+                                <button onClick={() => handleUpdateStatus(provider._id, 'rejected')} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-all" title="Reject"><Ban size={14} /></button>
                                 <button onClick={() => handleDelete(provider._id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Delete"><Trash2 size={14} /></button>
                               </>
                             ) : (
                               <>
                                 <button onClick={() => setSelectedProvider(provider)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View"><Eye size={14} /></button>
-                                <button onClick={() => handleUpdateStatus(provider._id, 'Pending')} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="Reconsider"><RotateCcw size={14} /></button>
+                                <button onClick={() => handleUpdateStatus(provider._id, 'pending')} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="Re-evaluate"><RotateCcw size={14} /></button>
                                 <button onClick={() => handleDelete(provider._id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Delete"><Trash2 size={14} /></button>
                               </>
                             )}
                           </>
                         )}
+
                       </div>
                     </td>
                   )}

@@ -2,21 +2,24 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
-import userRoutes     from './routes/userRoutes';
-import categoryRoutes from './routes/categoryRoutes';
-import serviceRoutes  from './routes/serviceRoutes';
-import providerRoutes from './routes/providerRoutes';
-import addressRoutes  from './routes/addressRoutes';
-import bookingRoutes  from './routes/bookingRoutes';
-import reviewRoutes   from './routes/reviewRoutes';
-import bannerRoutes   from './routes/bannerRoutes';
-import offerRoutes    from './routes/offerRoutes';
-import adminReportRoutes from './routes/adminReportRoutes';
-import notificationRoutes from './routes/notificationRoutes';
-import paymentRoutes   from './routes/paymentRoutes';
-import providerServiceRoutes from './routes/providerServiceRoutes';
-import complaintRoutes from './routes/complaintRoutes';
-import locationRoutes from './routes/locationRoutes';
+import userRoutes     from './routes/user/userRoutes';
+import categoryRoutes from './routes/admin/categoryRoutes';
+import serviceRoutes  from './routes/admin/serviceRoutes';
+import providerRoutes from './routes/provider/providerRoutes';
+import addressRoutes  from './routes/user/addressRoutes';
+import bookingRoutes  from './routes/user/bookingRoutes';
+import reviewRoutes   from './routes/user/reviewRoutes';
+import bannerRoutes   from './routes/admin/bannerRoutes';
+import offerRoutes    from './routes/admin/offerRoutes';
+import adminReportRoutes from './routes/admin/adminReportRoutes';
+import notificationRoutes from './routes/user/notificationRoutes';
+import paymentRoutes   from './routes/user/paymentRoutes';
+import providerServiceRoutes from './routes/provider/providerServiceRoutes';
+import complaintRoutes from './routes/admin/complaintRoutes';
+import locationRoutes from './routes/admin/locationRoutes';
+import subServiceRoutes from './routes/admin/subServiceRoutes';
+
+
 
 dotenv.config();
 
@@ -45,17 +48,38 @@ app.use('/api/payments',   paymentRoutes);
 app.use('/api/provider-services', providerServiceRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/locations', locationRoutes);
+app.use('/api/sub-services', subServiceRoutes);
+
 
 
 app.get('/api/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', message: 'ServiceSwift Backend is active' });
+  res.json({ status: 'ok', message: 'FIXVO Backend is active' });
 });
 // app.get("/", (req, res) => {
 //   res.send("API is working");
 // });
 
-app.listen(Number(port), '0.0.0.0', () => {
+const server = app.listen(Number(port), '0.0.0.0', () => {
   console.log(`🚀 Server ready at http://localhost:${port}`);
+});
+
+server.on('error', (error: any) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${port} is already in use. Attempting to restart...`);
+    process.exit(1);
+  } else {
+    console.error('❌ Server error:', error);
+  }
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('🔥 Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
 
 // Port 5001 - Active

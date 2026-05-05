@@ -29,7 +29,7 @@ const categoriesData: Category[] = [
   {
     id: "home-services",
     name: "Home Services",
-    image: "/images/Category/house.png",
+    image: "/images/category/house.png",
     label: "REPAIR & FIX",
     groups: [
       {
@@ -45,7 +45,7 @@ const categoriesData: Category[] = [
   {
     id: "cleaning",
     name: "Cleaning Services",
-    image: "/images/Category/cleaning.png",
+    image: "/images/category/cleaning.png",
     label: "DEEP CLEAN",
     groups: [
       {
@@ -60,7 +60,7 @@ const categoriesData: Category[] = [
   {
     id: "appliances",
     name: "Appliance Services",
-    image: "/images/Category/trolley.png",
+    image: "/images/category/trolley.png",
     label: "GADGET FIX",
     groups: [
       {
@@ -77,7 +77,7 @@ const categoriesData: Category[] = [
   {
     id: "improvement",
     name: "Home Improvement",
-    image: "/images/Category/paint-roller.png",
+    image: "/images/category/paint-roller.png",
     label: "RENOVATION",
     groups: [
       {
@@ -92,21 +92,21 @@ const categoriesData: Category[] = [
   {
     id: "tech",
     name: "Smart / Tech",
-    image: "/images/Category/security-cam.png",
+    image: "/images/category/security-cam.png",
     label: "PRO SETUP",
     redirectPath: "/services/tech",
   },
   {
     id: "outdoor",
     name: "Outdoor Services",
-    image: "/images/Category/gardening.png",
+    image: "/images/category/gardening.png",
     label: "GREEN & CLEAN",
     redirectPath: "/services/outdoor",
   },
   {
     id: "lifestyle",
     name: "Personal & Lifestyle",
-    image: "/images/Category/salon.png",
+    image: "/images/category/salon.png",
     label: "LUXURY CARE",
     redirectPath: "/services/lifestyle",
   },
@@ -128,7 +128,7 @@ const categoriesData: Category[] = [
   {
     id: "emergency",
     name: "Emergency Services",
-    image: "/images/Category/emergency-call.png",
+    image: "/images/category/emergency-call.png",
     label: "24/7 SUPPORT",
     redirectPath: "/services/emergency",
   }

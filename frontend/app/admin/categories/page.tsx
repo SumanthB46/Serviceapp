@@ -1,6 +1,7 @@
 import React from 'react';
-import ServiceTable from '@/components/admin/services/ServiceTable';
+import CategoryTable from '@/components/admin/services/CategoryTable';
 
 export default function CategoriesPage() {
-  return <ServiceTable />;
+  return <CategoryTable />;
 }
+

@@ -16,10 +16,12 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, category
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     category_name: '',
+    slug: '',
     icon: '',
     description: '',
     status: 'active',
   });
+
 
   useEffect(() => {
     setMounted(true);
@@ -31,17 +33,21 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, category
       if (category) {
         setFormData({
           category_name: category.category_name || category.name || '',
+          slug: category.slug || '',
           icon: category.icon || '',
           description: category.description || '',
           status: category.status || 'active',
         });
+
       } else {
         setFormData({
           category_name: '',
+          slug: '',
           icon: '',
           description: '',
           status: 'active'
         });
+
       }
     } else {
       document.body.style.overflow = 'unset';
@@ -82,9 +88,11 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, category
           initial={{ opacity: 0, scale: 0.9, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 30 }}
-          className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden z-[9999] border border-white/20 pointer-events-auto"
+          className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden z-[9999] border border-white/20 pointer-events-auto max-h-[90vh] flex flex-col"
+
         >
-          <div className="px-8 pt-6 pb-2 flex justify-between items-center">
+          <div className="px-8 pt-6 pb-4 flex justify-between items-center flex-shrink-0 border-b border-gray-50">
+
             <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase tracking-[0.1em]">
               {category ? 'Edit Category' : 'New Category'}
             </h2>
@@ -93,7 +101,9 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, category
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-4">
+          <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
+            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-4 custom-scrollbar">
+
             {/* Form Section Hub */}
             <div className="bg-[#F8FAFC] border border-gray-100 p-6 rounded-[2rem] space-y-4 relative group">
               <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
@@ -103,20 +113,41 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, category
               </div>
 
               <div className="space-y-4 relative z-10">
-                {/* Category Name */}
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
-                    <Tag size={12} className="text-blue-500" /> Category Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Electrical Services"
-                    value={formData.category_name}
-                    onChange={(e) => setFormData({ ...formData, category_name: e.target.value })}
-                    className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                      <Tag size={12} className="text-blue-500" /> Category Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Electrical Services"
+                      value={formData.category_name}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        const slug = name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+                        setFormData({ ...formData, category_name: name, slug: (category && category.slug) ? formData.slug : slug });
+
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                      <Tag size={12} className="text-blue-500" /> Slug
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. electrical-services"
+                      value={formData.slug}
+                      onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/ /g, '-') })}
+                      className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                    />
+                  </div>
                 </div>
+
 
                 {/* Icon and Status row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -166,8 +197,10 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ isOpen, onClose, category
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3 pt-2">
+            </div>
+            
+            <div className="flex-shrink-0 px-8 pb-8 pt-4 bg-white border-t border-gray-50 flex gap-3">
+
               <button
                 type="button"
                 onClick={onClose}

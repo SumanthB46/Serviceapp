@@ -10,6 +10,7 @@ import {
   CalendarCheck,
   List,
   Layers,
+  LayoutGrid,
   MapPin,
   Image as ImageIcon,
   BarChart2,
@@ -18,6 +19,7 @@ import {
   LogOut,
   Settings,
   Ticket
+
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -27,7 +29,10 @@ const sidebarLinks = [
   { name: 'Providers', href: '/admin/providers', icon: Briefcase },
   { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
   { name: 'Categories', href: '/admin/categories', icon: List },
-  { name: 'Sub-Services', href: '/admin/sub-services', icon: Layers },
+  { name: 'Services', href: '/admin/services', icon: Layers },
+  { name: 'Sub-Services', href: '/admin/sub-services', icon: LayoutGrid },
+
+
   { name: 'Locations', href: '/admin/locations', icon: MapPin },
   { name: 'Offers', href: '/admin/offers', icon: Ticket },
   { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
@@ -52,10 +57,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/10 to-transparent pointer-events-none" />
         <Link href="/admin" className="flex items-center gap-3 relative z-10">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:rotate-6 transition-transform">
-            <span className="text-white font-black text-lg">A</span>
+            <span className="text-white font-black text-lg">F</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-base font-bold text-white tracking-tight leading-none">ArchitecturalService</span>
+            <span className="text-base font-bold text-white tracking-tight leading-none">FIXVO</span>
           </div>
         </Link>
         <button

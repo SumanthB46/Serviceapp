@@ -6,9 +6,14 @@ export interface IOffer extends Document {
   provider_service_id?: Types.ObjectId; // Optional link to a specific provider service
   discount_type: 'flat' | 'percentage';
   discount_value: number;
+  max_discount?: number;
   min_amount: number;
   expiry_date: Date;
+  usage_limit: number;
+  per_user_limit: number;
+  applicable_on: 'all' | 'service' | 'provider';
   status: 'active' | 'inactive';
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +51,24 @@ const offerSchema = new Schema<IOffer>(
       min: 0,
       default: 0,
     },
+    max_discount: {
+      type: Number,
+      min: 0,
+    },
+    usage_limit: {
+      type: Number,
+      default: 0, // 0 means unlimited
+    },
+    per_user_limit: {
+      type: Number,
+      default: 1,
+    },
+    applicable_on: {
+      type: String,
+      enum: ['all', 'service', 'provider'],
+      default: 'all',
+    },
+
     expiry_date: {
       type: Date,
       required: true,

@@ -1,9 +1,8 @@
 "use client";
-
-import React from 'react';
+import React, { useState } from 'react';
 import Input from '../common/Input';
 import Button from '../common/Button';
-import { Image as ImageIcon, Link as LinkIcon, Calendar, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 interface BannerFormProps {
   initialData?: any;
@@ -12,54 +11,68 @@ interface BannerFormProps {
 }
 
 const BannerForm: React.FC<BannerFormProps> = ({ initialData, onSubmit, onCancel }) => {
+  const [formData, setFormData] = useState({
+    title: initialData?.title || '',
+    subtitle: initialData?.subtitle || '',
+    image_url: initialData?.image_url || '',
+    redirect_type: initialData?.redirect_type || 'url',
+    redirect_url: initialData?.redirect_url || '',
+    button_text: initialData?.button_text || '',
+    display_order: initialData?.display_order || 0,
+    status: initialData?.status || 'active',
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
   return (
-    <form className="space-y-6 bg-white p-2 rounded-2xl animate-in zoom-in-95 duration-500" onSubmit={(e) => { e.preventDefault(); onSubmit({}); }}>
-      <div className="space-y-4">
-        <Input 
-          label="Banner Title" 
-          placeholder="e.g. Summer Mega Sale 2025" 
-          defaultValue={initialData?.title} 
-          required 
-        />
-        
-        <Input 
-          label="Promotion Image URL" 
-          placeholder="https://example.com/promotion.jpg" 
-          icon={ImageIcon} 
-          defaultValue={initialData?.imageUrl} 
-          required 
-        />
-        
-        <Input 
-          label="Destination URL" 
-          placeholder="/categories/ac-vent-clean" 
-          icon={LinkIcon} 
-          defaultValue={initialData?.targetUrl} 
-          required 
-        />
-        
-        <div className="grid grid-cols-2 gap-5">
-          <Input 
-            label="Starts From" 
-            type="date" 
-            icon={Calendar} 
-            defaultValue={initialData?.startDate} 
-          />
-          <Input 
-            label="Valid Until" 
-            type="date" 
-            icon={Calendar} 
-            defaultValue={initialData?.expiresOn} 
-          />
+    <form className="space-y-4 bg-white p-2" onSubmit={handleSubmit}>
+      <Input label="Title" name="title" value={formData.title} onChange={handleChange} required />
+      <Input label="Subtitle" name="subtitle" value={formData.subtitle} onChange={handleChange} />
+      <Input label="Image URL" name="image_url" value={formData.image_url} onChange={handleChange} required />
+      
+      <div className="flex gap-4">
+        <div className="w-1/2">
+          <label className="block text-xs font-bold text-gray-700 mb-1">Redirect Type</label>
+          <select name="redirect_type" value={formData.redirect_type} onChange={handleChange} className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all bg-white text-sm">
+            <option value="url">URL</option>
+            <option value="category">Category</option>
+            <option value="service">Service</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+        <div className="w-1/2">
+          <Input label="Redirect URL / ID" name="redirect_url" value={formData.redirect_url} onChange={handleChange} />
+        </div>
+      </div>
+      
+      <div className="flex gap-4">
+        <div className="w-1/3">
+          <Input label="Button Text" name="button_text" value={formData.button_text} onChange={handleChange} />
+        </div>
+        <div className="w-1/3">
+          <Input label="Display Order" type="number" name="display_order" value={formData.display_order} onChange={handleChange} required />
+        </div>
+        <div className="w-1/3">
+          <label className="block text-xs font-bold text-gray-700 mb-1">Status</label>
+          <select name="status" value={formData.status} onChange={handleChange} className="w-full h-10 px-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all bg-white text-sm">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 pt-6 border-t border-gray-100 flex-col sm:flex-row">
-        <Button variant="outline" type="button" className="flex-1" fullWidth onClick={onCancel}>Discard Changes</Button>
-        <Button variant="primary" type="submit" className="flex-1 shadow-lg" fullWidth icon={CheckCircle2}>Publish Campaign</Button>
+      <div className="flex gap-4 pt-4 border-t">
+        <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
+        <Button variant="primary" type="submit" icon={CheckCircle2}>Save Banner</Button>
       </div>
     </form>
   );
 };
-
 export default BannerForm;

@@ -10,8 +10,7 @@ export interface IBanner extends Document {
   button_text?: string;
   display_order: number;
   status: 'active' | 'inactive';
-  start_date?: Date;
-  end_date?: Date;
+  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -58,8 +57,7 @@ const bannerSchema = new Schema<IBanner>(
       enum: ['active', 'inactive'],
       default: 'active',
     },
-    start_date: { type: Date },
-    end_date:   { type: Date },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
