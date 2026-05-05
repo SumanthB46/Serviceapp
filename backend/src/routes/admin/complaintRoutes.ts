@@ -13,3 +13,6 @@ router.get('/user/:userId', getComplaintsByUserId);
 router.put('/:id', protect, admin, updateComplaintStatus);
 
 export default router;
+
+
+

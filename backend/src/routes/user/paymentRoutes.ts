@@ -11,3 +11,6 @@ router.route('/')
 router.get('/:bookingId', protect, getPaymentByBooking);
 
 export default router;
+
+
+

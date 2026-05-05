@@ -15,3 +15,6 @@ router.route('/:id')
   .delete(protect, deleteProviderService);
 
 export default router;
+
+
+

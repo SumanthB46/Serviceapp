@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #1D2B83;
+  --color-primary-dark: #162266;
+  --color-primary-light: #3b4cb8;
+}
+
 :root {
   --background: #FCF8FF;
   --foreground: #171717;
@@ -46,6 +52,31 @@
   .no-scrollbar { 
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    animation: marquee 50s linear infinite;
+  }
+  .pause-animation {
+    animation-play-state: paused;
+  }
+  .marquee-container:hover .animate-marquee {
+    animation-play-state: paused;
   }
 }
 

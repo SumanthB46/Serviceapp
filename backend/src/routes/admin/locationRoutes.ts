@@ -21,3 +21,6 @@ router.route('/:id')
   .delete(protect, admin, deleteLocation);
 
 export default router;
+
+
+

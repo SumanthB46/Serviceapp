@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ChevronRight
 } from "lucide-react";
@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CategoryModal from "./CategoryModal";
+import { API_URL } from "@/config/api";
 
 interface Category {
   id: string;
@@ -25,129 +26,133 @@ interface Category {
   }[];
 }
 
-const categoriesData: Category[] = [
-  {
-    id: "home-services",
-    name: "Home Services",
-    image: "/images/category/house.png",
-    label: "REPAIR & FIX",
-    groups: [
-      {
-        title: "",
-        services: [
-          { id: "electrical", name: "Electrical", image: "/images/categorymodal/electrical/wiring.png" },
-          { id: "plumbing", name: "Plumbing", image: "/images/categorymodal/plumbing/plumbing.png" },
-          { id: "carpentry", name: "Carpentry", image: "/images/categorymodal/carpentry/sofa.png" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "cleaning",
-    name: "Cleaning Services",
-    image: "/images/category/cleaning.png",
-    label: "DEEP CLEAN",
-    groups: [
-      {
-        title: "",
-        services: [
-          { id: "home-cleaning", name: "Home Cleaning", image: "/images/categorymodal/home_cleaning/cleaning (2).png" },
-          { id: "commercial-cleaning", name: "Commercial Cleaning", image: "/images/categorymodal/commercial_cleaning/office.png" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "appliances",
-    name: "Appliance Services",
-    image: "/images/category/trolley.png",
-    label: "GADGET FIX",
-    groups: [
-      {
-        title: "",
-        services: [
-          { id: "ac-services", name: "AC Services", image: "/images/categorymodal/ac/air-conditioner.png" },
-          { id: "washing-machine", name: "Washing Machine", image: "/images/categorymodal/washing_machine/washing-machine.png" },
-          { id: "refrigerator", name: "Refrigerator", image: "/images/categorymodal/refrigerator/fridge.png" },
-          { id: "tv", name: "TV", image: "/images/categorymodal/tv/tv.png" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "improvement",
-    name: "Home Improvement",
-    image: "/images/category/paint-roller.png",
-    label: "RENOVATION",
-    groups: [
-      {
-        title: "",
-        services: [
-          { id: "painting", name: "Painting", image: "/images/categorymodal/painting/interior-design.png" },
-          { id: "renovation", name: "Renovation", image: "/images/categorymodal/renovation/shinny.png" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "tech",
-    name: "Smart / Tech",
-    image: "/images/category/security-cam.png",
-    label: "PRO SETUP",
-    redirectPath: "/services/tech",
-  },
-  {
-    id: "outdoor",
-    name: "Outdoor Services",
-    image: "/images/category/gardening.png",
-    label: "GREEN & CLEAN",
-    redirectPath: "/services/outdoor",
-  },
-  {
-    id: "lifestyle",
-    name: "Personal & Lifestyle",
-    image: "/images/category/salon.png",
-    label: "LUXURY CARE",
-    redirectPath: "/services/lifestyle",
-  },
-  {
-    id: "b2b",
-    name: "B2B / Bulk",
-    image: "/images/category/service.png",
-    label: "BUSINESS",
-    groups: [
-      {
-        title: "",
-        services: [
-          { id: "apartment-society", name: "Apartment / Society Services", image: "/images/categorymodal/emergency/repair (2).png" },
-          { id: "commercial-vendors", name: "Commercial Vendors", image: "/images/categorymodal/emergency/technician.png" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "emergency",
-    name: "Emergency Services",
-    image: "/images/category/emergency-call.png",
-    label: "24/7 SUPPORT",
-    redirectPath: "/services/emergency",
-  }
-  
-];
+interface CategoryCardProps {
+  cat: Category;
+  index: number;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+const CategoryCard = ({ cat, index, isActive, onClick }: CategoryCardProps) => {
+  return (
+    <motion.button
+      whileHover={{ y: -6, scale: 1.05 }}
+      whileTap={{ scale: 0.93 }}
+      onClick={onClick}
+      className="relative w-[140px] h-[160px] flex-none group perspective-1000"
+    >
+      <motion.div
+        className="relative w-full h-full transition-all duration-500 preserve-3d group-hover:[transform:rotateY(180deg)]"
+        style={{ transformStyle: "preserve-3d" }}
+      >
+        {/* Front Face */}
+        <div className={`absolute inset-0 backface-hidden flex flex-col items-center justify-center gap-3 rounded-2xl border p-4 transition-all duration-300 ${isActive
+          ? "border-[#1D2B83] bg-[#1D2B83] text-white shadow-lg"
+          : "border-white bg-white text-slate-600 shadow-sm"
+          }`}
+          style={{ backfaceVisibility: "hidden" }}
+        >
+          <div className={`rounded-xl p-2 transition-all duration-300 ${isActive ? "bg-white/20" : "bg-slate-50"}`}>
+            <img src={cat.image} alt={cat.name} className="h-10 w-10 object-contain" />
+          </div>
+          <span className="text-[10px] font-black uppercase text-center leading-tight break-words">
+            {cat.name}
+          </span>
+        </div>
+
+        {/* Back Face */}
+        <div className={`absolute inset-0 backface-hidden flex flex-col items-center justify-center p-4 rounded-2xl border rotate-y-180 ${isActive
+          ? "border-[#1D2B83] bg-white text-[#1D2B83]"
+          : "border-[#1D2B83] bg-[#1D2B83] text-white shadow-xl"
+          }`}
+          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+        >
+          <span className="text-[8px] font-black uppercase tracking-[0.05em] text-center line-clamp-4">
+            {cat.label}
+          </span>
+          <div className="mt-2 h-0.5 w-8 bg-current opacity-30 rounded-full" />
+        </div>
+      </motion.div>
+    </motion.button>
+  );
+};
 
 const Categories = () => {
   const router = useRouter();
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleCategoryClick = (category: Category) => {
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${API_URL}/categories`);
+        const data = await response.json();
+        
+        const mappedCategories: Category[] = Array.isArray(data) 
+          ? data.map((cat: any) => ({
+              id: cat._id?.toString() || Math.random().toString(),
+              name: cat.category_name,
+              image: cat.icon,
+              label: cat.description || "SERVICE",
+            }))
+          : [];
+        
+        setCategories(mappedCategories);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const handleCategoryClick = async (category: Category) => {
     if (category.redirectPath) {
       router.push(category.redirectPath);
       return;
     }
-    setSelectedCategory(category);
-    setIsModalOpen(true);
+
+    // Fetch services for this category to populate groups
+    try {
+      const response = await fetch(`${API_URL}/services?category_id=${category.id}`);
+      const servicesData = await response.json();
+
+      // Create a group for the fetched services
+      const categoryWithServices: Category = {
+        ...category,
+        groups: [
+          {
+            title: "",
+            services: servicesData.map((s: any) => ({
+              id: s._id,
+              name: s.service_name,
+              image: s.image
+            }))
+          }
+        ]
+      };
+
+      setSelectedCategory(categoryWithServices);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching services for category:", error);
+      // Fallback: show empty modal or handle error
+      setSelectedCategory(category);
+      setIsModalOpen(true);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="bg-[#F5F2FB] py-16 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1D2B83]"></div>
+      </div>
+    );
+  }
 
   return (
     <section className="bg-[#F5F2FB] py-16">
@@ -172,47 +177,38 @@ const Categories = () => {
           />
         </motion.div>
 
-        {/* Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-4 px-2">
-          {categoriesData.map((cat, index) => {
-            const isActive = selectedCategory?.id === cat.id;
+        {/* Categories Scrollable Container with Auto-scroll */}
+        <div className="relative overflow-hidden marquee-container">
+          <div className={`flex w-max animate-marquee ${isModalOpen ? "pause-animation" : ""}`}>
+            {/* First set of categories */}
+            <div className="flex gap-4 px-2 pb-4">
+              {categories.map((cat, index) => (
+                <CategoryCard 
+                  key={`first-${cat.id}-${index}`} 
+                  cat={cat} 
+                  index={index} 
+                  isActive={selectedCategory?.id === cat.id}
+                  onClick={() => handleCategoryClick(cat)}
+                />
+              ))}
+            </div>
+            {/* Second set of categories for seamless loop */}
+            <div className="flex gap-4 px-2 pb-4">
+              {categories.map((cat, index) => (
+                <CategoryCard 
+                  key={`second-${cat.id}-${index}`} 
+                  cat={cat} 
+                  index={index} 
+                  isActive={selectedCategory?.id === cat.id}
+                  onClick={() => handleCategoryClick(cat)}
+                />
+              ))}
+            </div>
+          </div>
 
-            return (
-              <motion.button
-                key={cat.id}
-                initial={{ opacity: 0, y: 40, scale: 0.9 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.06, type: "spring", bounce: 0.4 }}
-                whileHover={{ y: -6, scale: 1.05 }}
-                whileTap={{ scale: 0.93 }}
-                onClick={() => handleCategoryClick(cat)}
-                className={`flex flex-col items-center justify-center gap-3 rounded-2xl border p-4 transition-all duration-300 ${isActive
-                  ? "border-[#1D2B83] bg-[#1D2B83] text-white shadow-lg shadow-[#1D2B83]/20"
-                  : "border-white bg-white text-slate-600 shadow-sm hover:border-blue-100 hover:bg-[#F0F7FF] hover:shadow-md"
-                  }`}
-              >
-                <div
-                  className={`rounded-xl p-2 transition-all duration-300 ${isActive ? "bg-white/20 scale-110" : "bg-slate-50"
-                    }`}
-                >
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    className="h-10 w-10 object-contain"
-                  />
-                </div>
-                <div className="flex flex-col items-center gap-0.5">
-                  <span className={`text-[7px] font-black uppercase tracking-[0.1em] ${isActive ? "text-white/70" : "text-slate-400"}`}>
-                    {cat.label}
-                  </span>
-                  <span className="text-[9px] font-black uppercase text-center leading-tight">
-                    {cat.name}
-                  </span>
-                </div>
-              </motion.button>
-            );
-          })}
+          {/* Fade effects on sides */}
+          <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#F5F2FB] to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-[#F5F2FB] to-transparent z-10 pointer-events-none" />
         </div>
 
         {/* View More Button */}
@@ -221,7 +217,7 @@ const Categories = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="group flex items-center gap-3 rounded-full bg-white px-8 py-4 text-xs font-bold uppercase tracking-widest text-[#1D2B83] shadow-md transition-all hover:bg-[#1D2B83] hover:text-white"
+              className="group flex items-center gap-3 rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#1D2B83] shadow-md transition-all hover:bg-[#1D2B83] hover:text-white"
             >
               View All Services
               <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

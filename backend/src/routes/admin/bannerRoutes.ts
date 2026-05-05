@@ -15,3 +15,6 @@ router.route('/:id')
   .delete(protect, admin, deleteBanner);
 
 export default router;
+
+
+

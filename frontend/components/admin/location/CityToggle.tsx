@@ -331,7 +331,7 @@ const CityToggleRegistry: React.FC = () => {
         title="Confirm Status Change"
         message={`Are you sure you want to change the status of ${locationToToggle?.name} to ${locationToToggle?.status === 'active' ? 'Offline' : 'Active'}?`}
         confirmLabel="Confirm Change"
-        variant="primary"
+        variant="info"
       />
     </div>
   );

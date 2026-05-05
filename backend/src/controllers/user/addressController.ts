@@ -92,3 +92,4 @@ export const deleteAddress = async (req: AuthRequest, res: Response): Promise<vo
     res.status(500).json({ message: error.message });
   }
 };
+

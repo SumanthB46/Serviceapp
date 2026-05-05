@@ -65,3 +65,4 @@ export const updateComplaintStatus = async (req: Request, res: Response): Promis
     res.status(400).json({ message: error.message });
   }
 };
+
