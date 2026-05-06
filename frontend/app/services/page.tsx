@@ -10,128 +10,22 @@ import { MoveRight } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
+import { useEffect } from "react";
+
 interface ServiceItem {
   id: string;
   image: string;
   title: string;
   rating: number;
   price: string;
-  priceValue: number; // For sorting and filtering
+  priceValue: number;
   category: string;
 }
 
-const allServices: ServiceItem[] = [
-  {
-    id: "1",
-    image: "/images/services/full_house.jpg",
-    title: "Full House Cleaning",
-    rating: 4.9,
-    price: "₹2,499 – ₹5,999",
-    priceValue: 2499,
-    category: "cleaning",
-  },
-  {
-    id: "2",
-    image: "/images/services/bathroom.jpg",
-    title: "Bathroom Cleaning",
-    rating: 4.8,
-    price: "₹499 – ₹899",
-    priceValue: 499,
-    category: "cleaning",
-  },
-  {
-    id: "3",
-    image: "/images/services/kitchen.jpg",
-    title: "Kitchen Cleaning",
-    rating: 5.0,
-    price: "₹999 – ₹1,799",
-    priceValue: 999,
-    category: "cleaning",
-  },
-  {
-    id: "4",
-    image: "/images/services/carpet_cleaning.jpg",
-    title: "Carpet Cleaning",
-    rating: 4.7,
-    price: "₹199 – ₹499",
-    priceValue: 199,
-    category: "cleaning",
-  },
-  {
-    id: "5",
-    image: "/images/services/electrical_panel_service_1775460125959.png",
-    title: "Smart Home Setup",
-    rating: 4.9,
-    price: "₹2,499.00",
-    priceValue: 2499,
-    category: "electrical",
-  },
-  {
-    id: "6",
-    image: "/images/services/electrical_panel_service_1775460125959.png",
-    title: "Fixture Installation",
-    rating: 4.7,
-    price: "₹499.00",
-    priceValue: 499,
-    category: "installation",
-  },
-  {
-    id: "7",
-    image: "/images/services/ac_sterilization_service_1775460291924.png",
-    title: "HVAC Sterilization",
-    rating: 5.0,
-    price: "₹1,899.00",
-    priceValue: 1899,
-    category: "ac-repair",
-  },
-  {
-    id: "8",
-    image: "/images/services/m1.jpg",
-    title: "Leak Detection",
-    rating: 4.9,
-    price: "₹999.00",
-    priceValue: 999,
-    category: "plumbing",
-  },
-  {
-    id: "9",
-    image: "/images/services/salon_blowout_1775459997104.png",
-    title: "Deep Sculpt Facial",
-    rating: 5.0,
-    price: "₹2,500.00",
-    priceValue: 2500,
-    category: "salon",
-  },
-  {
-    id: "10",
-    image: "/images/services/manicure_service_1775460066015.png",
-    title: "Signature Pedicure",
-    rating: 4.7,
-    price: "₹1,200.00",
-    priceValue: 1200,
-    category: "salon",
-  },
-  {
-    id: "11",
-    image: "/images/services/ac_sterilization_service_1775460291924.png",
-    title: "Full System Re-gas",
-    rating: 4.7,
-    price: "₹3,500.00",
-    priceValue: 3500,
-    category: "ac-repair",
-  },
-  {
-    id: "12",
-    image: "/images/services/m2.jpg",
-    title: "Pipe Replacement",
-    rating: 4.8,
-    price: "₹4,000.00",
-    priceValue: 4000,
-    category: "plumbing",
-  },
-];
-
 const ServicesContent = () => {
+  const [allServices, setAllServices] = useState<ServiceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category") || "all";
   const searchParam = searchParams.get("search") || "";
@@ -145,8 +39,39 @@ const ServicesContent = () => {
     rating: "any",
   });
 
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api'}/services`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch services');
+        }
+        const data = await response.json();
+        
+        const mappedData: ServiceItem[] = data.map((item: any) => ({
+          id: item._id,
+          image: item.images?.[0] || "/images/services/placeholder.png",
+          title: item.service_name,
+          rating: item.avg_rating || 0,
+          price: `₹${item.base_price}`,
+          priceValue: item.base_price,
+          category: item.category_id?.category_name?.toLowerCase().replace(/ /g, '-') || "other",
+        }));
+        
+        setAllServices(mappedData);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
   // Sync with param change if needed (optional, but good for back/forward navigation)
-  React.useEffect(() => {
+  useEffect(() => {
     if (categoryParam) {
       setActiveCategory(categoryParam);
     }
@@ -222,11 +147,20 @@ const ServicesContent = () => {
             </h2>
           </div>
 
-          {filteredServices.length > 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-12 h-12 border-4 border-[#1D2B83] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-20 text-red-500 font-bold">
+              {error}
+            </div>
+          ) : filteredServices.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 border-t border-slate-100 pt-10">
               {filteredServices.map((service) => (
                 <ServiceCard
                   key={service.id}
+                  id={service.id}
                   image={service.image}
                   title={service.title}
                   rating={service.rating}

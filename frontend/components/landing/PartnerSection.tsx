@@ -96,14 +96,41 @@ const PartnerSection = () => {
               ))}
             </div>
 
-            <Link href="/join-as-partner">
-              <Button
-                type="primary"
-                size="large"
-                className="mt-10 h-14 rounded-xl px-10 text-base font-bold bg-[#1D2B83]"
-              >
-                BECOME A PARTNER
-              </Button>
+            <Link href="/join-as-partner" className="inline-block mt-10">
+              <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes floating-points {
+                  0% { transform: translateY(0); }
+                  85% { opacity: 0; }
+                  100% { transform: translateY(-40px); opacity: 0; }
+                }
+              `}} />
+              
+              <button className="group relative flex items-center justify-center overflow-hidden transition-all duration-300 border-none outline-none px-8 h-14 rounded-xl cursor-pointer active:scale-95 shadow-lg shadow-blue-500/20 bg-[radial-gradient(65.28%_65.28%_at_50%_100%,rgba(186,230,255,0.6)_0%,rgba(186,230,255,0)_100%)] bg-[#1D2B83]">
+                {/* Floating Particles */}
+                <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
+                  {[...Array(6)].map((_, i) => (
+                    <div 
+                      key={i}
+                      className="absolute bottom-[-5px] w-0.5 h-0.5 bg-white rounded-full opacity-0"
+                      style={{
+                        left: `${[15, 35, 50, 65, 80, 90][i]}%`,
+                        animation: `floating-points ${[2.2, 2.5, 1.9, 2.3, 2.0, 2.4][i]}s infinite ease-in-out`,
+                        animationDelay: `${[0.2, 0.5, 0, 0.3, 0.1, 0.4][i]}s`,
+                        opacity: [0.8, 0.6, 1, 0.7, 0.9, 0.5][i]
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Inner Content */}
+                <div className="relative z-10 flex items-center gap-3 text-white font-bold tracking-wider transition-colors duration-300">
+                  <span className="text-sm uppercase">Become a Partner</span>
+                  <svg className="w-4 h-4 transition-transform duration-300 transform group-hover:translate-x-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </div>
+              </button>
             </Link>
           </div>
 

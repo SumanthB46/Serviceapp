@@ -17,9 +17,9 @@ interface ServiceHeroProps {
   }) => void;
 }
 
-const ServiceHero: React.FC<ServiceHeroProps> = ({ 
-  onSearch, 
-  onApplyFilters 
+const ServiceHero: React.FC<ServiceHeroProps> = ({
+  onSearch,
+  onApplyFilters
 }) => {
   const [selected, setSelected] = useState("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -42,8 +42,8 @@ const ServiceHero: React.FC<ServiceHeroProps> = ({
             {/* Search Input */}
             <div className="relative flex-1 lg:flex-none lg:w-64">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Search services..."
                 onChange={(e) => onSearch(e.target.value)}
                 className="w-full bg-white rounded-full py-3 pl-11 pr-6 text-xs font-medium text-slate-700 outline-none border border-transparent focus:border-[#1D2B83]/20 transition-all placeholder:text-slate-400 shadow-sm"
@@ -65,9 +65,9 @@ const ServiceHero: React.FC<ServiceHeroProps> = ({
       </div>
 
       {/* Filter Sidebar Component */}
-      <FilterSidebar 
-        isOpen={isFilterOpen} 
-        onClose={() => setIsFilterOpen(false)} 
+      <FilterSidebar
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
         onApply={onApplyFilters}
       />
     </section>
