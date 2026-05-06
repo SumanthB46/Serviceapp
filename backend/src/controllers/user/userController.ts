@@ -235,19 +235,25 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
 // @access  Public
 export const sendOtp = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { identifier, role, useEmail } = req.body;
+    const { identifier, role, useEmail, mode } = req.body;
     
-    // Check if user already exists in the main User table
+    // Check if user exists for specific modes
     const existingUser = await User.findOne(useEmail ? { email: identifier } : { phone: identifier });
-    if (existingUser) {
-      res.status(400).json({ message: 'This email or phone number is already registered. Please log in.' });
+
+    if (mode === 'register' && existingUser) {
+      res.status(400).json({ message: 'This email or phone is already registered. Please log in instead.' });
+      return;
+    }
+
+    if (mode === 'forgot-password' && !existingUser) {
+      res.status(404).json({ message: 'No account found with this identifier.' });
       return;
     }
 
     // Generate a random 6-digit OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Store in Otp collection temporarily. Upsert ensures we overwrite any existing OTP for this identifier.
+    // Store in Otp collection temporarily
     await Otp.findOneAndUpdate(
       { identifier },
       { otpCode, role: role || 'customer', identifier },
@@ -260,8 +266,8 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
       const transporter = nodemailer.createTransport({
         service: 'gmail', 
         auth: {
-          user: process.env.SMTP_EMAIL, // Add this to your backend .env -> e.g., admin@gmail.com
-          pass: process.env.SMTP_PASSWORD, // Add this to your backend .env -> standard Google App Password
+          user: process.env.SMTP_EMAIL,
+          pass: process.env.SMTP_PASSWORD,
         },
       });
 
@@ -273,7 +279,7 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
           <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px;">
             <h2 style="color: #1D2B83; text-align: center;">ServiceApp Verification</h2>
             <p>Hello,</p>
-            <p>Thank you for joining us! Please use the verification code below to securely log into your account.</p>
+            <p>Please use the verification code below to securely log into your account.</p>
             <div style="background-color: #F8F9FC; padding: 15px; text-align: center; border-radius: 10px; margin: 20px 0;">
               <h1 style="font-size: 32px; letter-spacing: 8px; color: #1D2B83; margin: 0;">${otpCode}</h1>
             </div>
@@ -297,7 +303,6 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
       if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER) {
         try {
           const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-          // Auto-prepend Indian country code if not present, based on frontend forcing +91
           const formattedPhone = identifier.startsWith('+') ? identifier : `+91${identifier}`;
           
           await twilioClient.messages.create({
@@ -314,14 +319,9 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
       }
     }
 
-    // Returning otpCode strictly for development testing as we don't have SMS/Email gateway setup fully
     res.status(200).json({ message: 'OTP sent successfully', otpCode });
   } catch (error: any) {
-    if (error.code === 11000) {
-      res.status(400).json({ message: 'Email or phone already in use by another account.' });
-    } else {
-      res.status(500).json({ message: error.message });
-    }
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -339,23 +339,149 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Check if user already exists in the main User table
+    const existingUser = await User.findOne(useEmail ? { email: identifier } : { phone: identifier });
+
     // Clean up OTP to prevent reuse
     await Otp.deleteOne({ _id: otpRecord._id });
 
-    // IMPORTANT: We do not save to the User table here. 
-    // We strictly verify the code and pass a 'pending' state backwards. 
-    // The account is exclusively completed in the final registration profile step.
-    
-    res.status(200).json({
-      message: 'OTP verified successfully',
-      user: {
-         _id: "pending_verification",
-         role: otpRecord.role,
-         email: useEmail ? identifier : "",
-         phone: !useEmail ? identifier : "",
-         token: "pending_auth_token",
-      }
+    if (existingUser) {
+      // User exists - this is a login
+      res.status(200).json({
+        message: 'OTP verified successfully (Login)',
+        user: {
+          _id: existingUser._id,
+          name: existingUser.name,
+          email: existingUser.email,
+          phone: existingUser.phone,
+          role: existingUser.role,
+          profile_image: existingUser.profile_image,
+          token: generateToken(existingUser._id.toString()),
+        }
+      });
+    } else {
+      // User doesn't exist - this is a pending registration
+      res.status(200).json({
+        message: 'OTP verified successfully (New User)',
+        user: {
+          _id: "pending_verification",
+          role: otpRecord.role,
+          email: useEmail ? identifier : "",
+          phone: !useEmail ? identifier : "",
+          token: "pending_auth_token",
+        }
+      });
+    }
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+// @desc    Forgot Password - Send OTP
+// @route   POST /api/users/forgot-password
+// @access  Public
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      res.status(404).json({ message: 'User with this email does not exist.' });
+      return;
+    }
+
+    // Reuse sendOtp logic by calling it or mocking the request
+    // For simplicity, we'll just trigger the OTP send here
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    await Otp.findOneAndUpdate(
+      { identifier: email },
+      { otpCode, identifier: email },
+      { upsert: true }
+    );
+
+    // Send Email
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD,
+      },
     });
+
+    const mailOptions = {
+      from: process.env.SMTP_EMAIL || 'admin@serviceapp.com',
+      to: email,
+      subject: 'Reset Your Password - ServiceApp',
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px;">
+          <h2 style="color: #1D2B83; text-align: center;">Password Reset Request</h2>
+          <p>Hello,</p>
+          <p>We received a request to reset your password. Use the code below to proceed:</p>
+          <div style="background-color: #F8F9FC; padding: 15px; text-align: center; border-radius: 10px; margin: 20px 0;">
+            <h1 style="font-size: 32px; letter-spacing: 8px; color: #1D2B83; margin: 0;">${otpCode}</h1>
+          </div>
+          <p style="color: #666; font-size: 14px;">If you didn't request this, please ignore this email.</p>
+        </div>
+      `,
+    };
+
+    if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {
+      await transporter.sendMail(mailOptions);
+    }
+
+    res.status(200).json({ message: 'OTP sent to your email' });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Verify OTP for Reset Password (Step 2)
+// @route   POST /api/users/verify-reset-otp
+// @access  Public
+export const verifyResetOtp = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, otp } = req.body;
+    const otpRecord = await Otp.findOne({ identifier: email, otpCode: otp });
+
+    if (!otpRecord) {
+      res.status(400).json({ message: 'Invalid or expired OTP.' });
+      return;
+    }
+
+    res.status(200).json({ message: 'OTP verified. Please set your new password.' });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Reset Password (Step 3)
+// @route   POST /api/users/reset-password
+// @access  Public
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, otp, password } = req.body;
+
+    // Verify OTP again at the final step for security
+    const otpRecord = await Otp.findOne({ identifier: email, otpCode: otp });
+    if (!otpRecord) {
+      res.status(400).json({ message: 'Invalid or expired OTP. Please start over.' });
+      return;
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(404).json({ message: 'User not found.' });
+      return;
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+    await user.save();
+
+    // Clean up OTP
+    await Otp.deleteOne({ _id: otpRecord._id });
+
+    res.status(200).json({ message: 'Password reset successful. You can now log in.' });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

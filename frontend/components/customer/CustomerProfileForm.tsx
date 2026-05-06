@@ -16,6 +16,8 @@ export default function CustomerProfileForm() {
     email: "",
     phone: "",
     gender: "",
+    password: "",
+    confirmPassword: "",
   });
   
   const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -62,6 +64,16 @@ export default function CustomerProfileForm() {
       setError("Please enter your full name");
       return;
     }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
     
     setLoading(true);
     try {
@@ -79,6 +91,7 @@ export default function CustomerProfileForm() {
           email: formData.email,
           phone: formData.phone,
           gender: formData.gender,
+          password: formData.password,
           role: pendingUser.role || 'customer'
         }),
       });
@@ -173,6 +186,32 @@ export default function CustomerProfileForm() {
               placeholder="Enter phone number"
               className="w-full bg-[#F5F7FA] border border-transparent rounded-xl px-4 py-3.5 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#1D2B83] focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
+          </div>
+
+          {/* Password Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600 pl-1">Password</label>
+              <input 
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                className="w-full bg-[#F5F7FA] border border-transparent rounded-xl px-4 py-3.5 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#1D2B83] focus:bg-white transition-all"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600 pl-1">Confirm Password</label>
+              <input 
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="••••••••"
+                className="w-full bg-[#F5F7FA] border border-transparent rounded-xl px-4 py-3.5 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#1D2B83] focus:bg-white transition-all"
+              />
+            </div>
           </div>
 
           {/* Gender */}

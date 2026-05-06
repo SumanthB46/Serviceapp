@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../../middleware/authMiddleware';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { Provider } from '../../models/Provider';
@@ -100,7 +101,7 @@ export const createProvider = async (req: Request, res: Response): Promise<void>
     const provider = await Provider.create({
       user_id,
       availability_status: availability_status || 'offline',
-      location: location || 'Unassigned',
+      location_id: mongoose.Types.ObjectId.isValid(location) ? location : undefined,
       overall_rating: 0,
       is_verified: false
     });
@@ -155,10 +156,12 @@ export const updateProvider = async (req: Request, res: Response): Promise<void>
     const { availability_status, location, is_verified, overall_rating, status } = req.body;
 
     provider.availability_status = availability_status ?? provider.availability_status;
-    provider.location            = location            ?? provider.location;
+    if (location && mongoose.Types.ObjectId.isValid(location)) {
+      provider.location_id = location;
+    }
     provider.is_verified         = is_verified         ?? provider.is_verified;
     provider.overall_rating      = overall_rating      ?? provider.overall_rating;
-    provider.status              = status              ?? provider.status;
+    provider.kyc_status          = status              ?? provider.kyc_status;
 
     const updated = await provider.save();
     const populated = await updated.populate('user_id', 'name email phone profile_image status');
@@ -199,5 +202,60 @@ export const deleteProvider = async (req: Request, res: Response): Promise<void>
   }
 };
 
-// Legacy addProviderDocument removed. Documents are now managed per ProviderService record.
+// @desc    Get current provider profile
+// @route   GET /api/providers/me
+// @access  Private/Provider
+export const getMyProviderProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const provider = await Provider.findOne({ user_id: req.user?._id })
+      .populate('user_id', 'name email phone profile_image status');
+    
+    if (!provider) {
+      res.status(404).json({ message: 'Provider profile not found' });
+      return;
+    }
+
+    const services = await ProviderService.find({ 
+      provider_id: provider._id, 
+      isDeleted: false 
+    });
+
+    res.json({
+      ...provider.toObject(),
+      services
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update current provider profile
+// @route   PUT /api/providers/me
+// @access  Private/Provider
+export const updateMyProviderProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const provider = await Provider.findOne({ user_id: req.user?._id });
+    
+    if (!provider) {
+      res.status(404).json({ message: 'Provider profile not found' });
+      return;
+    }
+
+    const { availability_status, location } = req.body;
+
+    provider.availability_status = availability_status ?? provider.availability_status;
+    if (location && mongoose.Types.ObjectId.isValid(location)) {
+      provider.location_id = location;
+    }
+
+    const updated = await provider.save();
+    const populated = await updated.populate('user_id', 'name email phone profile_image status');
+    
+    const services = await ProviderService.find({ provider_id: provider._id, isDeleted: false });
+    res.json({ ...populated.toObject(), services });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 

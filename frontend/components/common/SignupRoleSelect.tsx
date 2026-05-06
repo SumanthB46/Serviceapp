@@ -17,8 +17,22 @@ const cardVariants: Variants = {
 const SignupRoleSelect = () => {
   const router = useRouter();
 
+  const buttonClasses = `
+    group relative overflow-hidden flex items-center justify-center 
+    px-[15px] py-[5px] text-[17px] font-semibold 
+    border-2 border-[rgb(40,144,241)] rounded-full 
+    text-[rgb(40,144,241)] transition-colors duration-300 delay-100 ease-out 
+    hover:text-white mt-8 w-full min-h-[56px]
+    before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 
+    before:content-[''] before:rounded-full before:block 
+    before:w-[150%] before:aspect-square before:z-0 
+    before:transition-all before:duration-500 before:ease-out 
+    hover:before:shadow-[inset_0_0_0_30rem_rgb(40,144,241)]
+    active:scale-95 transition-all
+  `;
+
   return (
-    <div className="min-h-screen bg-[#F3F4F8] flex flex-col items-center justify-center px-4 py-16">
+    <div className="min-h-screen bg-[#F3F4F8] flex flex-col items-center justify-center px-1 py-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -46,7 +60,7 @@ const SignupRoleSelect = () => {
         >
           <div className="w-full h-52 overflow-hidden">
             <img
-              src="/images/signup/Customer.png"
+              src="/images/signup/Customer.jpg"
               alt="Book a Service"
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
               onError={(e) => {
@@ -68,9 +82,9 @@ const SignupRoleSelect = () => {
             </p>
             <button
               onClick={() => router.push("/register?role=customer")}
-              className="mt-8 w-full bg-[#1D2B83] hover:bg-[#16226b] active:scale-95 text-white font-bold text-sm uppercase tracking-[0.15em] py-4 rounded-2xl transition-all duration-300 shadow-lg shadow-blue-100"
+              className={buttonClasses}
             >
-              Continue
+              <span className="relative z-10">CONTINUE</span>
             </button>
           </div>
         </motion.div>
@@ -85,7 +99,7 @@ const SignupRoleSelect = () => {
         >
           <div className="w-full h-52 overflow-hidden">
             <img
-              src="/images/signup/SP.png"
+              src="/images/signup/SP.jpg"
               alt="Become a Service Provider"
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
               onError={(e) => {
@@ -107,9 +121,9 @@ const SignupRoleSelect = () => {
             </p>
             <button
               onClick={() => router.push("/register?role=provider")}
-              className="mt-8 w-full bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold text-sm uppercase tracking-[0.15em] py-4 rounded-2xl transition-all duration-300"
+              className={buttonClasses}
             >
-              Continue
+              <span className="relative z-10">CONTINUE</span>
             </button>
           </div>
         </motion.div>

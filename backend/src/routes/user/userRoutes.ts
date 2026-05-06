@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, loginUser, getMe, updateMe, getUsers, deleteUser, updateUser, sendOtp, verifyOtp } from '../../controllers/user/userController';
+import { registerUser, loginUser, getMe, updateMe, getUsers, deleteUser, updateUser, sendOtp, verifyOtp, forgotPassword, resetPassword, verifyResetOtp } from '../../controllers/user/userController';
 import { protect, admin } from '../../middleware/authMiddleware';
 
 const router = express.Router();
@@ -9,6 +9,9 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/send-otp', sendOtp);
 router.post('/verify-otp', verifyOtp);
+router.post('/forgot-password', forgotPassword);
+router.post('/verify-reset-otp', verifyResetOtp);
+router.post('/reset-password', resetPassword);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
 router.get('/me', protect, getMe);

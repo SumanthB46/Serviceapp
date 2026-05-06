@@ -5,28 +5,30 @@ import Image from "next/image";
 import { Star, Clock } from "lucide-react";
 import { Button } from "antd";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 interface ServiceCardProps {
+  id: string;
   image: string;
   title: string;
   rating: number;
-  // duration: string;
   price: string;
   category?: string;
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({
+  id,
   image,
   title,
   rating,
-  // duration,
   price,
 }) => {
   return (
-    <motion.div
-      whileHover={{ y: -5 }}
-      className="flex-shrink-0 w-[300px] bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 transition-all hover:shadow-xl group"
-    >
+    <Link href={`/services/${id}`}>
+      <motion.div
+        whileHover={{ y: -5 }}
+        className="flex-shrink-0 w-[300px] bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 transition-all hover:shadow-xl group h-full"
+      >
       {/* Image Section */}
       <div className="relative h-48 w-full overflow-hidden">
         <Image
@@ -66,6 +68,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         </Button>
       </div>
     </motion.div>
+    </Link>
   );
 };
 
