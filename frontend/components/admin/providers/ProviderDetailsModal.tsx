@@ -32,19 +32,19 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
 
    // Provider Fields
    const [providerForm, setProviderForm] = useState({
-      location_id: '',
       availability_status: 'offline',
       kyc_status: 'pending',
-      total_jobs: 0,
-      completed_jobs: 0,
-      cancelled_jobs: 0,
-      acceptance_rate: 0,
-      completion_rate: 0,
-      years_of_experience: 0,
-      bio: '',
-      languages: [] as string[],
-      rejection_reason: '',
-      penalty_amount: 0
+      aadhar_id: '',
+      bank_details: {
+         account_holder_name: '',
+         account_number: '',
+         ifsc_code: '',
+         bank_name: '',
+         branch: ''
+      },
+      verification_docs: {
+         id_proof_url: ''
+      }
    });
 
 
@@ -76,19 +76,19 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
 
          // Populate Provider
          setProviderForm({
-            location_id: provider.location_id?._id || '',
             availability_status: provider.availability_status || 'offline',
             kyc_status: provider.kyc_status || 'pending',
-            total_jobs: provider.total_jobs || 0,
-            completed_jobs: provider.completed_jobs || 0,
-            cancelled_jobs: provider.cancelled_jobs || 0,
-            acceptance_rate: provider.acceptance_rate || 0,
-            completion_rate: provider.completion_rate || 0,
-            years_of_experience: provider.years_of_experience || 0,
-            bio: provider.bio || '',
-            languages: provider.languages || [],
-            rejection_reason: provider.rejection_reason || '',
-            penalty_amount: provider.penalty_amount || 0
+            aadhar_id: provider.aadhar_id || '',
+            bank_details: {
+               account_holder_name: provider.bank_details?.account_holder_name || '',
+               account_number: provider.bank_details?.account_number || '',
+               ifsc_code: provider.bank_details?.ifsc_code || '',
+               bank_name: provider.bank_details?.bank_name || '',
+               branch: provider.bank_details?.branch || ''
+            },
+            verification_docs: {
+               id_proof_url: provider.verification_docs?.id_proof_url || ''
+            }
          });
 
 
@@ -122,8 +122,6 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
       if (!userForm.name.trim()) newErrors.name = "Full name is required";
       if (!userForm.email.trim()) newErrors.email = "Email is required";
       if (!userForm.phone.trim()) newErrors.phone = "Phone is required";
-
-      if (!providerForm.location_id) newErrors.location_id = "Location is required";
 
       setErrors(newErrors);
       if (Object.keys(newErrors).length > 0 && (newErrors.name || newErrors.email || newErrors.phone)) {
@@ -282,21 +280,6 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
                            <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1">
                                  <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
-                                    <MapPin size={12} className="text-blue-500" /> Location
-                                 </label>
-                                 <select
-                                    value={providerForm.location_id}
-                                    onChange={(e) => setProviderForm({ ...providerForm, location_id: e.target.value })}
-                                    className={`w-full px-4 py-3 bg-white border ${errors.location_id ? 'border-red-500 ring-4 ring-red-500/10' : 'border-gray-100'} rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all`}
-                                 >
-                                    <option value="">Select Location</option>
-                                    {locations.map(loc => (
-                                       <option key={loc._id} value={loc._id}>{loc.name} ({loc.type})</option>
-                                    ))}
-                                 </select>
-                              </div>
-                              <div className="space-y-1">
-                                 <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
                                     <Activity size={12} className="text-blue-500" /> Availability
                                  </label>
                                  <select
@@ -309,75 +292,104 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
                                     <option value="offline">Offline</option>
                                  </select>
                               </div>
-                           </div>
-
-                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1">
                                  <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
-                                    <Activity size={12} className="text-blue-500" /> Completed Jobs
+                                    <UserCheck size={12} className="text-blue-500" /> KYC Status
+                                 </label>
+                                 <select
+                                    value={providerForm.kyc_status}
+                                    onChange={(e) => setProviderForm({ ...providerForm, kyc_status: e.target.value })}
+                                    className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                                 >
+                                    <option value="pending">Pending</option>
+                                    <option value="verified">Verified</option>
+                                    <option value="rejected">Rejected</option>
+                                 </select>
+                              </div>
+                           </div>
+
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                 <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                                    <Activity size={12} className="text-blue-500" /> Aadhar ID
                                  </label>
                                  <input
-                                    type="number"
-                                    value={providerForm.completed_jobs}
-                                    onChange={(e) => setProviderForm({ ...providerForm, completed_jobs: Number(e.target.value) })}
+                                    type="text"
+                                    value={providerForm.aadhar_id}
+                                    onChange={(e) => setProviderForm({ ...providerForm, aadhar_id: e.target.value })}
                                     className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                                    placeholder="Aadhar Number"
                                  />
                               </div>
                               <div className="space-y-1">
                                  <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
-                                    <Activity size={12} className="text-blue-500" /> Success Rate (%)
+                                    <Activity size={12} className="text-blue-500" /> ID Proof URL
                                  </label>
                                  <input
-                                    type="number"
-                                    value={providerForm.completion_rate}
-                                    onChange={(e) => setProviderForm({ ...providerForm, completion_rate: Number(e.target.value) })}
+                                    type="text"
+                                    value={providerForm.verification_docs.id_proof_url}
+                                    onChange={(e) => setProviderForm({ ...providerForm, verification_docs: { id_proof_url: e.target.value } })}
                                     className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                                    placeholder="ID Proof URL"
                                  />
                               </div>
                            </div>
 
-                           <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
-                                 <Activity size={12} className="text-blue-500" /> Professional Bio
-                              </label>
-                              <textarea
-                                 value={providerForm.bio}
-                                 onChange={(e) => setProviderForm({ ...providerForm, bio: e.target.value })}
-                                 rows={3}
-                                 className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all resize-none"
-                                 placeholder="Brief overview of the expert's professional background..."
-                              />
-                           </div>
-
-                           <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
-                                 <UserCheck size={12} className="text-blue-500" /> KYC Status
-                              </label>
-                              <select
-                                 value={providerForm.kyc_status}
-                                 onChange={(e) => setProviderForm({ ...providerForm, kyc_status: e.target.value })}
-                                 className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
-                              >
-                                 <option value="pending">Pending</option>
-                                 <option value="verified">Verified</option>
-                                 <option value="rejected">Rejected</option>
-                              </select>
-                           </div>
-
-                           {providerForm.kyc_status === 'rejected' && (
-                              <div className="space-y-1">
-                                 <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
-                                    <Activity size={12} className="text-red-500" /> Rejection Reason
-                                 </label>
-                                 <textarea
-                                    value={providerForm.rejection_reason}
-                                    onChange={(e) => setProviderForm({ ...providerForm, rejection_reason: e.target.value })}
-                                    rows={3}
-                                    className="w-full px-4 py-3 bg-white border border-red-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-200 transition-all resize-none"
-                                    placeholder="Specify why the application was rejected..."
-                                 />
+                           <div className="space-y-3 pt-4 border-t border-gray-100">
+                              <h3 className="text-sm font-black text-gray-900 tracking-tight uppercase tracking-[0.1em]">Bank Details</h3>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                 <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1">Account Holder</label>
+                                    <input
+                                       type="text"
+                                       value={providerForm.bank_details.account_holder_name}
+                                       onChange={(e) => setProviderForm({ ...providerForm, bank_details: { ...providerForm.bank_details, account_holder_name: e.target.value } })}
+                                       className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                                       placeholder="Account Holder Name"
+                                    />
+                                 </div>
+                                 <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1">Account Number</label>
+                                    <input
+                                       type="text"
+                                       value={providerForm.bank_details.account_number}
+                                       onChange={(e) => setProviderForm({ ...providerForm, bank_details: { ...providerForm.bank_details, account_number: e.target.value } })}
+                                       className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                                       placeholder="Account Number"
+                                    />
+                                 </div>
+                                 <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1">IFSC Code</label>
+                                    <input
+                                       type="text"
+                                       value={providerForm.bank_details.ifsc_code}
+                                       onChange={(e) => setProviderForm({ ...providerForm, bank_details: { ...providerForm.bank_details, ifsc_code: e.target.value } })}
+                                       className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                                       placeholder="IFSC Code"
+                                    />
+                                 </div>
+                                 <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1">Bank Name</label>
+                                    <input
+                                       type="text"
+                                       value={providerForm.bank_details.bank_name}
+                                       onChange={(e) => setProviderForm({ ...providerForm, bank_details: { ...providerForm.bank_details, bank_name: e.target.value } })}
+                                       className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                                       placeholder="Bank Name"
+                                    />
+                                 </div>
+                                 <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1">Branch</label>
+                                    <input
+                                       type="text"
+                                       value={providerForm.bank_details.branch}
+                                       onChange={(e) => setProviderForm({ ...providerForm, bank_details: { ...providerForm.bank_details, branch: e.target.value } })}
+                                       className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
+                                       placeholder="Branch"
+                                    />
+                                 </div>
                               </div>
-                           )}
+                           </div>
                         </motion.div>
                      )}
                   </form>

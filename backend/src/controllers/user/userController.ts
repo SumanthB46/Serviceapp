@@ -46,6 +46,8 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       role: role || 'customer',
       gender,
       profile_image: profile_image || '',
+      isEmailVerified: !!email,
+      isPhoneVerified: !!phone,
     });
 
     if (user) {
@@ -55,7 +57,6 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
           user_id: user._id,
           availability_status: 'offline',
           kyc_status: 'pending',
-          overall_rating: 0,
           is_verified: false,
         });
 
@@ -95,6 +96,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        profile_image: user.profile_image,
         token: generateToken(user._id.toString()),
       });
     } else {
@@ -136,6 +138,7 @@ export const updateMe = async (req: AuthRequest, res: Response): Promise<void> =
     user.email         = req.body.email         ?? user.email;
     user.phone         = req.body.phone         ?? user.phone;
     user.profile_image = req.body.profile_image ?? user.profile_image;
+    user.gender        = req.body.gender        ?? user.gender;
 
     if (req.body.password) {
       const salt = await bcrypt.genSalt(10);
@@ -163,7 +166,7 @@ export const updateMe = async (req: AuthRequest, res: Response): Promise<void> =
 // @access  Public
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const users = await User.find({ status: { $ne: 'deleted' } }).sort({ createdAt: -1 });
+    const users = await User.find({ isDeleted: false }).sort({ createdAt: -1 });
     res.json(users);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -222,7 +225,8 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
       res.status(404).json({ message: 'User not found' });
       return;
     }
-    user.status = 'deleted';
+    user.isDeleted = true;
+    user.status = 'blocked'; // Block the user upon soft deletion
     await user.save();
     res.json({ message: 'User moved to trash (Soft Delete)' });
   } catch (error: any) {
@@ -346,6 +350,14 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
     await Otp.deleteOne({ _id: otpRecord._id });
 
     if (existingUser) {
+      // Update verification flags
+      if (useEmail) {
+        existingUser.isEmailVerified = true;
+      } else {
+        existingUser.isPhoneVerified = true;
+      }
+      await existingUser.save();
+
       // User exists - this is a login
       res.status(200).json({
         message: 'OTP verified successfully (Login)',

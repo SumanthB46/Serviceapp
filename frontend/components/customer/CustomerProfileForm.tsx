@@ -11,6 +11,7 @@ export default function CustomerProfileForm() {
   
   const [userId, setUserId] = useState("");
   const [token, setToken] = useState("");
+  const [role, setRole] = useState("customer");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -35,6 +36,7 @@ export default function CustomerProfileForm() {
       const user = JSON.parse(storedUserStr);
       setUserId(user._id);
       setToken(storedToken);
+      setRole(user.role || "customer");
       
       setFormData(prev => ({
         ...prev,
@@ -112,7 +114,11 @@ export default function CustomerProfileForm() {
       }));
       
       // Redirect to main app/dashboard after success
-      router.push("/");
+      if (data.role === 'provider') {
+        router.push("/provider_register/services");
+      } else {
+        router.push("/");
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -137,10 +143,12 @@ export default function CustomerProfileForm() {
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-3xl font-extrabold text-[#1D2B83] tracking-tight mb-3">
-            Tell us about you.
+            {role === 'provider' ? "Complete Your Profile" : "Tell us about you."}
           </h1>
           <p className="text-slate-500 font-medium text-[15px] max-w-[320px] mx-auto text-balance">
-            Personalize your experience to receive the highest standard of services.
+            {role === 'provider' 
+              ? "Tell us more about yourself to start providing services."
+              : "Personalize your experience to receive the highest standard of services."}
           </p>
         </div>
 

@@ -1,23 +1,24 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  UserCircle, 
-  Settings, 
-  Calendar, 
-  Package, 
-  Wallet, 
-  Star, 
-  Bell, 
-  MapPin, 
+import {
+  LayoutDashboard,
+  Calendar,
+  Package,
+  Wallet,
+  Star,
+  Bell,
+  MapPin,
   Image as ImageIcon,
   Wrench,
   LogOut,
-  X
+  X,
+  ChevronRight,
+  Settings
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const menuItems = [
   { name: "Dashboard", icon: LayoutDashboard, href: "/provider/dashboard" },
@@ -38,61 +39,118 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  const getInitials = (name: string) => {
+    if (!name) return "PR";
+    return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+  };
 
   return (
     <>
       {/* Mobile Overlay */}
-      <div 
+      <div
         className={`fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 transition-opacity lg:hidden ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         onClick={onClose}
       />
 
-      {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 h-full w-72 bg-white border-r border-slate-200 z-50 transition-transform lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="p-6 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 bg-[#1D2B83] rounded-lg flex items-center justify-center">
-                <Wrench className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-slate-900">ServiceSwift</span>
-            </Link>
-            <button onClick={onClose} className="lg:hidden p-2 text-slate-400 hover:text-slate-600">
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
-            <div className="space-y-1">
-              {menuItems.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                      isActive 
-                        ? "bg-primary/10 text-primary" 
-                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                    }`}
-                  >
-                    <item.icon className={`h-5 w-5 ${isActive ? "text-primary" : "text-slate-400"}`} />
-                    {item.name}
-                  </Link>
-                );
-              })}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0F172A] border-r border-white/5 transition-transform duration-500 ease-in-out lg:translate-x-0 flex flex-col h-screen overflow-hidden ${isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+      >
+        {/* Branding Header - Slightly more compact */}
+        <div className="flex items-center justify-between h-20 px-6 relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/10 to-transparent pointer-events-none" />
+          <Link href="/provider/dashboard" className="flex items-center gap-3 relative z-10">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:rotate-6 transition-transform">
+              <span className="text-white font-black text-lg">F</span>
             </div>
-          </nav>
+            <div className="flex flex-col">
+              <span className="text-base font-bold text-white tracking-tight leading-none">FIXVO</span>
+            </div>
+          </Link>
+          <button
+            className="lg:hidden text-gray-400 hover:text-white transition-colors"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-slate-100">
-            <button className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 transition-all">
-              <LogOut className="h-5 w-5" />
-              Logout
-            </button>
+        {/* Main Navigation - No scroll area, adjusted padding */}
+        <div className="flex-1 px-3 py-4 flex flex-col overflow-y-auto custom-scrollbar">
+          <nav className="space-y-1">
+            {menuItems.map((link) => {
+              const isActive =
+                pathname === link.href ||
+                (pathname.startsWith(link.href) && link.href !== '/provider/dashboard');
+              const Icon = link.icon;
+
+              return (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden ${isActive
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                >
+                  {/* Active Indicator Line */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="provider-active-indicator"
+                      className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-blue-400 rounded-r-full"
+                    />
+                  )}
+
+                  <div className="flex items-center gap-3 relative z-10">
+                    <div className={`transition-all duration-300 ${isActive ? 'text-white' : 'group-hover:text-blue-400 group-hover:scale-110'
+                      }`}>
+                      <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                    </div>
+                    <span className={`text-[13px] font-bold tracking-tight transition-transform duration-300 ${isActive ? 'translate-x-1' : 'group-hover:translate-x-1'
+                      }`}>
+                      {link.name}
+                    </span>
+                  </div>
+                  {isActive && <ChevronRight size={12} className="opacity-60 relative z-10" />}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Bottom Profile Section - More compact */}
+        <div className="p-4 border-t border-white/5 bg-white/[0.01]">
+          <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer group mb-3">
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-blue-600 flex items-center justify-center font-bold text-white shadow-inner text-xs">
+              {getInitials(user?.name)}
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <p className="text-xs font-bold text-white truncate">{user?.name || "Provider"}</p>
+              <p className="text-[9px] text-gray-500 font-bold truncate">{user?.email || "expert@fixvo.com"}</p>
+            </div>
+            <Settings size={14} className="text-gray-500 group-hover:text-blue-400 transition-colors" />
           </div>
+
+          <button 
+            onClick={() => {
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              window.location.href = "/login";
+            }}
+            className="w-full flex items-center gap-3 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-all text-[10px] font-bold uppercase tracking-widest"
+          >
+            <LogOut size={14} />
+            Sign Out
+          </button>
         </div>
       </aside>
     </>

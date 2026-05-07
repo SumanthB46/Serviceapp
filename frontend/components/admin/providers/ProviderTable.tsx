@@ -81,8 +81,8 @@ const ProviderTable: React.FC = () => {
     const matchSearch = (p.user_id?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
       (p.user_id?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
       (p.user_id?.phone?.includes(searchTerm) ?? false);
-    const matchLocation = locationFilter === 'All' || p.location_id?.name === locationFilter;
-    const matchService = serviceFilter === 'All' || (p.services && p.services.some(s => s.service_name === serviceFilter));
+    const matchLocation = locationFilter === 'All'; // Location filter is temporarily disabled
+    const matchService = serviceFilter === 'All' || (p.services && p.services.some(s => s.subservice_ids.some(sub => sub.subservice_name === serviceFilter)));
     return matchStatus && matchSearch && matchLocation && matchService;
 
 
@@ -310,21 +310,21 @@ const ProviderTable: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="scale-90 origin-left">
                       <Badge variant="neutral">
-                        {provider.services?.[0]?.service_name || 'General'}
+                        {provider.services?.[0]?.subservice_ids?.[0]?.subservice_name || 'Expert'}
                       </Badge>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-500 font-bold uppercase text-[9px] tracking-widest">{provider.location_id?.name || 'Unassigned'}</td>
+                  <td className="px-6 py-4 text-gray-500 font-bold uppercase text-[9px] tracking-widest">Unassigned</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5 text-gray-900 font-black">
                       <CheckCircle2 size={14} className="text-green-600" />
-                      <span>{provider.total_jobs || 0}</span>
+                      <span>0</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5 text-gray-900 font-black">
                       <Star size={14} className="text-amber-500 fill-amber-500" />
-                      <span>{provider.completion_rate || 100}%</span>
+                      <span>100%</span>
                     </div>
                   </td>
 

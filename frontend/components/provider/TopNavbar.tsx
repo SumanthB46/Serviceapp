@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Menu, Bell, Search, User, ChevronDown, UserCircle, Settings, LogOut } from "lucide-react";
+import { Menu, Bell, User, ChevronDown, UserCircle, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
+import axios from "axios";
+import { API_URL } from "@/config/api";
 
 interface TopNavbarProps {
   onOpenSidebar: () => void;
@@ -10,9 +12,41 @@ interface TopNavbarProps {
 
 export default function TopNavbar({ onOpenSidebar }: TopNavbarProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  React.useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const storedUser = localStorage.getItem("user");
+        
+        // Initial load from storage for speed
+        if (storedUser) setUser(JSON.parse(storedUser));
+
+        if (token) {
+          const response = await axios.get(`${API_URL}/users/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUser(response.data);
+          localStorage.setItem("user", JSON.stringify(response.data));
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+  };
+
 
   return (
-    <header className="h-20 border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-30 px-4 lg:px-8">
+    <header className="fixed top-0 right-0 left-0 lg:left-64 h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md z-30 px-4 lg:px-8 transition-all">
       <div className="h-full flex items-center justify-between">
         {/* Left Side */}
         <div className="flex items-center gap-4">
@@ -45,7 +79,7 @@ export default function TopNavbar({ onOpenSidebar }: TopNavbarProps) {
           <div className="relative">
             <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
               <div className="hidden lg:block text-right">
-                <span className="block text-sm font-bold text-slate-900">Aryan Sharma</span>
+                <span className="block text-sm font-bold text-slate-900">{user?.name || "Provider"}</span>
                 <span className="block text-xs font-medium text-emerald-600">Active • Online</span>
               </div>
               <button 
@@ -54,7 +88,11 @@ export default function TopNavbar({ onOpenSidebar }: TopNavbarProps) {
               >
                 <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
                   <img 
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aryan" 
+                    src={user?.profile_image ? (
+                      user.profile_image.startsWith('http') || user.profile_image.startsWith('data:') 
+                        ? user.profile_image 
+                        : `${API_URL.replace('/api', '')}/${user.profile_image.replace(/\\/g, '/')}`
+                    ) : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'Provider'}`} 
                     alt="Profile"
                     className="h-full w-full object-cover" 
                   />
@@ -94,7 +132,10 @@ export default function TopNavbar({ onOpenSidebar }: TopNavbarProps) {
                   </Link>
 
                   <div className="border-t border-slate-50 mt-2 pt-2">
-                    <button className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-all">
+                    <button 
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-all"
+                    >
                       <LogOut className="h-5 w-5" />
                       Logout
                     </button>

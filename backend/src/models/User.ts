@@ -7,8 +7,12 @@ export interface IUser extends Document {
   password?: string;
   role: 'admin' | 'customer' | 'provider';
   profile_image?: string;
-  status: 'active' | 'blocked' | 'deleted';
-  gender?: 'male' | 'female' | 'other';
+  status: 'active' | 'blocked';
+  gender?: string;
+  isDeleted: boolean;
+  lastLogin?: Date;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,6 +38,12 @@ const userSchema = new Schema<IUser>(
       unique: true,
       sparse: true,
       trim: true,
+      validate: {
+        validator: function(v: string) {
+          return /^\+?[1-9]\d{1,14}$/.test(v); // Basic international phone validation
+        },
+        message: (props: any) => `${props.value} is not a valid phone number!`
+      }
     },
     password: {
       type: String,
@@ -51,13 +61,27 @@ const userSchema = new Schema<IUser>(
     },
     status: {
       type: String,
-      enum: ['active', 'blocked', 'deleted'],
+      enum: ['active', 'blocked'],
       default: 'active',
     },
     gender: {
       type: String,
-      enum: ['male', 'female', 'other'],
       required: false,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    lastLogin: {
+      type: Date,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isPhoneVerified: {
+      type: Boolean,
+      default: false,
     },
   },
   {
