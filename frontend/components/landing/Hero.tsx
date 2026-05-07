@@ -63,14 +63,14 @@ const Hero = () => {
             </div>
 
             {/* Trending */}
-            <div className="mt-6 flex flex-wrap items-center gap-4 text-[12px] font-bold tracking-widest text-slate-400">
+            {/* <div className="mt-6 flex flex-wrap items-center gap-4 text-[12px] font-bold tracking-widest text-slate-400">
               <span className="uppercase">Trending:</span>
               <div className="flex gap-4 text-[#1D2B83]">
                 <button className="hover:opacity-80" onClick={() => setSearchQuery("Deep Cleaning")}>Deep Cleaning</button>
                 <button className="hover:opacity-80" onClick={() => setSearchQuery("AC Service")}>AC Service</button>
                 <button className="hover:opacity-80" onClick={() => setSearchQuery("Massage")}>Massage</button>
               </div>
-            </div>
+            </div> */}
 
             <div className="mt-10">
               <motion.div

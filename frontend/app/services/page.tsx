@@ -91,7 +91,7 @@ const ServicesContent = () => {
     // Search Filter
     if (searchQuery) {
       result = result.filter((service) =>
-        service.title.toLowerCase().includes(searchQuery.toLowerCase())
+        (service.title || "").toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 

@@ -107,9 +107,9 @@ const ServiceTable: React.FC = () => {
     };
 
     const filteredServices = services.filter(s =>
-        (s.service_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        ((s.service_name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
          (s.slug && s.slug.toLowerCase().includes(searchTerm.toLowerCase()))) &&
-        (filterStatus === 'All' || s.status.toLowerCase() === filterStatus.toLowerCase())
+        (filterStatus === 'All' || (s.status || "").toLowerCase() === filterStatus.toLowerCase())
     );
 
 

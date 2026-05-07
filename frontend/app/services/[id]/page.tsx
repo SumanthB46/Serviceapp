@@ -73,9 +73,11 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
   }, [services]);
 
   const filteredServices = services.filter(service => {
+    const title = service.title || "";
+    const description = service.description || "";
     const matchesCategory = activeSubCategory === "All Services" || service.subCategory === activeSubCategory;
-    const matchesSearch = service.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          service.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
