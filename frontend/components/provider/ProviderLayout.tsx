@@ -15,10 +15,10 @@ export default function ProviderLayout({ children }: ProviderLayoutProps) {
     <div className="min-h-screen bg-slate-50 flex">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <div className="flex-1 flex flex-col lg:pl-72">
+      <div className="flex-1 flex flex-col lg:pl-64 w-full">
         <TopNavbar onOpenSidebar={() => setSidebarOpen(true)} />
         
-        <main className="flex-1 p-4 lg:p-8">
+        <main className="flex-1 p-4 lg:p-8 mt-16">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

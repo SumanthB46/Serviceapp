@@ -17,15 +17,12 @@ export interface ProviderDocument {
 export interface ProviderService {
   _id: string;
   provider_id: string | { _id: string; user_id: { name: string; email: string } };
-  service_id: string;
-  service_name: string;
+  location_ids: string[];
   experience: number;
   price: number;
-  min_price?: number;
-  max_price?: number;
-  is_featured?: boolean;
-  is_available?: boolean;
-  skills: string[];
+  discount: number;
+  final_price: number;
+  subservice_ids: { _id: string; subservice_name: string }[];
   documents: ProviderDocument[];
   availability: {
     day: string;
@@ -34,14 +31,12 @@ export interface ProviderService {
     slot_duration: number;
     buffer_time: number;
   }[];
-  weekly_off?: string[];
-  blocked_dates?: { date: string; reason: string }[];
-  service_radius_km: number;
-  service_rating: number;
-  total_reviews: number;
+  is_featured: boolean;
+  is_available: boolean;
   is_active: boolean;
   isDeleted: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 
@@ -57,36 +52,22 @@ export interface Provider {
   };
   availability_status: 'available' | 'busy' | 'offline';
   kyc_status: 'pending' | 'verified' | 'rejected';
-  location_id?: {
-    _id: string;
-    name: string;
-    state?: string;
-    country?: string;
-  };
-  total_jobs: number;
-  completed_jobs: number;
-  cancelled_jobs: number;
-  acceptance_rate: number;
-  completion_rate: number;
-  years_of_experience: number;
-  bio?: string;
-  languages?: string[];
-  profile_image?: string;
-  rejection_reason?: string;
-  overall_rating: number;
-  rating_breakdown?: {
-    5: number;
-    4: number;
-    3: number;
-    2: number;
-    1: number;
-  };
-  portfolio?: { image: string; description: string }[];
-  last_active_at?: string;
   is_verified: boolean;
+  aadhar_last4?: string;
+  bank_details?: {
+    account_holder_name: string;
+    account_number_last4: string;
+    ifsc_code: string;
+    bank_name: string;
+    branch: string;
+  };
+  verification_docs?: {
+    id_proof_url: string;
+  };
   services?: ProviderService[]; 
   isDeleted: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 
@@ -96,28 +77,31 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  status: 'Active' | 'Inactive' | 'Suspended' | 'Blocked' | 'Pending';
-  bookings?: number;
-  spent?: string;
+  status: 'active' | 'blocked';
+  isDeleted: boolean;
+  lastLogin?: string;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  gender?: string;
+  role?: 'admin' | 'customer' | 'provider';
+  avatar?: string;
   joinedDate: string;
   lastActive?: string;
-  role?: 'Customer' | 'Admin' | 'Support';
-  avatar?: string;
+  bookings?: number;
+  spent?: string;
 }
+
 export interface ILocation {
   _id: string;
   name: string;
-  type: 'city' | 'area';
+  type: string;
   parent_id?: string | ILocation | null;
-  state?: string;
-  country?: string;
   pincode?: string;
-  coordinates?: {
+  coordinates: {
     type: 'Point';
-    coordinates: number[];
+    coordinates: [number, number];
   };
   status: 'active' | 'inactive';
-
   isDeleted: boolean;
   createdAt: string;
 }

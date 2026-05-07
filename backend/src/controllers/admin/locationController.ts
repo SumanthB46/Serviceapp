@@ -37,7 +37,7 @@ export const getLocationById = async (req: Request, res: Response): Promise<void
 // @access  Private/Admin
 export const createLocation = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, type, parent_id, state, country, pincode, status, latitude, longitude } = req.body;
+    const { name, type, parent_id, pincode, status, latitude, longitude } = req.body;
 
 
     // Validate type
@@ -50,8 +50,6 @@ export const createLocation = async (req: Request, res: Response): Promise<void>
       name,
       type,
       parent_id: parent_id || null, // For cities, this will be null
-      state,
-      country,
       pincode,
       status: status || 'active',
       coordinates: {
@@ -79,14 +77,12 @@ export const updateLocation = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const { name, type, parent_id, state, country, pincode, status, latitude, longitude } = req.body;
+    const { name, type, parent_id, pincode, status, latitude, longitude } = req.body;
 
 
     location.name = name ?? location.name;
     location.type = type ?? location.type;
     location.parent_id = parent_id !== undefined ? parent_id : location.parent_id;
-    location.state = state ?? location.state;
-    location.country = country ?? location.country;
     location.pincode = pincode ?? location.pincode;
     location.status = status ?? location.status;
     

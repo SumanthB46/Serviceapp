@@ -17,8 +17,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 .DS_Store
+Thumbs.db
+desktop.ini
 *.pem
 *.key
+*.bak
+*.tmp
+*.local
+.eslintcache
 
 
 # IDE / UI / OS Files
@@ -29,6 +35,8 @@ yarn-error.log*
 brain/
 scratch/
 .gemini/
+CLAUDE.md
+AGENTS.md
 .temp/
 .tmp/
 temp/
@@ -58,3 +66,8 @@ next-env.d.ts
 # Backend (Node.js)
 # ========================
 logs/
+
+# ========================
+# Local / Utility Scripts
+# ========================
+backend/src/clean_db.ts

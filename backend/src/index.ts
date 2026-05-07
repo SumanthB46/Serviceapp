@@ -30,7 +30,12 @@ const app = express();
 const port = 5005;
 
 app.use(cors());
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
 app.use(express.json({ limit: '10mb' })); // increased limit for base64 images
+app.use('/uploads', express.static('uploads'));
 
 // Routes
 app.use('/api/users',      userRoutes);
@@ -65,8 +70,7 @@ const server = app.listen(Number(port), '0.0.0.0', () => {
 
 server.on('error', (error: any) => {
   if (error.code === 'EADDRINUSE') {
-    console.error(`❌ Port ${port} is already in use. Attempting to restart...`);
-    process.exit(1);
+    console.error(`❌ Port ${port} is already in use.`);
   } else {
     console.error('❌ Server error:', error);
   }

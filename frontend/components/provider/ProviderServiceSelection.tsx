@@ -40,7 +40,7 @@ interface Availability {
 interface ServiceDetail {
   experience: number;
   price: number;
-  skills: string;
+  subserviceIds: string[];
   selectedLocations: string[];
   availability: Availability[];
   documents: DocUpload[];
@@ -58,6 +58,7 @@ export default function ProviderServiceSelection() {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [servicesMap, setServicesMap] = useState<Record<string, Service[]>>({});
+  const [subServicesMap, setSubServicesMap] = useState<Record<string, any[]>>({});
   const [locations, setLocations] = useState<LocationData[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -74,7 +75,6 @@ export default function ProviderServiceSelection() {
   // Step 3 form states
   const [aadharId, setAadharId] = useState("");
   const [idProof, setIdProof] = useState<DocUpload>({ doc_type: 'Government ID' });
-  const [selfie, setSelfie] = useState<DocUpload>({ doc_type: 'Selfie' });
   const [bankDetails, setBankDetails] = useState({
     account_holder_name: "",
     account_number: "",
@@ -132,6 +132,19 @@ export default function ProviderServiceSelection() {
     }
   };
 
+  const fetchSubServicesForService = async (serviceId: string) => {
+    if (subServicesMap[serviceId]) return;
+    try {
+      const res = await fetch(`${API_URL}/sub-services?service_id=${serviceId}`);
+      const data = await res.json();
+      if (res.ok) {
+        setSubServicesMap(prev => ({ ...prev, [serviceId]: data }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch sub-services", err);
+    }
+  };
+
   const handleCategoryToggle = (categoryId: string) => {
     setSelectedCategoryIds(prev => {
       const isSelected = prev.includes(categoryId);
@@ -148,17 +161,19 @@ export default function ProviderServiceSelection() {
     });
   };
 
+
   const toggleService = (serviceId: string) => {
     setSelectedServices(prev => {
       const isSelected = prev.includes(serviceId);
       const next = isSelected ? prev.filter(id => id !== serviceId) : [...prev, serviceId];
       if (!isSelected && !serviceDetails[serviceId]) {
+        fetchSubServicesForService(serviceId);
         setServiceDetails(curr => ({
           ...curr,
           [serviceId]: {
             experience: 0,
             price: 0,
-            skills: "",
+            subserviceIds: [],
             selectedLocations: [],
             availability: [{ day: "Monday", start_time: "09:00", end_time: "18:00" }],
             documents: []
@@ -193,12 +208,18 @@ export default function ProviderServiceSelection() {
       }
 
       setSelectedCategoryIds(validCategoryIds);
+
+      // Fetch sub-services for all selected services
+      selectedServices.forEach(svcId => {
+        fetchSubServicesForService(svcId);
+      });
+
       setCurrentStep(2);
     } else if (currentStep === 2) {
       for (const svcId of selectedServices) {
         const details = serviceDetails[svcId];
         const service = Object.values(servicesMap).flat().find(s => s._id === svcId);
-        
+
         if (!details || (details.experience || 0) <= 0) {
           return setError(`Please enter years of experience for ${service?.service_name}.`);
         }
@@ -208,8 +229,8 @@ export default function ProviderServiceSelection() {
         if (!details.selectedLocations || details.selectedLocations.length === 0) {
           return setError(`Please select at least one location for ${service?.service_name}.`);
         }
-        if (!details.skills || details.skills.trim() === "") {
-          return setError(`Please list your skills for ${service?.service_name}.`);
+        if (!details.subserviceIds || details.subserviceIds.length === 0) {
+          return setError(`Please select at least one sub-service for ${service?.service_name}.`);
         }
         if (!details.documents || details.documents.length === 0) {
           return setError(`Please upload at least one experience certificate for ${service?.service_name}.`);
@@ -226,8 +247,7 @@ export default function ProviderServiceSelection() {
   const handleSubmit = async () => {
     // Step 3 Validation: Identity and Bank Details
     if (!idProof.file) return setError("Please upload your ID Proof (Government ID).");
-    if (!selfie.file) return setError("Please capture or upload a selfie for verification.");
-    
+
     const aadharRegex = /^\d{12}$/;
     if (!aadharRegex.test(aadharId.replace(/\s/g, ""))) {
       return setError("Please enter a valid 12-digit Aadhar Number.");
@@ -237,7 +257,7 @@ export default function ProviderServiceSelection() {
     if (!bankDetails.account_number.trim() || bankDetails.account_number.length < 9) {
       return setError("Please enter a valid Bank Account Number.");
     }
-    
+
     const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
     if (!ifscRegex.test(bankDetails.ifsc_code.toUpperCase())) {
       return setError("Please enter a valid 11-digit IFSC Code (e.g., ABCD0123456).");
@@ -249,7 +269,7 @@ export default function ProviderServiceSelection() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      
+
       // 1. Get Provider ID
       const pRes = await fetch(`${API_URL}/providers/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -261,16 +281,16 @@ export default function ProviderServiceSelection() {
       // 2. Update Identity Details via /me endpoint
       const updateMeRes = await fetch(`${API_URL}/providers/me`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${token}` 
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           aadhar_id: aadharId,
           bank_details: bankDetails,
-          verification_docs: { 
-            id_proof_url: idProof.file_url || "", 
-            selfie_url: selfie.file_url || "" 
+          verification_docs: {
+            id_proof_url: idProof.file_url || "",
+            selfie_url: ""
           }
         }),
       });
@@ -288,11 +308,9 @@ export default function ProviderServiceSelection() {
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             provider_id: providerId,
-            service_id: serviceId,
-            service_name: service?.service_name,
             experience: details.experience || 0,
             price: details.price || 0,
-            skills: (details.skills || "").split(',').map((s: string) => s.trim()).filter((s: string) => s !== ""),
+            subservice_ids: details.subserviceIds || [],
             location_ids: details.selectedLocations || [],
             availability: details.availability || [],
             documents: (details.documents || []).map((d: any) => ({
@@ -413,14 +431,16 @@ export default function ProviderServiceSelection() {
             <div className="space-y-8">
               {selectedServices.map(serviceId => {
                 const service = Object.values(servicesMap).flat().find(s => s._id === serviceId);
-                const details = serviceDetails[serviceId] || { 
-                  experience: 0, 
-                  price: 0, 
-                  skills: "", 
-                  selectedLocations: [], 
+                const details = serviceDetails[serviceId] || {
+                  experience: 0,
+                  price: 0,
+                  subserviceIds: [],
+                  selectedLocations: [],
                   availability: [],
                   documents: []
                 };
+                const subServices = subServicesMap[serviceId] || [];
+
                 return (
                   <div key={serviceId} className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100 space-y-6">
                     <div className="flex items-center gap-2 text-[#1D2B83]">
@@ -429,29 +449,29 @@ export default function ProviderServiceSelection() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1"><label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Experience</label>
-                        <input 
-                          type="number" 
-                          value={details.experience === 0 ? "" : details.experience} 
-                          onFocus={(e) => e.target.select()} 
+                        <input
+                          type="number"
+                          value={details.experience === 0 ? "" : details.experience}
+                          onFocus={(e) => e.target.select()}
                           onChange={(e) => {
                             const val = e.target.value === "" ? 0 : parseInt(e.target.value);
                             handleServiceDetailChange(serviceId, 'experience', isNaN(val) ? 0 : val);
-                          }} 
-                          className="w-full px-4 py-2 border rounded-xl text-sm" 
-                          placeholder="0" 
+                          }}
+                          className="w-full px-4 py-2 border rounded-xl text-sm"
+                          placeholder="0"
                         />
                       </div>
                       <div className="space-y-1"><label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Price</label>
-                        <input 
-                          type="number" 
-                          value={details.price === 0 ? "" : details.price} 
-                          onFocus={(e) => e.target.select()} 
+                        <input
+                          type="number"
+                          value={details.price === 0 ? "" : details.price}
+                          onFocus={(e) => e.target.select()}
                           onChange={(e) => {
                             const val = e.target.value === "" ? 0 : parseInt(e.target.value);
                             handleServiceDetailChange(serviceId, 'price', isNaN(val) ? 0 : val);
-                          }} 
-                          className="w-full px-4 py-2 border rounded-xl text-sm" 
-                          placeholder="0" 
+                          }}
+                          className="w-full px-4 py-2 border rounded-xl text-sm"
+                          placeholder="0"
                         />
                       </div>
                     </div>
@@ -470,15 +490,28 @@ export default function ProviderServiceSelection() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 flex items-center gap-1"><Brush className="w-3 h-3" /> Skills (Comma separated)</label>
-                      <input 
-                        type="text" 
-                        value={details.skills} 
-                        onChange={(e) => handleServiceDetailChange(serviceId, 'skills', e.target.value)} 
-                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#1D2B83]/20" 
-                        placeholder="e.g. Plumbing, Leak Repair, Pipe Fitting" 
-                      />
+                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 flex items-center gap-1"><Package className="w-3 h-3" /> Select Sub-Services</label>
+                      <div className="flex flex-wrap gap-2">
+                        {subServices.length > 0 ? subServices.map(sub => (
+                          <button
+                            key={sub._id}
+                            onClick={() => {
+                              const isSelected = details.subserviceIds.includes(sub._id);
+                              handleServiceDetailChange(serviceId, 'subserviceIds', isSelected ? details.subserviceIds.filter(id => id !== sub._id) : [...details.subserviceIds, sub._id]);
+                            }}
+                            className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${details.subserviceIds.includes(sub._id) ? "bg-emerald-500 text-white border-emerald-500 shadow-sm" : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"}`}
+                          >
+                            <div className="flex items-center gap-1.5">
+                              {details.subserviceIds.includes(sub._id) && <Check className="w-3 h-3" />}
+                              {sub.subservice_name}
+                            </div>
+                          </button>
+                        )) : (
+                          <div className="text-[11px] text-slate-400 italic pl-1">Loading sub-services...</div>
+                        )}
+                      </div>
                     </div>
+
 
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 flex items-center gap-1"><FileText className="w-3 h-3" /> Experience Certificates</label>
@@ -573,31 +606,6 @@ export default function ProviderServiceSelection() {
                     className="w-full px-4 py-3 bg-[#F1F5F9] border-none rounded-xl text-sm focus:ring-2 focus:ring-[#1D2B83] outline-none transition-all"
                     placeholder="XXXX XXXX XXXX"
                   />
-                </div>
-              </div>
-
-              {/* Selfie Verification Section */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 pl-1">
-                  <UserCircle className="w-4 h-4 text-[#1D2B83]" />
-                  <h3 className="text-[13px] font-bold text-slate-700">Selfie Verification</h3>
-                </div>
-                <div className="flex items-center gap-4 px-1">
-                  <div className="w-14 h-14 bg-[#F1F5F9] rounded-full flex items-center justify-center border-4 border-white shadow-md overflow-hidden flex-shrink-0">
-                    {selfie.file_url ? (
-                      <img src={selfie.file_url} className="w-full h-full object-cover" />
-                    ) : (
-                      <Camera className="w-6 h-6 text-[#CBD5E1]" />
-                    )}
-                  </div>
-                  <label className="flex-1 cursor-pointer bg-[#F1F5F9] hover:bg-[#E2E8F0] py-3 rounded-xl text-center text-[12px] font-bold text-[#475569] transition-all flex items-center justify-center gap-2">
-                    <Camera className="w-4 h-4" />
-                    Capture or upload a selfie
-                    <input type="file" className="hidden" accept="image/*" onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) setSelfie({ doc_type: 'Selfie', file, file_url: URL.createObjectURL(file) });
-                    }} />
-                  </label>
                 </div>
               </div>
 

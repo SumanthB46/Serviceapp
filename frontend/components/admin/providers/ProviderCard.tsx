@@ -18,7 +18,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, onApprove, onReje
     <div className="bg-white/80 backdrop-blur-xl border border-gray-100 rounded-[2.5rem] p-6 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.05)] hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 group relative overflow-hidden">
       {/* Background Decorative Glow */}
       <div className={`absolute -top-12 -right-12 w-48 h-48 rounded-full opacity-0 group-hover:opacity-[0.03] transition-opacity duration-700 ${
-        provider.status === 'Approved' ? 'bg-green-500' : provider.status === 'Pending' ? 'bg-yellow-500' : 'bg-red-500'
+        provider.kyc_status === 'verified' ? 'bg-green-500' : provider.kyc_status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
       }`} />
 
       {/* Header with Avatar and Rating */}
@@ -29,7 +29,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, onApprove, onReje
             alt={provider.user_id.name} 
             className="w-16 h-16 rounded-[1.5rem] object-cover ring-4 ring-gray-50 group-hover:rotate-3 transition-transform" 
           />
-          {provider.status === 'Approved' && (
+          {provider.kyc_status === 'verified' && (
             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-600 rounded-full border-4 border-white flex items-center justify-center text-white shadow-sm">
                <ShieldCheck size={12} strokeWidth={3} />
             </div>
@@ -37,12 +37,12 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, onApprove, onReje
         </div>
         
         <div className="flex flex-col items-end gap-2">
-           <Badge variant={provider.status === 'Approved' ? 'success' : provider.status === 'Pending' ? 'warning' : 'danger'}>
-              {provider.status}
+           <Badge variant={provider.kyc_status === 'verified' ? 'success' : provider.kyc_status === 'pending' ? 'warning' : 'danger'}>
+              {provider.kyc_status}
            </Badge>
            <div className="flex items-center gap-1.5 bg-yellow-50 px-2.5 py-1 rounded-full border border-yellow-100/50">
               <Star size={14} className="fill-yellow-500 text-yellow-500" />
-              <span className="text-xs font-black text-yellow-700 leading-none">{provider.overall_rating}</span>
+              <span className="text-xs font-black text-yellow-700 leading-none">5.0</span>
            </div>
         </div>
       </div>
@@ -53,11 +53,11 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, onApprove, onReje
         <div className="flex items-center gap-2 mt-2">
            <div className="flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
               <Briefcase size={12} />
-              {provider.services?.[0]?.service_name || 'Consultant'}
+              {provider.services?.[0]?.subservice_ids?.[0]?.subservice_name || 'Consultant'}
            </div>
            <div className="flex items-center gap-1 px-2.5 py-1 bg-gray-50 text-gray-500 rounded-lg text-[10px] font-bold">
               <MapPin size={12} />
-              {provider.location}
+              Unassigned
            </div>
         </div>
       </div>
@@ -77,7 +77,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, onApprove, onReje
       </div>
 
       {/* Actions (Only visible for Pending) */}
-      {provider.status === 'Pending' && (
+      {provider.kyc_status === 'pending' && (
         <div className="mt-5 grid grid-cols-2 gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
            <button 
              onClick={() => onApprove(provider)}

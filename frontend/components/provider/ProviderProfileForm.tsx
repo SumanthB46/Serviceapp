@@ -2,251 +2,449 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  ArrowRight, 
+  ChevronDown, 
+  UserCircle, 
+  Camera, 
+  ShieldCheck, 
+  CreditCard, 
+  Clock, 
+  Briefcase,
+  Mail,
+  Phone,
+  User as UserIcon,
+  CheckCircle2,
+  AlertCircle,
+  Banknote,
+  Activity,
+  Edit3,
+  Save,
+  X
+} from "lucide-react";
+import axios from "axios";
 import { API_URL } from '@/config/api';
 
 export default function ProviderProfileForm() {
   const router = useRouter();
-  
-  const [userId, setUserId] = useState("");
+
   const [token, setToken] = useState("");
-  const [formData, setFormData] = useState({
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Edit states
+  const [isEditingUser, setIsEditingUser] = useState(false);
+  const [isEditingProvider, setIsEditingProvider] = useState(false);
+
+  // User Table Data
+  const [userFormData, setUserFormData] = useState({
     name: "",
     email: "",
     phone: "",
     gender: "",
-    password: "",
-    confirmPassword: "",
+    profile_image: "",
   });
-  
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-  
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+
+  // Provider Table Data
+  const [providerFormData, setProviderFormData] = useState({
+    availability_status: 'offline',
+    aadhar_last4: '',
+    bank_details: {
+      account_holder_name: '',
+      account_number_last4: '',
+      ifsc_code: '',
+      bank_name: '',
+      branch: ''
+    }
+  });
+
+  // Original data for cancellation
+  const [originalUser, setOriginalUser] = useState<any>(null);
+  const [originalProvider, setOriginalProvider] = useState<any>(null);
+
+  const getProfileImageUrl = (path: string, name: string) => {
+    if (!path) return `https://api.dicebear.com/7.x/avataaars/svg?seed=${name || 'Provider'}`;
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    const baseUrl = API_URL.replace('/api', '');
+    const cleanPath = path.replace(/\\/g, '/');
+    return `${baseUrl}/${cleanPath}`;
+  };
 
   useEffect(() => {
-    // Load existing user data from OTP step
-    const storedUserStr = localStorage.getItem("user");
     const storedToken = localStorage.getItem("token");
-    
-    if (storedUserStr && storedToken) {
-      const user = JSON.parse(storedUserStr);
-      setUserId(user._id);
+    if (storedToken) {
       setToken(storedToken);
-      
-      setFormData(prev => ({
-        ...prev,
-        email: user.email || "",
-        phone: user.phone || "",
-        name: user.name || "",
-        gender: user.gender || "",
-      }));
-
-      // Lock verified fields to prevent modification of authenticator
-      if (user.email) setIsEmailVerified(true);
-      if (user.phone) setIsPhoneVerified(true);
+      fetchProfile(storedToken);
     } else {
-      // If no active session, send back to signup
-      router.push("/signup");
+      router.push("/login");
     }
   }, [router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if(error) setError("");
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name) {
-      setError("Please enter your full name");
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    
-    setLoading(true);
+  const fetchProfile = async (authToken: string) => {
     try {
-      // Always forcibly set role to 'provider' when completing this flow
-      const res = await fetch(`${API_URL}/users/register`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          gender: formData.gender,
-          password: formData.password,
-          role: 'provider'
-        }),
+      setLoading(true);
+      // Fetch User details
+      const userRes = await axios.get(`${API_URL}/users/me`, {
+        headers: { Authorization: `Bearer ${authToken}` }
       });
       
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to complete registration");
-      
-      // Update local storage user with geninue authenticated tokens
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify({
-        _id: data._id,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        role: data.role,
-        gender: formData.gender,
-        profile_image: data.profile_image,
-      }));
-      
-      // Redirect Provider to their specific service selection page
-      router.push("/provider_register/services");
-    } catch (err: any) {
-      setError(err.message);
+      if (userRes.data) {
+        const u = userRes.data;
+        const initialUser = {
+          name: u.name || "",
+          email: u.email || "",
+          phone: u.phone || "",
+          gender: u.gender || "",
+          profile_image: u.profile_image || "",
+        };
+        setUserFormData(initialUser);
+        setOriginalUser(initialUser);
+      }
+
+      // Fetch Provider details
+      const providerRes = await axios.get(`${API_URL}/providers/me`, {
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+      if (providerRes.data) {
+        const p = providerRes.data;
+        const initialProvider = {
+          availability_status: p.availability_status || 'offline',
+          aadhar_last4: p.aadhar_last4 || '',
+          bank_details: {
+            account_holder_name: p.bank_details?.account_holder_name || '',
+            account_number_last4: p.bank_details?.account_number_last4 || '',
+            ifsc_code: p.bank_details?.ifsc_code || '',
+            bank_name: p.bank_details?.bank_name || '',
+            branch: p.bank_details?.branch || ''
+          }
+        };
+        setProviderFormData(initialProvider);
+        setOriginalProvider(initialProvider);
+      }
+    } catch (err) {
+      console.error("Failed to fetch profile:", err);
+      setError("Failed to load profile details.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleUserChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setUserFormData({ ...userFormData, [e.target.name]: e.target.value });
+  };
+
+  const handleProviderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setProviderFormData((prev: any) => ({
+        ...prev,
+        [parent]: { ...prev[parent], [child]: value }
+      }));
+    } else {
+      setProviderFormData({ ...providerFormData, [name]: value });
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUserFormData({ ...userFormData, profile_image: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const saveUserChanges = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.put(`${API_URL}/users/me`, userFormData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUserFormData(res.data);
+      setOriginalUser(res.data);
+      localStorage.setItem("user", JSON.stringify(res.data));
+      setIsEditingUser(false);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to update basic profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveProviderChanges = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.put(`${API_URL}/providers/me`, providerFormData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProviderFormData(res.data);
+      setOriginalProvider(res.data);
+      setIsEditingProvider(false);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to update professional profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelUserEdit = () => {
+    setUserFormData(originalUser);
+    setIsEditingUser(false);
+  };
+
+  const cancelProviderEdit = () => {
+    setProviderFormData(originalProvider);
+    setIsEditingProvider(false);
+  };
+
+  if (loading && !originalUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#F8F9FC] flex items-center justify-center p-4">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-[500px] bg-white rounded-[2rem] shadow-xl p-8 sm:p-10 border-t-8 border-[#1D2B83]"
-      >
-        {/* Stepper */}
-        <div className="flex items-center justify-center gap-2 mb-10">
-          <div className="h-1.5 w-6 rounded-full bg-[#1D2B83]"></div>
-          <div className="h-1.5 w-6 rounded-full bg-[#1D2B83]"></div>
-          <div className="h-1.5 w-6 rounded-full bg-slate-200"></div>
-        </div>
-
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-extrabold text-[#1D2B83] tracking-tight mb-3">
-            Partner Profile
-          </h1>
-          <p className="text-slate-500 font-medium text-[15px] max-w-[320px] mx-auto text-balance">
-            Complete your professional profile to start accepting jobs.
-          </p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          
-          {/* Full Name */}
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-600 pl-1">Professional Full Name</label>
-            <input 
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="First and Last Name"
-              className="w-full bg-[#F5F7FA] border border-transparent rounded-xl px-4 py-3.5 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#1D2B83] focus:bg-white transition-all"
-            />
-          </div>
-
-          {/* Email */}
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-600 pl-1">Business Email</label>
-            <input 
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              disabled={isEmailVerified}
-              placeholder="Enter your email"
-              className="w-full bg-[#F5F7FA] border border-transparent rounded-xl px-4 py-3.5 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#1D2B83] focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-            />
-          </div>
-
-          {/* Phone */}
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-600 pl-1">Contact Phone</label>
-            <input 
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              disabled={isPhoneVerified}
-              placeholder="Enter phone number"
-              className="w-full bg-[#F5F7FA] border border-transparent rounded-xl px-4 py-3.5 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#1D2B83] focus:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-            />
-          </div>
-
-          {/* Password Section */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-600 pl-1">Password</label>
-              <input 
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full bg-[#F5F7FA] border border-transparent rounded-xl px-4 py-3.5 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#1D2B83] focus:bg-white transition-all"
-              />
+    <div className="max-w-6xl mx-auto space-y-8">
+        
+        {/* SECTION 1: Profile & Basic Details (USER Table) */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden"
+        >
+          <div className="h-32 bg-gradient-to-r from-[#1D2B83] to-[#2E3BA1] relative">
+            <div className="absolute -bottom-16 left-8 sm:left-12">
+              <div className="relative group">
+                <div className="w-32 h-32 rounded-full border-4 border-white bg-slate-100 overflow-hidden shadow-lg">
+                  <img 
+                    src={getProfileImageUrl(userFormData.profile_image, userFormData.name)} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover" 
+                  />
+                </div>
+                {isEditingUser && (
+                  <label className="absolute bottom-1 right-1 bg-white p-2 rounded-full shadow-md cursor-pointer hover:bg-slate-50 transition-all border border-slate-100">
+                    <Camera size={18} className="text-[#1D2B83]" />
+                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                  </label>
+                )}
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-600 pl-1">Confirm Password</label>
-              <input 
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full bg-[#F5F7FA] border border-transparent rounded-xl px-4 py-3.5 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#1D2B83] focus:bg-white transition-all"
-              />
+            
+            {/* User Edit Toggle */}
+            <div className="absolute bottom-4 right-8">
+               <button 
+                onClick={() => isEditingUser ? saveUserChanges() : setIsEditingUser(true)}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all ${isEditingUser ? 'bg-emerald-500 text-white' : 'bg-white text-[#1D2B83] hover:scale-105'}`}
+               >
+                 {isEditingUser ? <><Save size={14} /> Save Info</> : <><Edit3 size={14} /> Edit Identity</>}
+               </button>
+               {isEditingUser && (
+                 <button onClick={cancelUserEdit} className="ml-2 p-2.5 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-all backdrop-blur-md">
+                   <X size={16} />
+                 </button>
+               )}
             </div>
           </div>
 
-          {/* Gender */}
-          <div className="space-y-1 pb-4">
-            <label className="text-xs font-bold text-slate-600 pl-1">Gender</label>
-            <div className="relative">
-              <select 
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="w-full bg-[#F5F7FA] border border-transparent rounded-xl pl-4 pr-10 py-3.5 text-slate-900 font-medium appearance-none focus:outline-none focus:border-[#1D2B83] focus:bg-white transition-all"
-              >
-                <option value="" disabled className="text-slate-400">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                <ChevronDown className="w-5 h-5 text-[#1D2B83]" />
+          <div className="pt-20 pb-10 px-8 sm:px-12">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-slate-50 pb-8">
+              <div className="space-y-1">
+                <input 
+                  name="name"
+                  value={userFormData.name}
+                  onChange={handleUserChange}
+                  readOnly={!isEditingUser}
+                  className={`text-3xl font-black tracking-tight focus:outline-none w-full max-w-md ${isEditingUser ? 'text-blue-600 bg-blue-50/50 rounded-lg px-2' : 'text-slate-900 bg-transparent'}`}
+                  placeholder="Set your name"
+                />
+                <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Professional Identity
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+              <div className={`space-y-1.5 p-4 rounded-2xl border transition-all ${isEditingUser ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50 border-slate-100/50'}`}>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Mail size={12} className="text-blue-500" /> Business Email
+                </label>
+                <input 
+                  type="email" 
+                  name="email"
+                  value={userFormData.email}
+                  onChange={handleUserChange}
+                  readOnly={!isEditingUser}
+                  className="w-full bg-transparent text-sm font-bold text-slate-700 focus:outline-none"
+                />
+              </div>
+              <div className={`space-y-1.5 p-4 rounded-2xl border transition-all ${isEditingUser ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50 border-slate-100/50'}`}>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Phone size={12} className="text-blue-500" /> Primary Contact
+                </label>
+                <input 
+                  type="tel" 
+                  name="phone"
+                  value={userFormData.phone}
+                  onChange={handleUserChange}
+                  readOnly={!isEditingUser}
+                  className="w-full bg-transparent text-sm font-bold text-slate-700 focus:outline-none"
+                />
+              </div>
+              <div className={`space-y-1.5 p-4 rounded-2xl border transition-all ${isEditingUser ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50 border-slate-100/50'}`}>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <UserCircle size={12} className="text-blue-500" /> Gender
+                </label>
+                <select 
+                  name="gender"
+                  value={userFormData.gender}
+                  onChange={handleUserChange}
+                  disabled={!isEditingUser}
+                  className="w-full bg-transparent text-sm font-bold text-slate-700 focus:outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">Choose Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
               </div>
             </div>
           </div>
+        </motion.div>
 
-          {error && (
-            <p className="text-sm text-red-500 font-medium text-center pb-2">{error}</p>
-          )}
-
-          {/* Submit */}
-          <button 
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#202B7D] hover:bg-[#161F63] text-white font-bold py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg shadow-blue-900/20 disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+        {/* SECTION 2: Split Layout (PROVIDER Table & Cards) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Column 1: Professional Details (PROVIDER Table) */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="lg:col-span-2 space-y-6"
           >
-            {loading ? "Registering..." : "Complete Registration"}
-            {!loading && <ArrowRight className="w-5 h-5" />}
-          </button>
-        </form>
-      </motion.div>
-    </div>
+            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 sm:p-10 relative">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase tracking-wider flex items-center gap-3">
+                  <ShieldCheck className="text-blue-600" size={24} />
+                  Professional Status
+                </h2>
+                <div className="flex items-center gap-2">
+                   <button 
+                    onClick={() => isEditingProvider ? saveProviderChanges() : setIsEditingProvider(true)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${isEditingProvider ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                   >
+                     {isEditingProvider ? <><Save size={12} /> Update Professional</> : <><Edit3 size={12} /> Edit Details</>}
+                   </button>
+                   {isEditingProvider && (
+                      <button onClick={cancelProviderEdit} className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 transition-all">
+                        <X size={14} />
+                      </button>
+                   )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                {/* Identity Info */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
+                      <CreditCard size={20} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aadhar Verification</p>
+                      <p className="text-sm font-bold text-slate-700">XXXX-XXXX-{providerFormData.aadhar_last4 || '0000'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
+                      <Clock size={20} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Availability</p>
+                      <p className={`text-sm font-bold uppercase tracking-tight ${providerFormData.availability_status === 'available' ? 'text-emerald-600' : 'text-slate-500'}`}>
+                        {providerFormData.availability_status}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bank Details */}
+                <div className={`rounded-[2rem] p-6 border transition-all ${isEditingProvider ? 'bg-blue-50/30 border-blue-100' : 'bg-[#F8FAFC] border-slate-100'}`}>
+                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+                    <Banknote size={14} className="text-blue-600" /> Settlement
+                  </h3>
+                  <div className="space-y-4">
+                     <div className="space-y-1">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Bank Name</p>
+                        <input 
+                          name="bank_details.bank_name"
+                          value={providerFormData.bank_details.bank_name}
+                          onChange={handleProviderChange}
+                          readOnly={!isEditingProvider}
+                          className="w-full bg-transparent text-xs font-black text-slate-700 focus:outline-none"
+                          placeholder="Bank Name"
+                        />
+                     </div>
+                     <div className="space-y-1">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">IFSC Code</p>
+                        <input 
+                          name="bank_details.ifsc_code"
+                          value={providerFormData.bank_details.ifsc_code}
+                          onChange={handleProviderChange}
+                          readOnly={!isEditingProvider}
+                          className="w-full bg-transparent text-xs font-black text-slate-700 focus:outline-none"
+                          placeholder="IFSC Code"
+                        />
+                     </div>
+                     <div className="pt-2 border-t border-slate-200/50">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">A/C Number (Last 4)</p>
+                        <p className="text-xs font-black text-slate-700">•••• •••• {providerFormData.bank_details.account_number_last4 || 'XXXX'}</p>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Column 2: Cards (Stats & Tips) */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-6"
+          >
+            <div className="bg-[#1D2B83] rounded-[2.5rem] p-8 text-white shadow-xl shadow-blue-900/20 relative overflow-hidden group">
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+              <Activity className="mb-6 opacity-80" size={32} />
+              <p className="text-[10px] font-black text-blue-200 uppercase tracking-[0.2em] mb-2">Partner Rank</p>
+              <h3 className="text-4xl font-black mb-2 italic">Silver</h3>
+              <p className="text-[11px] text-blue-100 font-bold leading-relaxed">
+                Complete 10 more bookings to unlock Gold Status.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.15em]">Health</h3>
+                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Stable</span>
+              </div>
+              <div className="space-y-4">
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 w-[85%] rounded-full"></div>
+                </div>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight leading-normal">
+                  Professional documents are 85% verified.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
   );
 }

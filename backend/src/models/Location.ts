@@ -2,14 +2,12 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface ILocation extends Document {
   name: string;
-  type: 'city' | 'area';
+  type: string;
   parent_id?: Types.ObjectId | null;
-  state?: string;
-  country?: string;
   pincode?: string;
   coordinates: {
-    type: string;
-    coordinates: number[];
+    type: 'Point';
+    coordinates: [number, number];
   };
   status: 'active' | 'inactive';
   isDeleted: boolean;
@@ -27,21 +25,12 @@ const locationSchema = new Schema<ILocation>(
     },
     type: {
       type: String,
-      enum: ['city', 'area'],
       required: true,
     },
     parent_id: {
       type: Schema.Types.ObjectId,
       ref: 'Location',
       default: null,
-    },
-    state: {
-      type: String,
-      trim: true,
-    },
-    country: {
-      type: String,
-      trim: true,
     },
     pincode: {
       type: String,
@@ -57,7 +46,6 @@ const locationSchema = new Schema<ILocation>(
       default: 'active',
     },
     isDeleted: {
-
       type: Boolean,
       default: false,
     },
@@ -70,4 +58,3 @@ const locationSchema = new Schema<ILocation>(
 locationSchema.index({ coordinates: '2dsphere' });
 
 export const Location = mongoose.model<ILocation>('Location', locationSchema);
-
