@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
-  ChevronRight
+  ChevronRight,
+  ChevronLeft
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -83,6 +84,17 @@ const Categories = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const scrollAmount = 300;
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -178,30 +190,42 @@ const Categories = () => {
         </motion.div>
 
         {/* Categories Scrollable Container with Auto-scroll */}
-        <div className="relative overflow-hidden marquee-container">
-          <div className={`flex w-max animate-marquee ${isModalOpen ? "pause-animation" : ""}`}>
-            {/* First set of categories */}
-            <div className="flex gap-4 px-2 pb-4">
-              {categories.map((cat, index) => (
-                <CategoryCard 
-                  key={`first-${cat.id}-${index}`} 
-                  cat={cat} 
-                  index={index} 
-                  isActive={selectedCategory?.id === cat.id}
-                  onClick={() => handleCategoryClick(cat)}
-                />
-              ))}
-            </div>
-            {/* Second set of categories for seamless loop */}
-            <div className="flex gap-4 px-2 pb-4">
-              {categories.map((cat, index) => (
-                <CategoryCard 
-                  key={`second-${cat.id}-${index}`} 
-                  cat={cat} 
-                  index={index} 
-                  isActive={selectedCategory?.id === cat.id}
-                  onClick={() => handleCategoryClick(cat)}
-                />
+        <div className="relative group/marquee">
+          {/* Manual Scroll Buttons */}
+          <button
+            onClick={() => scroll("left")}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg text-[#1D2B83] transition-all hover:bg-[#1D2B83] hover:text-white -left-6 border border-slate-100"
+            aria-label="Scroll Left"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          
+          <button
+            onClick={() => scroll("right")}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg text-[#1D2B83] transition-all hover:bg-[#1D2B83] hover:text-white -right-6 border border-slate-100"
+            aria-label="Scroll Right"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+
+          <div 
+            ref={scrollRef}
+            className="relative overflow-hidden marquee-container"
+          >
+            <div className={`flex w-max animate-marquee ${isModalOpen ? "pause-animation" : ""}`}>
+              {/* We use 3 sets to ensure there is never a break even on large screens or during resets */}
+              {[1, 2, 3].map((setNum) => (
+                <div key={`set-${setNum}`} className="flex gap-8 pr-8 py-4">
+                  {categories.map((cat, index) => (
+                    <CategoryCard 
+                      key={`set${setNum}-${cat.id}-${index}`} 
+                      cat={cat} 
+                      index={index} 
+                      isActive={selectedCategory?.id === cat.id}
+                      onClick={() => handleCategoryClick(cat)}
+                    />
+                  ))}
+                </div>
               ))}
             </div>
           </div>

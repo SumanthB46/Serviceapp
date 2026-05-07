@@ -45,11 +45,10 @@ const CategoryTable: React.FC = () => {
 
   // Logic for search and pagination
   const filteredCategories = categories.filter(cat => 
-    cat.category_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (cat.category_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
     (cat.slug && cat.slug.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (cat.description && cat.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    cat.status.toLowerCase().includes(searchTerm.toLowerCase())
-
+    (cat.status || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredCategories.length / rowsPerPage);
