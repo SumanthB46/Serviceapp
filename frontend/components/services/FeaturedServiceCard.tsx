@@ -34,7 +34,7 @@ const FeaturedServiceCard: React.FC<FeaturedServiceCardProps> = ({
       <div className="relative w-full md:w-48 h-48 rounded-2xl overflow-hidden flex-shrink-0">
         <Image
           src={image}
-          alt={title}
+          alt={title || "Featured service image"}
           fill
           className="object-cover"
         />

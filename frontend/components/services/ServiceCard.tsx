@@ -33,7 +33,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       <div className="relative h-48 w-full overflow-hidden">
         <Image
           src={image}
-          alt={title}
+          alt={title || "Service image"}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />

@@ -23,14 +23,14 @@ export default function TopNavbar({ onOpenSidebar }: TopNavbarProps) {
             <Menu className="h-6 w-6" />
           </button>
           
-          <div className="hidden md:flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 w-96">
+          {/* <div className="hidden md:flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 w-96">
             <Search className="h-4 w-4 text-slate-400" />
             <input 
               type="text" 
               placeholder="Search bookings, services..." 
               className="bg-transparent border-none outline-none text-sm text-slate-600 w-full"
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Right Side */}

@@ -66,7 +66,7 @@ const BookingServiceCard: React.FC<BookingServiceCardProps> = ({
           <div className="relative w-48 h-48 rounded-2xl overflow-hidden shadow-sm group-hover:shadow-md transition-all">
             <Image
               src={image}
-              alt={title}
+              alt={title || "Service image"}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-110"
             />

@@ -127,8 +127,8 @@ const SubServiceTable: React.FC = () => {
     };
 
     const filteredSubServices = subServices.filter(s =>
-        (s.subservice_name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (filterStatus === 'All' || s.status.toLowerCase() === filterStatus.toLowerCase())
+        ((s.subservice_name || "").toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (filterStatus === 'All' || (s.status || "").toLowerCase() === filterStatus.toLowerCase())
     );
 
     const handleOpenAdd = () => {
