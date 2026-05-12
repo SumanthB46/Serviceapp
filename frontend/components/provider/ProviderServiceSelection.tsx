@@ -424,7 +424,6 @@ export default function ProviderServiceSelection() {
                   price: 0,
                   subserviceIds: [],
                   selectedLocations: [],
-                  availability: [],
                   documents: []
                 };
                 const subServices = subServicesMap[serviceId] || [];

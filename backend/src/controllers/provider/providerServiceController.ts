@@ -6,7 +6,10 @@ import mongoose from 'mongoose';
 // @desc    Add service to provider profile
 // @route   POST /api/provider-services
 // @access  Private/Provider
-export const addProviderService = async (req: AuthRequest, res: Response): Promise<void> => {
+export const addProviderService = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const {
       provider_id,
@@ -45,13 +48,21 @@ export const addProviderService = async (req: AuthRequest, res: Response): Promi
 // @desc    Get all provider services (Admin)
 // @route   GET /api/provider-services
 // @access  Private/Admin
-export const getAllProviderServices = async (req: Request, res: Response): Promise<void> => {
+export const getAllProviderServices = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
-    const services = await ProviderService.find({ isDeleted: false })
-      .populate({
-        path: 'provider_id',
-        populate: { path: 'user_id', select: 'name email' }
-      });
+    const services = await ProviderService.find({
+      isDeleted: false,
+    }).populate({
+      path: 'provider_id',
+      populate: {
+        path: 'user_id',
+        select: 'name email',
+      },
+    });
+
     res.json(services);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -61,7 +72,10 @@ export const getAllProviderServices = async (req: Request, res: Response): Promi
 // @desc    Get services of a provider
 // @route   GET /api/provider-services/:providerId
 // @access  Public
-export const getProviderServices = async (req: Request, res: Response): Promise<void> => {
+export const getProviderServices = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const services = await ProviderService.find({ 
       provider_id: req.params.providerId,
@@ -74,10 +88,13 @@ export const getProviderServices = async (req: Request, res: Response): Promise<
   }
 };
 
-// @desc    Update provider service price
+// @desc    Update provider service
 // @route   PUT /api/provider-services/:id
 // @access  Private/Provider
-export const updateProviderService = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateProviderService = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { 
       price, 
@@ -88,11 +105,13 @@ export const updateProviderService = async (req: AuthRequest, res: Response): Pr
       is_available,
       is_featured 
     } = req.body;
-    
+
     const providerService = await ProviderService.findById(req.params.id);
 
     if (!providerService) {
-      res.status(404).json({ message: 'Provider service not found' });
+      res.status(404).json({
+        message: 'Provider service not found',
+      });
       return;
     }
 
@@ -108,19 +127,27 @@ export const updateProviderService = async (req: AuthRequest, res: Response): Pr
 
     res.json(providerService);
   } catch (error: any) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({
+      message: error.message,
+    });
   }
 };
 
 // @desc    Remove service from provider profile
 // @route   DELETE /api/provider-services/:id
 // @access  Private/Provider
-export const deleteProviderService = async (req: AuthRequest, res: Response): Promise<void> => {
+export const deleteProviderService = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
-    const providerService = await ProviderService.findById(req.params.id);
+    const providerService =
+      await ProviderService.findById(req.params.id);
 
     if (!providerService) {
-      res.status(404).json({ message: 'Provider service not found' });
+      res.status(404).json({
+        message: 'Provider service not found',
+      });
       return;
     }
 
@@ -130,6 +157,8 @@ export const deleteProviderService = async (req: AuthRequest, res: Response): Pr
     
     res.json({ message: 'Service removed from provider' });
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };

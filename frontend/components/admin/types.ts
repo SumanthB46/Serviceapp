@@ -24,13 +24,6 @@ export interface ProviderService {
   final_price: number;
   subservice_ids: { _id: string; subservice_name: string }[];
   documents: ProviderDocument[];
-  availability: {
-    day: string;
-    start_time: string;
-    end_time: string;
-    slot_duration: number;
-    buffer_time: number;
-  }[];
   is_featured: boolean;
   is_available: boolean;
   is_active: boolean;

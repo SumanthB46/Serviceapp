@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
+import { API_URL } from "@/config/api";
 import {
     CheckCircle2,
     User,
@@ -70,6 +72,7 @@ export function MultiStepForm() {
     const [submitted, setSubmitted] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
     const [fileName, setFileName] = useState("");
+    const [locations, setLocations] = useState<any[]>([]);
     const [form, setForm] = useState({
         name: "",
         phone: "",
@@ -83,6 +86,20 @@ export function MultiStepForm() {
 
     const next = () => setStep((s) => Math.min(s + 1, FORM_STEPS.length - 1));
     const back = () => setStep((s) => Math.max(s - 1, 0));
+
+    useEffect(() => {
+        const fetchLocations = async () => {
+            try {
+                const res = await axios.get(`${API_URL}/locations`);
+                setLocations(res.data);
+            } catch (error) {
+                console.error("Error fetching locations:", error);
+            }
+        };
+        fetchLocations();
+    }, []);
+
+    const areas = locations.filter(loc => loc.type === 'area');
 
     const handleSubmit = () => {
         setSubmitted(true);
@@ -165,7 +182,20 @@ export function MultiStepForm() {
                                     <InputField icon={<Phone className="h-4 w-4" />} placeholder="Phone Number" value={form.phone} onChange={(v) => update("phone", v)} type="tel" />
                                 </div>
                                 <InputField icon={<Mail className="h-4 w-4" />} placeholder="Email Address" value={form.email} onChange={(v) => update("email", v)} type="email" />
-                                <InputField icon={<MapPin className="h-4 w-4" />} placeholder="City / Location" value={form.location} onChange={(v) => update("location", v)} />
+                                <div className="relative">
+                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                    <select
+                                        value={form.location}
+                                        onChange={(e) => update("location", e.target.value)}
+                                        className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-700 focus:border-[#1D2B83] focus:outline-none focus:ring-2 focus:ring-[#1D2B83]/20 transition-all cursor-pointer"
+                                    >
+                                        <option value="">Select Area / Location</option>
+                                        {areas.map((loc) => (
+                                            <option key={loc._id} value={loc.name}>{loc.name}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                                </div>
                             </div>
                         )}
 

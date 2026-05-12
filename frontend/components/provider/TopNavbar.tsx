@@ -13,6 +13,7 @@ interface TopNavbarProps {
 export default function TopNavbar({ onOpenSidebar }: TopNavbarProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [providerStatus, setProviderStatus] = useState<string>("offline");
 
   React.useEffect(() => {
     const fetchUserData = async () => {
@@ -35,7 +36,29 @@ export default function TopNavbar({ onOpenSidebar }: TopNavbarProps) {
       }
     };
 
+    const fetchProviderStatus = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const response = await axios.get(`${API_URL}/providers/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setProviderStatus(response.data.availability_status || "offline");
+        }
+      } catch (error) {
+        console.error("Error fetching provider status:", error);
+      }
+    };
+
     fetchUserData();
+    fetchProviderStatus();
+
+    const handleStatusChange = (e: any) => {
+      setProviderStatus(e.detail);
+    };
+
+    window.addEventListener('providerStatusChanged', handleStatusChange);
+    return () => window.removeEventListener('providerStatusChanged', handleStatusChange);
   }, []);
 
   const handleLogout = () => {
@@ -80,7 +103,9 @@ export default function TopNavbar({ onOpenSidebar }: TopNavbarProps) {
             <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
               <div className="hidden lg:block text-right">
                 <span className="block text-sm font-bold text-slate-900">{user?.name || "Provider"}</span>
-                <span className="block text-xs font-medium text-emerald-600">Active • Online</span>
+                <span className={`block text-xs font-medium ${providerStatus === 'available' ? 'text-emerald-600' : 'text-slate-400'}`}>
+                  {providerStatus === 'available' ? '• Online' : '• Offline'}
+                </span>
               </div>
               <button 
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -113,14 +138,16 @@ export default function TopNavbar({ onOpenSidebar }: TopNavbarProps) {
                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Account</p>
                   </div>
                   
-                  <Link 
-                    href="/provider/profile" 
-                    onClick={() => setIsProfileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-all"
+                  <button 
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      window.dispatchEvent(new CustomEvent('openProviderProfile'));
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-all"
                   >
                     <UserCircle className="h-5 w-5 text-slate-400" />
                     Edit Profile
-                  </Link>
+                  </button>
                   
                   <Link 
                     href="/provider/settings" 

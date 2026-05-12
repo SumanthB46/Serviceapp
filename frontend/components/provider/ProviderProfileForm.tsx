@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import ProviderProfileModal from "./modals/ProviderProfileModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowRight, 
@@ -33,9 +34,7 @@ export default function ProviderProfileForm() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Edit states
-  const [isEditingUser, setIsEditingUser] = useState(false);
-  const [isEditingProvider, setIsEditingProvider] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // User Table Data
   const [userFormData, setUserFormData] = useState({
@@ -130,76 +129,7 @@ export default function ProviderProfileForm() {
     }
   };
 
-  const handleUserChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setUserFormData({ ...userFormData, [e.target.name]: e.target.value });
-  };
 
-  const handleProviderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setProviderFormData((prev: any) => ({
-        ...prev,
-        [parent]: { ...prev[parent], [child]: value }
-      }));
-    } else {
-      setProviderFormData({ ...providerFormData, [name]: value });
-    }
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUserFormData({ ...userFormData, profile_image: reader.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const saveUserChanges = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.put(`${API_URL}/users/me`, userFormData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUserFormData(res.data);
-      setOriginalUser(res.data);
-      localStorage.setItem("user", JSON.stringify(res.data));
-      setIsEditingUser(false);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to update basic profile");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveProviderChanges = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.put(`${API_URL}/providers/me`, providerFormData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setProviderFormData(res.data);
-      setOriginalProvider(res.data);
-      setIsEditingProvider(false);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to update professional profile");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cancelUserEdit = () => {
-    setUserFormData(originalUser);
-    setIsEditingUser(false);
-  };
-
-  const cancelProviderEdit = () => {
-    setProviderFormData(originalProvider);
-    setIsEditingProvider(false);
-  };
 
   if (loading && !originalUser) {
     return (
@@ -211,6 +141,11 @@ export default function ProviderProfileForm() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
+        <ProviderProfileModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)} 
+          onUpdateSuccess={() => fetchProfile(token)} 
+        />
         
         {/* SECTION 1: Profile & Basic Details (USER Table) */}
         <motion.div 
@@ -228,28 +163,17 @@ export default function ProviderProfileForm() {
                     className="w-full h-full object-cover" 
                   />
                 </div>
-                {isEditingUser && (
-                  <label className="absolute bottom-1 right-1 bg-white p-2 rounded-full shadow-md cursor-pointer hover:bg-slate-50 transition-all border border-slate-100">
-                    <Camera size={18} className="text-[#1D2B83]" />
-                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                  </label>
-                )}
               </div>
             </div>
             
             {/* User Edit Toggle */}
             <div className="absolute bottom-4 right-8">
                <button 
-                onClick={() => isEditingUser ? saveUserChanges() : setIsEditingUser(true)}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all ${isEditingUser ? 'bg-emerald-500 text-white' : 'bg-white text-[#1D2B83] hover:scale-105'}`}
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all bg-white text-[#1D2B83] hover:scale-105"
                >
-                 {isEditingUser ? <><Save size={14} /> Save Info</> : <><Edit3 size={14} /> Edit Identity</>}
+                 <Edit3 size={14} /> Edit Identity
                </button>
-               {isEditingUser && (
-                 <button onClick={cancelUserEdit} className="ml-2 p-2.5 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-all backdrop-blur-md">
-                   <X size={16} />
-                 </button>
-               )}
             </div>
           </div>
 
@@ -259,9 +183,8 @@ export default function ProviderProfileForm() {
                 <input 
                   name="name"
                   value={userFormData.name}
-                  onChange={handleUserChange}
-                  readOnly={!isEditingUser}
-                  className={`text-3xl font-black tracking-tight focus:outline-none w-full max-w-md ${isEditingUser ? 'text-blue-600 bg-blue-50/50 rounded-lg px-2' : 'text-slate-900 bg-transparent'}`}
+                  readOnly
+                  className="text-3xl font-black tracking-tight focus:outline-none w-full max-w-md text-slate-900 bg-transparent"
                   placeholder="Set your name"
                 />
                 <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] flex items-center gap-2">
@@ -272,48 +195,37 @@ export default function ProviderProfileForm() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-              <div className={`space-y-1.5 p-4 rounded-2xl border transition-all ${isEditingUser ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50 border-slate-100/50'}`}>
+              <div className="space-y-1.5 p-4 rounded-2xl border bg-slate-50 border-slate-100/50">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Mail size={12} className="text-blue-500" /> Business Email
                 </label>
                 <input 
                   type="email" 
-                  name="email"
                   value={userFormData.email}
-                  onChange={handleUserChange}
-                  readOnly={!isEditingUser}
+                  readOnly
                   className="w-full bg-transparent text-sm font-bold text-slate-700 focus:outline-none"
                 />
               </div>
-              <div className={`space-y-1.5 p-4 rounded-2xl border transition-all ${isEditingUser ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50 border-slate-100/50'}`}>
+              <div className="space-y-1.5 p-4 rounded-2xl border bg-slate-50 border-slate-100/50">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Phone size={12} className="text-blue-500" /> Primary Contact
                 </label>
                 <input 
                   type="tel" 
-                  name="phone"
                   value={userFormData.phone}
-                  onChange={handleUserChange}
-                  readOnly={!isEditingUser}
+                  readOnly
                   className="w-full bg-transparent text-sm font-bold text-slate-700 focus:outline-none"
                 />
               </div>
-              <div className={`space-y-1.5 p-4 rounded-2xl border transition-all ${isEditingUser ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50 border-slate-100/50'}`}>
+              <div className="space-y-1.5 p-4 rounded-2xl border bg-slate-50 border-slate-100/50">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <UserCircle size={12} className="text-blue-500" /> Gender
                 </label>
-                <select 
-                  name="gender"
-                  value={userFormData.gender}
-                  onChange={handleUserChange}
-                  disabled={!isEditingUser}
-                  className="w-full bg-transparent text-sm font-bold text-slate-700 focus:outline-none appearance-none cursor-pointer"
-                >
-                  <option value="">Choose Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
+                <input 
+                  value={userFormData.gender || 'Not Specified'}
+                  readOnly
+                  className="w-full bg-transparent text-sm font-bold text-slate-700 focus:outline-none uppercase"
+                />
               </div>
             </div>
           </div>
@@ -336,16 +248,11 @@ export default function ProviderProfileForm() {
                 </h2>
                 <div className="flex items-center gap-2">
                    <button 
-                    onClick={() => isEditingProvider ? saveProviderChanges() : setIsEditingProvider(true)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${isEditingProvider ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                    onClick={() => setIsModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all bg-slate-50 text-slate-600 hover:bg-slate-100"
                    >
-                     {isEditingProvider ? <><Save size={12} /> Update Professional</> : <><Edit3 size={12} /> Edit Details</>}
+                     <Edit3 size={12} /> Edit Details
                    </button>
-                   {isEditingProvider && (
-                      <button onClick={cancelProviderEdit} className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 transition-all">
-                        <X size={14} />
-                      </button>
-                   )}
                 </div>
               </div>
 
@@ -376,32 +283,18 @@ export default function ProviderProfileForm() {
                 </div>
 
                 {/* Bank Details */}
-                <div className={`rounded-[2rem] p-6 border transition-all ${isEditingProvider ? 'bg-blue-50/30 border-blue-100' : 'bg-[#F8FAFC] border-slate-100'}`}>
+                <div className="rounded-[2rem] p-6 border bg-[#F8FAFC] border-slate-100">
                   <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
                     <Banknote size={14} className="text-blue-600" /> Settlement
                   </h3>
                   <div className="space-y-4">
                      <div className="space-y-1">
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Bank Name</p>
-                        <input 
-                          name="bank_details.bank_name"
-                          value={providerFormData.bank_details.bank_name}
-                          onChange={handleProviderChange}
-                          readOnly={!isEditingProvider}
-                          className="w-full bg-transparent text-xs font-black text-slate-700 focus:outline-none"
-                          placeholder="Bank Name"
-                        />
+                        <p className="text-xs font-black text-slate-700">{providerFormData.bank_details.bank_name || 'N/A'}</p>
                      </div>
                      <div className="space-y-1">
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">IFSC Code</p>
-                        <input 
-                          name="bank_details.ifsc_code"
-                          value={providerFormData.bank_details.ifsc_code}
-                          onChange={handleProviderChange}
-                          readOnly={!isEditingProvider}
-                          className="w-full bg-transparent text-xs font-black text-slate-700 focus:outline-none"
-                          placeholder="IFSC Code"
-                        />
+                        <p className="text-xs font-black text-slate-700">{providerFormData.bank_details.ifsc_code || 'N/A'}</p>
                      </div>
                      <div className="pt-2 border-t border-slate-200/50">
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">A/C Number (Last 4)</p>

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import ProviderLayout from "@/components/provider/ProviderLayout";
+import React, { useState, useEffect } from "react";
 import BookingDetailModal from "@/components/provider/modals/BookingDetailModal";
+import axios from "axios";
+import { API_URL } from "@/config/api";
 import { 
   Search, 
   Filter, 
@@ -19,50 +20,126 @@ import {
 
 const tabs = ["Pending", "Accepted", "In Progress", "Completed"];
 
-const bookings = [
-  {
-    id: "BK-9821",
-    customer: "Priya Singh",
-    service: "Deep Home Cleaning",
-    dateTime: "15 May, 10:00 AM",
-    address: "B-402, Sunshine Apartments, Sector 45, Gurgaon",
-    amount: "₹2,499",
-    status: "Pending",
-    phone: "+91 98765 43210",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya"
-  },
-  {
-    id: "BK-9815",
-    customer: "Rahul Verma",
-    service: "AC Service",
-    dateTime: "14 May, 02:30 PM",
-    address: "H.No 124, Pocket C, Sarita Vihar, Delhi",
-    amount: "₹899",
-    status: "Accepted",
-    phone: "+91 99887 76655",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul"
-  },
-  {
-    id: "BK-9810",
-    customer: "Amit Kumar",
-    service: "Bathroom Cleaning",
-    dateTime: "12 May, 11:00 AM",
-    address: "Flat 12, Tower 2, DLF Phase 3, Gurgaon",
-    amount: "₹1,200",
-    status: "Completed",
-    phone: "+91 95554 33221",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Amit"
-  }
-];
+// const bookings = [
+//   {
+//     id: "BK-9821",
+//     customer: "Priya Singh",
+//     service: "Deep Home Cleaning",
+//     dateTime: "15 May, 10:00 AM",
+//     address: "B-402, Sunshine Apartments, Sector 45, Gurgaon",
+//     amount: "₹2,499",
+//     status: "Pending",
+//     phone: "+91 98765 43210",
+//     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya"
+//   },
+//   {
+//     id: "BK-9815",
+//     customer: "Rahul Verma",
+//     service: "AC Service",
+//     dateTime: "14 May, 02:30 PM",
+//     address: "H.No 124, Pocket C, Sarita Vihar, Delhi",
+//     amount: "₹899",
+//     status: "Accepted",
+//     phone: "+91 99887 76655",
+//     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul"
+//   },
+//   {
+//     id: "BK-9810",
+//     customer: "Amit Kumar",
+//     service: "Bathroom Cleaning",
+//     dateTime: "12 May, 11:00 AM",
+//     address: "Flat 12, Tower 2, DLF Phase 3, Gurgaon",
+//     amount: "₹1,200",
+//     status: "Completed",
+//     phone: "+91 95554 33221",
+//     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Amit"
+//   }
+// ];
 
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState("Pending");
-  const [selectedBooking, setSelectedBooking] = useState<typeof bookings[0] | null>(null);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const filteredBookings = bookings.filter(b => b.status === activeTab);
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token") || localStorage.getItem("jwt");
+      const response = await axios.get(`${API_URL}/bookings/my`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Map backend data to UI format
+      const mappedBookings = response.data.map((b: any) => ({
+        id: b.booking_id,
+        _id: b._id,
+        customer: b.customer_id?.name || "Unknown Customer",
+        service: b.service_id?.category_id?.category_name || "General Service",
+        dateTime: new Date(b.scheduled_at).toLocaleString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        address: `${b.location.address}, ${b.location.city}, ${b.location.pincode}`,
+        amount: `₹${b.payable_amount}`,
+        status: b.status.charAt(0).toUpperCase() + b.status.slice(1).replace('_', ' '),
+        phone: b.customer_id?.phone || "N/A",
+        avatar: b.customer_id?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.customer_id?.name || 'Customer'}`
+      }));
+      
+      setBookings(mappedBookings);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    try {
+      const token = localStorage.getItem("token") || localStorage.getItem("jwt");
+      await axios.put(`${API_URL}/bookings/${id}/status`, 
+        { status: newStatus.toLowerCase().replace(' ', '_') },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchBookings(); // Refresh list
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+    }
+  };
+
+  const filteredBookings = bookings.filter(b => {
+    const matchesTab = b.status === activeTab;
+    const matchesSearch = b.customer.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          b.id.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    let matchesDate = true;
+    if (selectedDate) {
+      const bDate = new Date(b.dateTime).toDateString();
+      const sDate = new Date(selectedDate).toDateString();
+      matchesDate = bDate === sDate;
+    }
+
+    return matchesTab && matchesSearch && matchesDate;
+  }).sort((a, b) => {
+    if (sortBy === "price_high") return parseFloat(b.amount.replace('₹', '')) - parseFloat(a.amount.replace('₹', ''));
+    if (sortBy === "price_low") return parseFloat(a.amount.replace('₹', '')) - parseFloat(b.amount.replace('₹', ''));
+    if (sortBy === "oldest") return new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime();
+    return new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime(); // newest
+  });
 
   return (
-    <ProviderLayout>
+    <>
       <BookingDetailModal 
         isOpen={!!selectedBooking} 
         onClose={() => setSelectedBooking(null)} 
@@ -75,19 +152,10 @@ export default function BookingsPage() {
             <h1 className="text-2xl font-bold text-slate-900">Manage Bookings</h1>
             <p className="text-slate-500 font-medium">Track your service requests and manage job progress.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="p-2.5 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition-all">
-              <Calendar className="h-5 w-5" />
-            </button>
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all">
-              <Filter className="h-4 w-4" />
-              Filter
-            </button>
-          </div>
         </div>
 
         {/* Search & Tabs */}
-        <div className="space-y-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="bg-white p-2 rounded-[24px] border border-slate-100 shadow-sm inline-flex flex-wrap gap-1">
             {tabs.map((tab) => (
               <button
@@ -104,19 +172,92 @@ export default function BookingsPage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm max-w-md">
-            <Search className="h-5 w-5 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search by customer name or ID..." 
-              className="bg-transparent border-none outline-none text-sm text-slate-600 w-full font-medium"
-            />
+          <div className="flex items-center gap-2 w-full lg:w-auto">
+            <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm w-full lg:min-w-[320px]">
+              <Search className="h-5 w-5 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Search by customer name or ID..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent border-none outline-none text-sm text-slate-600 w-full font-medium"
+              />
+            </div>
+            
+            <div className="relative">
+              <button 
+                onClick={() => (document.getElementById('date-picker') as HTMLInputElement).showPicker()}
+                className={`p-3 border rounded-2xl transition-all shadow-sm flex items-center gap-2 ${
+                  selectedDate ? "bg-primary/10 border-primary text-primary" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                }`}
+              >
+                <Calendar className="h-5 w-5" />
+                {selectedDate && <span className="text-xs font-bold">{new Date(selectedDate).toLocaleDateString()}</span>}
+              </button>
+              <input 
+                id="date-picker"
+                type="date" 
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="absolute opacity-0 pointer-events-none"
+              />
+              {selectedDate && (
+                <button 
+                  onClick={() => setSelectedDate("")}
+                  className="absolute -top-1 -right-1 p-1 bg-rose-500 text-white rounded-full shadow-lg"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+
+            <div className="relative">
+              <button 
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`flex items-center gap-2 px-5 py-3 border rounded-2xl font-bold text-sm transition-all shadow-sm shrink-0 ${
+                  isFilterOpen ? "bg-primary text-white border-primary" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <Filter className="h-4 w-4" />
+                Filter
+              </button>
+
+              {isFilterOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sort By</div>
+                  {[
+                    { id: 'newest', label: 'Newest First' },
+                    { id: 'oldest', label: 'Oldest First' },
+                    { id: 'price_high', label: 'Price: High to Low' },
+                    { id: 'price_low', label: 'Price: Low to High' },
+                  ].map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => {
+                        setSortBy(option.id);
+                        setIsFilterOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                        sortBy === option.id ? "bg-primary/10 text-primary" : "text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Bookings List */}
         <div className="space-y-4">
-          {filteredBookings.length > 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="text-slate-500 font-medium">Loading your bookings...</p>
+            </div>
+          ) : filteredBookings.length > 0 ? (
             filteredBookings.map((booking) => (
               <div key={booking.id} className="group bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-md transition-all">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-8">
@@ -171,17 +312,33 @@ export default function BookingsPage() {
                     <div className="flex items-center gap-2">
                       {booking.status === "Pending" ? (
                         <>
-                          <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
+                          <button 
+                            onClick={() => handleUpdateStatus(booking._id, "Accepted")}
+                            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
+                          >
                             <Check className="h-4 w-4" />
                             Accept
                           </button>
-                          <button className="p-2.5 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition-all border border-rose-100">
+                          <button 
+                            onClick={() => handleUpdateStatus(booking._id, "Rejected")}
+                            className="p-2.5 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition-all border border-rose-100"
+                          >
                             <X className="h-4 w-4" />
                           </button>
                         </>
                       ) : booking.status === "Accepted" ? (
-                        <button className="flex items-center gap-2 px-8 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
+                        <button 
+                          onClick={() => handleUpdateStatus(booking._id, "In Progress")}
+                          className="flex items-center gap-2 px-8 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+                        >
                           Start Job
+                        </button>
+                      ) : booking.status === "In Progress" ? (
+                        <button 
+                          onClick={() => handleUpdateStatus(booking._id, "Completed")}
+                          className="flex items-center gap-2 px-8 py-2.5 bg-purple-600 text-white rounded-xl font-bold text-sm hover:bg-purple-700 transition-all shadow-lg shadow-purple-100"
+                        >
+                          Complete Job
                         </button>
                       ) : (
                         <button 
@@ -207,6 +364,6 @@ export default function BookingsPage() {
           )}
         </div>
       </div>
-    </ProviderLayout>
+    </>
   );
 }
