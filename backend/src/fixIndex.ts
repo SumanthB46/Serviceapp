@@ -18,7 +18,7 @@ const run = async () => {
     } catch(err) {
       console.log('phone_1 index did not exist or already dropped');
     }
-    
+
     console.log('Finished. Mongoose will rebuild the sparse indexes automatically on next server boot.');
     process.exit(0);
   } catch (error) {

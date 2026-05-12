@@ -18,6 +18,7 @@ import providerServiceRoutes from './routes/provider/providerServiceRoutes';
 import complaintRoutes from './routes/admin/complaintRoutes';
 import locationRoutes from './routes/admin/locationRoutes';
 import subServiceRoutes from './routes/admin/subServiceRoutes';
+import walletRoutes from './routes/provider/walletRoutes';
 
 
 
@@ -54,6 +55,7 @@ app.use('/api/provider-services', providerServiceRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/sub-services', subServiceRoutes);
+app.use('/api/wallets', walletRoutes);
 
 
 

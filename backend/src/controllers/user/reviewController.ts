@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Review } from '../../models/Review';
+import { Provider } from '../../models/Provider';
 import { AuthRequest } from '../../middleware/authMiddleware';
 
 // @desc    Get reviews for a provider
@@ -68,3 +69,25 @@ export const deleteReview = async (req: AuthRequest, res: Response): Promise<voi
   }
 };
 
+
+// @desc    Get my reviews (Provider)
+// @route   GET /api/reviews/me
+// @access  Private/Provider
+export const getMyReviews = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const provider = await Provider.findOne({ user_id: req.user?._id });
+    if (!provider) {
+      res.status(404).json({ message: 'Provider profile not found' });
+      return;
+    }
+
+    const reviews = await Review.find({ provider_id: provider._id })
+      .populate('user_id', 'name profile_image')
+      .populate('service_id', 'service_name')
+      .sort({ createdAt: -1 });
+
+    res.json(reviews);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};

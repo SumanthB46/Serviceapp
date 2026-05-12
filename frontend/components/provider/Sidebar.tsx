@@ -9,7 +9,6 @@ import {
   Package,
   Wallet,
   Star,
-  Bell,
   MapPin,
   Image as ImageIcon,
   Wrench,
@@ -23,13 +22,9 @@ import { motion } from "framer-motion";
 const menuItems = [
   { name: "Dashboard", icon: LayoutDashboard, href: "/provider/dashboard" },
   { name: "Services", icon: Wrench, href: "/provider/services" },
-  { name: "Availability", icon: Calendar, href: "/provider/availability" },
   { name: "Bookings", icon: Package, href: "/provider/bookings" },
   { name: "Earnings", icon: Wallet, href: "/provider/earnings" },
   { name: "Reviews", icon: Star, href: "/provider/reviews" },
-  { name: "Notifications", icon: Bell, href: "/provider/notifications" },
-  { name: "Service Area", icon: MapPin, href: "/provider/area" },
-  { name: "Portfolio", icon: ImageIcon, href: "/provider/portfolio" },
 ];
 
 interface SidebarProps {
@@ -62,8 +57,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0F172A] border-r border-white/5 transition-transform duration-500 ease-in-out lg:translate-x-0 flex flex-col h-screen overflow-hidden ${isOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0F172A] border-r border-white/5 transition-transform duration-500 lg:translate-x-0 flex flex-col h-screen overflow-hidden ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         {/* Branding Header - Slightly more compact */}
         <div className="flex items-center justify-between h-20 px-6 relative overflow-hidden group">
@@ -129,7 +123,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Bottom Profile Section - More compact */}
         <div className="p-4 border-t border-white/5 bg-white/[0.01]">
-          <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer group mb-3">
+          <div 
+            onClick={() => window.dispatchEvent(new CustomEvent('openProviderProfile'))}
+            className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer group mb-3"
+          >
             <div className="w-8 h-8 rounded-lg overflow-hidden bg-blue-600 flex items-center justify-center font-bold text-white shadow-inner text-xs">
               {getInitials(user?.name)}
             </div>

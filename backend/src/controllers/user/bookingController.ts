@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Booking } from '../../models/Booking';
+import { Provider } from '../../models/Provider';
 import { AuthRequest } from '../../middleware/authMiddleware';
 export const getAllBookings = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -37,7 +38,12 @@ export const getMyBookings = async (req: AuthRequest, res: Response): Promise<vo
     if (req.user?.role === 'customer') {
       query = { customer_id: req.user._id };
     } else if (req.user?.role === 'provider') {
-      query = { provider_id: req.user._id }; 
+      const provider = await Provider.findOne({ user_id: req.user._id });
+      if (!provider) {
+        res.status(404).json({ message: 'Provider profile not found' });
+        return;
+      }
+      query = { provider_id: provider._id }; 
     }
 
     const bookings = await Booking.find(query)

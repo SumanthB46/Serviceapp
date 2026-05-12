@@ -31,18 +31,13 @@ interface LocationData {
   type: string;
 }
 
-interface Availability {
-  day: string;
-  start_time: string;
-  end_time: string;
-}
+
 
 interface ServiceDetail {
   experience: number;
   price: number;
   subserviceIds: string[];
   selectedLocations: string[];
-  availability: Availability[];
   documents: DocUpload[];
 }
 
@@ -52,7 +47,6 @@ interface DocUpload {
   file_url?: string;
 }
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export default function ProviderServiceSelection() {
   const router = useRouter();
@@ -175,7 +169,6 @@ export default function ProviderServiceSelection() {
             price: 0,
             subserviceIds: [],
             selectedLocations: [],
-            availability: [{ day: "Monday", start_time: "09:00", end_time: "18:00" }],
             documents: []
           }
         }));
@@ -234,9 +227,6 @@ export default function ProviderServiceSelection() {
         }
         if (!details.documents || details.documents.length === 0) {
           return setError(`Please upload at least one experience certificate for ${service?.service_name}.`);
-        }
-        if (!details.availability || details.availability.length === 0) {
-          return setError(`Please set an availability schedule for ${service?.service_name}.`);
         }
       }
       setCurrentStep(3);
@@ -312,7 +302,6 @@ export default function ProviderServiceSelection() {
             price: details.price || 0,
             subservice_ids: details.subserviceIds || [],
             location_ids: details.selectedLocations || [],
-            availability: details.availability || [],
             documents: (details.documents || []).map((d: any) => ({
               doc_type: d.doc_type,
               file_url: d.file_url || ""
@@ -436,7 +425,6 @@ export default function ProviderServiceSelection() {
                   price: 0,
                   subserviceIds: [],
                   selectedLocations: [],
-                  availability: [],
                   documents: []
                 };
                 const subServices = subServicesMap[serviceId] || [];
@@ -537,36 +525,7 @@ export default function ProviderServiceSelection() {
                         }} />
                       </label>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 flex items-center gap-1"><Calendar className="w-3 h-3" /> Availability</label>
-                      {(details.availability || []).map((av, idx) => (
-                        <div key={idx} className="flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-100">
-                          <select value={av.day} onChange={(e) => {
-                            const nextAv = [...(details.availability || [])];
-                            nextAv[idx].day = e.target.value;
-                            handleServiceDetailChange(serviceId, 'availability', nextAv);
-                          }} className="text-[11px] font-bold text-slate-600 outline-none flex-1 bg-transparent">
-                            {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
-                          </select>
-                          <input type="time" value={av.start_time} onChange={(e) => {
-                            const nextAv = [...(details.availability || [])];
-                            nextAv[idx].start_time = e.target.value;
-                            handleServiceDetailChange(serviceId, 'availability', nextAv);
-                          }} className="text-[11px] font-bold text-slate-600 outline-none" />
-                          <span className="text-slate-300">-</span>
-                          <input type="time" value={av.end_time} onChange={(e) => {
-                            const nextAv = [...(details.availability || [])];
-                            nextAv[idx].end_time = e.target.value;
-                            handleServiceDetailChange(serviceId, 'availability', nextAv);
-                          }} className="text-[11px] font-bold text-slate-600 outline-none" />
-                          <button onClick={() => {
-                            const nextAv = (details.availability || []).filter((_, i) => i !== idx);
-                            handleServiceDetailChange(serviceId, 'availability', nextAv);
-                          }} className="p-1 text-slate-300 hover:text-red-500"><Minus className="w-3 h-3" /></button>
-                        </div>
-                      ))}
-                      <button onClick={() => handleServiceDetailChange(serviceId, 'availability', [...(details.availability || []), { day: "Monday", start_time: "09:00", end_time: "18:00" }])} className="text-[10px] font-bold text-[#1D2B83] hover:underline pl-1">+ Add Slot</button>
-                    </div>
+
                   </div>
                 );
               })}

@@ -12,7 +12,8 @@ import {
   Plus,
   Zap,
   Clock,
-  MapPin
+  MapPin,
+  User
 } from "lucide-react";
 import { API_URL } from "@/config/api";
 
@@ -81,6 +82,32 @@ export default function DashboardOverview() {
     }
   };
 
+  const toggleStatus = async () => {
+    if (!providerData) return;
+    
+    const newStatus = providerData.availability_status === 'available' ? 'offline' : 'available';
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_URL}/providers/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ availability_status: newStatus }),
+      });
+
+      if (response.ok) {
+        const updated = await response.json();
+        setProviderData(updated);
+        // Dispatch event for TopNavbar to pick up
+        window.dispatchEvent(new CustomEvent('providerStatusChanged', { detail: newStatus }));
+      }
+    } catch (error) {
+      console.error("Error toggling status:", error);
+    }
+  };
+
   const dynamicStats = [
     { name: "Total Jobs", value: providerData?.total_jobs?.toString() || "0", icon: TrendingUp, color: "bg-blue-500", trend: "+12%" },
     { name: "Completed", value: providerData?.completed_jobs?.toString() || "0", icon: CheckCircle2, color: "bg-emerald-500", trend: "+8%" },
@@ -104,21 +131,43 @@ export default function DashboardOverview() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Welcome back, {user?.name?.split(' ')[0] || "Provider"}!</h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold text-slate-900">Welcome back, {user?.name?.split(' ')[0] || "Provider"}!</h1>
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('openProviderProfile'))}
+                className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                title="Edit Profile"
+              >
+                <User size={14} />
+              </button>
+            </div>
             <p className="text-slate-500 font-medium">Here's what's happening with your services today.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all">
-              <Zap className="h-4 w-4 text-amber-500" />
-              Go Online
-            </button>
-            <button 
-              onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
+          <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm transition-all hover:shadow-md">
+            <div className="flex flex-col items-end px-3 border-r border-slate-100">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Work Status</span>
+              <span className={`text-[10px] font-black uppercase tracking-widest ${providerData?.availability_status === 'available' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {providerData?.availability_status === 'available' ? 'Online' : 'Offline'}
+              </span>
+            </div>
+            <div 
+              onClick={toggleStatus}
+              className={`w-14 h-8 rounded-full p-1 cursor-pointer transition-all duration-500 relative ${
+                providerData?.availability_status === 'available' ? 'bg-emerald-500' : 'bg-slate-200'
+              }`}
             >
-              <Plus className="h-4 w-4" />
-              Add Service
-            </button>
+              <div 
+                className={`w-6 h-6 bg-white rounded-full shadow-lg transition-all duration-500 flex items-center justify-center ${
+                  providerData?.availability_status === 'available' ? 'translate-x-6' : 'translate-x-0'
+                }`}
+              >
+                {providerData?.availability_status === 'available' ? (
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                ) : (
+                  <div className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -206,7 +255,7 @@ export default function DashboardOverview() {
                 <Wallet className="h-24 w-24" />
               </div>
               <h3 className="text-primary/70 text-sm font-medium mb-1">Available Balance</h3>
-              <p className="text-3xl font-bold mb-6">₹12,450.00</p>
+              <p className="text-3xl font-bold mb-6">₹0.0</p>
               <button className="w-full py-3 bg-white text-primary rounded-xl font-bold text-sm hover:bg-primary/5 transition-all shadow-lg">
                 Withdraw Money
               </button>
