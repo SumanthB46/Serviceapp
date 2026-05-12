@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ProviderService } from '../../models/ProviderService';
 import { AuthRequest } from '../../middleware/authMiddleware';
+import mongoose from 'mongoose';
 
 // @desc    Add service to provider profile
 // @route   POST /api/provider-services
@@ -19,10 +20,12 @@ export const addProviderService = async (
       location_ids,
       subservice_ids,
       documents,
+      is_featured,
+      is_available
     } = req.body;
 
     const providerService = await ProviderService.create({
-      provider_id,
+      provider_id: new mongoose.Types.ObjectId(provider_id as string),
       experience: experience || 0,
       price: price || 0,
       discount: discount || 0,
@@ -30,8 +33,10 @@ export const addProviderService = async (
       location_ids: location_ids || [],
       subservice_ids: subservice_ids || [],
       documents: documents || [],
-      is_featured: req.body.is_featured || false,
-      is_available: req.body.is_available ?? true,
+      is_featured: is_featured || false,
+      is_available: is_available ?? true,
+      is_active: true,
+      isDeleted: false
     });
 
     res.status(201).json(providerService);
@@ -72,11 +77,11 @@ export const getProviderServices = async (
   res: Response
 ): Promise<void> => {
   try {
-    const services = await ProviderService.find({
+    const services = await ProviderService.find({ 
       provider_id: req.params.providerId,
-      isDeleted: false,
+      isDeleted: false 
     }).populate('subservice_ids');
-
+    
     res.json(services);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -91,12 +96,14 @@ export const updateProviderService = async (
   res: Response
 ): Promise<void> => {
   try {
-    const {
-      price,
-      discount,
-      final_price,
-      subservice_ids,
+    const { 
+      price, 
+      discount, 
+      final_price, 
+      subservice_ids, 
       is_active,
+      is_available,
+      is_featured 
     } = req.body;
 
     const providerService = await ProviderService.findById(req.params.id);
@@ -108,30 +115,13 @@ export const updateProviderService = async (
       return;
     }
 
-    providerService.price =
-      price ?? providerService.price;
-
-    providerService.discount =
-      discount ?? providerService.discount;
-
-    providerService.final_price =
-      final_price ?? providerService.final_price;
-
-    providerService.subservice_ids =
-      subservice_ids ??
-      providerService.subservice_ids;
-
-    // providerService.is_featured =
-    //   req.body.is_featured ??
-    //   providerService.is_featured;
-
-    // providerService.is_available =
-    //   req.body.is_available ??
-    //   providerService.is_available;
-
-    providerService.is_active =
-      is_active ??
-      providerService.is_active;
+    if (price !== undefined) providerService.price = price;
+    if (discount !== undefined) providerService.discount = discount;
+    if (final_price !== undefined) providerService.final_price = final_price;
+    if (subservice_ids !== undefined) providerService.subservice_ids = subservice_ids;
+    if (is_featured !== undefined) providerService.is_featured = is_featured;
+    if (is_available !== undefined) providerService.is_available = is_available;
+    if (is_active !== undefined) providerService.is_active = is_active;
 
     await providerService.save();
 
@@ -161,11 +151,11 @@ export const deleteProviderService = async (
       return;
     }
 
-    await providerService.deleteOne();
-
-    res.json({
-      message: 'Service removed from provider',
-    });
+    providerService.isDeleted = true;
+    providerService.is_active = false;
+    await providerService.save();
+    
+    res.json({ message: 'Service removed from provider' });
   } catch (error: any) {
     res.status(500).json({
       message: error.message,

@@ -175,9 +175,9 @@ const Categories = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="flex flex-col items-center mb-12"
+          className="flex flex-col items-center mb-8 sm:mb-12"
         >
-          <h2 className="text-3xl font-bold text-slate-800 tracking-tight mb-2">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight mb-2 text-center">
             What do you need help with?
           </h2>
           <motion.div
@@ -185,16 +185,16 @@ const Categories = () => {
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="h-1.5 w-20 bg-[#1D2B83] rounded-full origin-left"
+            className="h-1 sm:h-1.5 w-20 bg-[#1D2B83] rounded-full origin-left"
           />
         </motion.div>
 
         {/* Categories Scrollable Container with Auto-scroll */}
-        <div className="relative group/marquee">
-          {/* Manual Scroll Buttons */}
+        <div className="relative group/marquee px-2 sm:px-0">
+          {/* Manual Scroll Buttons - Hidden on very small screens for cleaner UI */}
           <button
             onClick={() => scroll("left")}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg text-[#1D2B83] transition-all hover:bg-[#1D2B83] hover:text-white -left-6 border border-slate-100"
+            className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg text-[#1D2B83] transition-all hover:bg-[#1D2B83] hover:text-white -left-6 border border-slate-100"
             aria-label="Scroll Left"
           >
             <ChevronLeft className="h-6 w-6" />
@@ -202,7 +202,7 @@ const Categories = () => {
           
           <button
             onClick={() => scroll("right")}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg text-[#1D2B83] transition-all hover:bg-[#1D2B83] hover:text-white -right-6 border border-slate-100"
+            className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg text-[#1D2B83] transition-all hover:bg-[#1D2B83] hover:text-white -right-6 border border-slate-100"
             aria-label="Scroll Right"
           >
             <ChevronRight className="h-6 w-6" />

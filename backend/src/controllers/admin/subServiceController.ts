@@ -1,14 +1,41 @@
 import { Request, Response } from 'express';
 import { SubService } from '../../models/SubService';
 import { Service } from '../../models/Service';
+import { ProviderService } from '../../models/ProviderService';
 
 // @desc    Get all sub-services (optionally filter by service)
 // @route   GET /api/sub-services?service_id=xxx
 // @access  Public
 export const getSubServices = async (req: Request, res: Response): Promise<void> => {
   try {
-    const filter: Record<string, any> = { isDeleted: false };
-    if (req.query.service_id) filter.service_id = req.query.service_id;
+    const filter: any = { isDeleted: false, status: 'active' };
+    if (req.query.service_id) {
+      filter.service_id = req.query.service_id as string;
+    }
+
+    // If location_id is provided, filter sub-services that are available in that location
+    if (req.query.location_id && req.query.location_id !== "Select City") {
+      try {
+        // Validate if it's a valid ObjectId to prevent CastError crashes
+        if (req.query.location_id.toString().match(/^[0-9a-fA-F]{24}$/)) {
+          // Use .distinct() to get all unique sub-service IDs available in this location
+          const availableSubServiceIds = await ProviderService.distinct('subservice_ids', {
+            location_ids: req.query.location_id as string,
+            isDeleted: false,
+            is_active: true
+          });
+
+          if (availableSubServiceIds && availableSubServiceIds.length > 0) {
+            filter._id = { $in: availableSubServiceIds };
+          } else {
+            // No providers in this location, so no sub-services should be shown
+            filter._id = { $in: [] };
+          }
+        }
+      } catch (innerError) {
+        console.error("Error filtering sub-services by location:", innerError);
+      }
+    }
 
     const subServices = await SubService.find(filter)
       .populate({

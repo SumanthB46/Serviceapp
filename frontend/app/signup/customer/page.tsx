@@ -1,4 +1,4 @@
-import CustomerProfileForm from '@/components/customer/CustomerProfileForm';
+import CustomerProfileForm from '@/components/user/profile/CustomerProfileForm';
 
 export const metadata = {
   title: 'Complete Profile - Customer',

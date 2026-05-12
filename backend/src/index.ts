@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+// Last updated: 2026-05-11T15:36
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
@@ -18,19 +19,32 @@ import providerServiceRoutes from './routes/provider/providerServiceRoutes';
 import complaintRoutes from './routes/admin/complaintRoutes';
 import locationRoutes from './routes/admin/locationRoutes';
 import subServiceRoutes from './routes/admin/subServiceRoutes';
-import walletRoutes from './routes/provider/walletRoutes';
+import cartRoutes from './routes/user/cartRoutes';
 
 
+
+
+import { cleanupExpiredDocs } from './utils/cleanupVerification';
 
 dotenv.config();
 
 // Connect to MongoDB
-connectDB();
+connectDB().then(() => {
+  // Run cleanup job on startup
+  cleanupExpiredDocs();
+});
 
 const app = express();
-const port = 5005;
+const port = process.env.PORT || 5005;
 
-app.use(cors());
+app.use(cors({
+  origin: function(origin, callback) {
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
@@ -55,7 +69,8 @@ app.use('/api/provider-services', providerServiceRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/sub-services', subServiceRoutes);
-app.use('/api/wallets', walletRoutes);
+app.use('/api/cart', cartRoutes);
+
 
 
 
@@ -79,13 +94,17 @@ server.on('error', (error: any) => {
 });
 
 process.on('uncaughtException', (err) => {
-  console.error('🔥 Uncaught Exception:', err);
+  console.error('🔥 Uncaught Exception:', err.message);
+  console.error(err.stack);
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
+process.on('unhandledRejection', (reason: any, promise) => {
+  console.error('🔥 Unhandled Rejection at:', promise);
+  console.error('Reason:', reason?.message || reason);
+  if (reason?.stack) console.error(reason.stack);
   process.exit(1);
 });
 
 // Port 5001 - Active
+ 

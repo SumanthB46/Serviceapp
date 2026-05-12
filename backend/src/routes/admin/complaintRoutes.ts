@@ -8,7 +8,7 @@ router.route('/')
   .get(protect, admin, getComplaints)
   .post(protect, submitComplaint);
 
-router.get('/user/:userId', getComplaintsByUserId);
+router.get('/user/:userId', protect, admin, getComplaintsByUserId);
 
 router.put('/:id', protect, admin, updateComplaintStatus);
 

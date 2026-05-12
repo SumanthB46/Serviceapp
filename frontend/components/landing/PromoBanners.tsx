@@ -42,22 +42,16 @@ export default function PromoBanners() {
   // If no banners are loaded from the database, show a default placeholder banner
   if (banners.length === 0) {
     return (
-      <section className="bg-white py-12 pb-24 relative overflow-hidden">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 relative">
-          <div className="relative w-full h-[650px] md:h-[500px]">
-            <div className="absolute inset-0 w-full overflow-hidden rounded-[3rem] bg-[#1D2B83] p-10 md:p-16 text-white shadow-2xl flex flex-col justify-center items-center text-center">
-              <h2 className="text-3xl md:text-5xl font-extrabold leading-tight tracking-tight drop-shadow-lg mb-4">
+      <section className="bg-white py-8 sm:py-12 pb-20 sm:pb-24 relative overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
+          <div className="relative w-full h-[400px] sm:h-[500px]">
+            <div className="absolute inset-0 w-full overflow-hidden rounded-[2rem] sm:rounded-[3rem] bg-[#1D2B83] p-8 sm:p-16 text-white shadow-2xl flex flex-col justify-center items-center text-center">
+              <h2 className="text-2xl sm:text-5xl font-extrabold leading-tight tracking-tight mb-4">
                 Exclusive Promotions
               </h2>
-              <p className="text-white text-sm md:text-lg opacity-90 leading-relaxed font-medium drop-shadow-md">
-                Add banners in your Admin Panel to see them displayed here!
+              <p className="text-white text-xs sm:text-lg opacity-90 leading-relaxed font-medium">
+                New offers coming soon! Stay tuned.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-2 justify-center">
-                <Link href="/admin/banners" className="relative overflow-hidden bg-white text-[#1D2B83] hover:text-[#1D2B83] text-sm font-bold uppercase tracking-[0.2em] px-10 py-5 rounded-2xl shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3">
-                  Go to Admin Panel
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
             </div>
           </div>
         </div>
@@ -69,9 +63,9 @@ export default function PromoBanners() {
   const isEvenLayout = activeIndex % 2 === 0;
 
   return (
-    <section className="bg-white py-12 pb-24 relative overflow-hidden">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 relative">
-        <div className="relative w-full h-[650px] md:h-[500px]">
+    <section className="bg-white py-8 sm:py-12 pb-20 sm:pb-24 relative overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
+        <div className="relative w-full h-[550px] sm:h-[500px]">
           <AnimatePresence mode="wait">
             {isEvenLayout ? (
               <motion.div
@@ -80,14 +74,14 @@ export default function PromoBanners() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -100 }}
                 transition={{ duration: 0.6, ease: "easeInOut" }}
-                className="absolute inset-0 w-full overflow-hidden rounded-[3rem] bg-[#1D2B83] p-10 md:p-16 text-white shadow-2xl"
+                className="absolute inset-0 w-full overflow-hidden rounded-[2rem] sm:rounded-[3rem] bg-[#1D2B83] p-8 sm:p-16 text-white shadow-2xl"
               >
                 {/* Decorative Background Elements */}
                 <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/5 blur-3xl animate-pulse" />
                 <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-indigo-400/10 blur-2xl" />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center relative z-10 h-full">
-                  <div className="flex flex-col gap-6 max-w-xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center relative z-10 h-full">
+                  <div className="flex flex-col gap-4 sm:gap-6 max-w-xl text-center md:text-left items-center md:items-start">
                     <div className="flex items-center gap-3 bg-white/10 w-fit px-4 py-2 rounded-full border border-white/10 backdrop-blur-sm">
                       <ShieldCheck className="h-4 w-4 text-indigo-200" />
                       <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-indigo-100">
@@ -95,17 +89,17 @@ export default function PromoBanners() {
                       </span>
                     </div>
 
-                    <h2 className="text-3xl md:text-5xl font-extrabold leading-tight tracking-tight">
+                    <h2 className="text-2xl sm:text-5xl font-extrabold leading-tight tracking-tight">
                       {currentBanner.title}
                     </h2>
 
-                    <p className="text-indigo-100 text-sm md:text-lg opacity-80 leading-relaxed font-medium">
+                    <p className="text-indigo-100 text-xs sm:text-lg opacity-80 leading-relaxed font-medium">
                       {currentBanner.subtitle}
                     </p>
 
                     {currentBanner.button_text && (
-                      <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <Link href={currentBanner.redirect_url || "/"} className="relative overflow-hidden bg-white text-[#1D2B83] hover:text-white text-sm font-bold uppercase tracking-[0.2em] px-10 py-5 rounded-2xl shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3 group isolate">
+                      <div className="mt-4">
+                        <Link href={currentBanner.redirect_url || "/"} className="relative overflow-hidden bg-white text-[#1D2B83] hover:text-white text-xs sm:text-sm font-bold uppercase tracking-[0.2em] px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3 group isolate">
                           <div className="absolute inset-0 bg-indigo-500 scale-x-0 origin-left transition-transform duration-500 ease-out group-hover:scale-x-100 -z-10" />
                           {currentBanner.button_text}
                           <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" />
@@ -129,13 +123,13 @@ export default function PromoBanners() {
                 exit={{ opacity: 0, x: -100 }}
                 transition={{ duration: 0.6, ease: "easeInOut" }}
                 style={{ background: "linear-gradient(135deg, #0f172a, #1e3a8a)" }}
-                className="absolute inset-0 w-full overflow-hidden rounded-[3rem] p-10 md:p-16 text-white shadow-2xl border border-white/10"
+                className="absolute inset-0 w-full overflow-hidden rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-16 text-white shadow-2xl border border-white/10"
               >
                 <div className="absolute -top-24 -left-20 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl animate-pulse" />
                 <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center relative z-10 h-full">
-                  <div className="flex flex-col gap-6 max-w-xl flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center relative z-10 h-full">
+                  <div className="flex flex-col gap-4 sm:gap-6 max-w-xl flex-1 text-center md:text-left items-center md:items-start">
                     <div className="inline-flex w-fit items-center gap-3 bg-white/10 text-indigo-200 px-5 py-2.5 rounded-2xl border border-white/10 backdrop-blur-sm">
                       <Building2 className="h-5 w-5" />
                       <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-indigo-100">
@@ -143,17 +137,17 @@ export default function PromoBanners() {
                       </span>
                     </div>
 
-                    <h2 className="text-3xl md:text-5xl font-extrabold text-white leading-tight tracking-tight">
+                    <h2 className="text-2xl sm:text-5xl font-extrabold text-white leading-tight tracking-tight">
                       {currentBanner.title}
                     </h2>
 
-                    <p className="text-indigo-100 text-sm md:text-lg max-w-lg leading-relaxed font-medium opacity-80">
+                    <p className="text-indigo-100 text-xs sm:text-lg max-w-lg leading-relaxed font-medium opacity-80">
                       {currentBanner.subtitle}
                     </p>
 
                     {currentBanner.button_text && (
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-4">
-                        <Link href={currentBanner.redirect_url || "/"} className="relative overflow-hidden bg-white text-[#1D2B83] hover:text-white text-sm font-bold uppercase tracking-[0.2em] px-10 py-5 rounded-2xl shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3 group isolate">
+                      <div className="flex flex-col sm:flex-row items-center gap-3 pt-4">
+                        <Link href={currentBanner.redirect_url || "/"} className="relative overflow-hidden bg-white text-[#1D2B83] hover:text-white text-xs sm:text-sm font-bold uppercase tracking-[0.2em] px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3 group isolate">
                           <div className="absolute inset-0 bg-indigo-500 scale-x-0 origin-left transition-transform duration-500 ease-out group-hover:scale-x-100 -z-10" />
                           {currentBanner.button_text}
                           <span className="ml-3 h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center transition-transform group-hover:translate-x-1">
@@ -177,12 +171,12 @@ export default function PromoBanners() {
 
         {/* Carousel Indicators */}
         {banners.length > 1 && (
-          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3">
+          <div className="absolute -bottom-6 sm:-bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 sm:gap-3">
             {banners.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setActiveIndex(idx)}
-                className={`transition-all duration-300 rounded-full ${activeIndex === idx ? "w-10 h-2 bg-[#1D2B83]" : "w-2 h-2 bg-slate-300 hover:bg-slate-400"}`}
+                className={`transition-all duration-300 rounded-full ${activeIndex === idx ? "w-8 sm:w-10 h-1.5 sm:h-2 bg-[#1D2B83]" : "w-1.5 sm:w-2 h-1.5 sm:h-2 bg-slate-300 hover:bg-slate-400"}`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             ))}

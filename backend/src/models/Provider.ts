@@ -21,7 +21,11 @@ export interface IProvider extends Document {
   
   verification_docs?: {
     id_proof_url: string;
+    pan_url?: string;
   };
+  kyc_rejection_reason?: string;
+  verified_at?: Date;
+  verification_docs_expiry?: Date;
   
   isDeleted: boolean;
   createdAt: Date;
@@ -68,7 +72,11 @@ const providerSchema = new Schema<IProvider>(
     },
     verification_docs: {
       id_proof_url: { type: String, trim: true },
+      pan_url: { type: String, trim: true },
     },
+    kyc_rejection_reason: { type: String },
+    verified_at: { type: Date },
+    verification_docs_expiry: { type: Date },
     isDeleted: {
       type: Boolean,
       default: false,

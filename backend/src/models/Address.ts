@@ -8,6 +8,10 @@ export interface IAddress extends Document {
   pincode: string;
   landmark?: string;
   is_default: boolean;
+  coordinates?: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +50,17 @@ const addressSchema = new Schema<IAddress>(
     is_default: {
       type: Boolean,
       default: false,
+    },
+    coordinates: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number],
+        index: '2dsphere',
+      },
     },
   },
   {

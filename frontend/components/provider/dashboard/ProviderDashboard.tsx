@@ -1,18 +1,15 @@
 "use client";
 
 import React from "react";
-import ProviderLayout from "@/components/provider/ProviderLayout";
-import {
-  TrendingUp,
-  CheckCircle2,
-  Wallet,
-  Star,
-  ArrowUpRight,
+import { 
+  TrendingUp, 
+  CheckCircle2, 
+  Wallet, 
+  Star, 
+  ArrowUpRight, 
   MoreHorizontal,
   Plus,
-  Zap,
-  Clock,
-  MapPin
+  Zap
 } from "lucide-react";
 
 const stats = [
@@ -52,13 +49,13 @@ const recentBookings = [
   }
 ];
 
-export default function DashboardPage() {
+export default function ProviderDashboard() {
   return (
     <div className="flex flex-col gap-8">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Welcome back, Expert!</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Welcome back, Aryan!</h1>
           <p className="text-slate-500 font-medium">Here's what's happening with your services today.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -130,10 +127,11 @@ export default function DashboardPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold ${booking.status === "Completed" ? "bg-emerald-50 text-emerald-600" :
-                          booking.status === "Upcoming" ? "bg-blue-50 text-blue-600" :
-                            "bg-amber-50 text-amber-600"
-                        }`}>
+                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold ${
+                        booking.status === "Completed" ? "bg-emerald-50 text-emerald-600" :
+                        booking.status === "Upcoming" ? "bg-blue-50 text-blue-600" :
+                        "bg-amber-50 text-amber-600"
+                      }`}>
                         {booking.status}
                       </span>
                     </td>
@@ -149,7 +147,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Side Panel */}
+        {/* Quick Stats/Summary Side Panel */}
         <div className="flex flex-col gap-6">
           <div className="bg-primary rounded-3xl p-6 text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
@@ -160,6 +158,29 @@ export default function DashboardPage() {
             <button className="w-full py-3 bg-white text-primary rounded-xl font-bold text-sm hover:bg-primary/5 transition-all shadow-lg">
               Withdraw Money
             </button>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Daily Schedule</h3>
+            <div className="space-y-4">
+              {[
+                { time: "09:00 AM", task: "Prep Equipment", type: "system" },
+                { time: "10:00 AM", task: "Deep Cleaning - Priya", type: "job" },
+                { time: "01:00 PM", task: "Lunch Break", type: "break" },
+                { time: "02:30 PM", task: "AC Service - Rahul", type: "job" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-4">
+                  <span className="text-xs font-bold text-slate-400 w-16 pt-1">{item.time}</span>
+                  <div className={`flex-1 p-3 rounded-2xl text-sm font-bold ${
+                    item.type === "job" ? "bg-primary/10 text-primary border border-primary/20" :
+                    item.type === "break" ? "bg-slate-50 text-slate-600 border border-slate-100" :
+                    "bg-amber-50 text-amber-700 border border-amber-100"
+                  }`}>
+                    {item.task}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

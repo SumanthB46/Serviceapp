@@ -32,7 +32,6 @@ interface LocationData {
 }
 
 
-
 interface ServiceDetail {
   experience: number;
   price: number;
@@ -107,7 +106,9 @@ export default function ProviderServiceSelection() {
     try {
       const res = await fetch(`${API_URL}/locations`);
       const data = await res.json();
-      if (res.ok) setLocations(data.filter((l: any) => l.status === 'active'));
+      if (res.ok) {
+        setLocations(data.filter((l: any) => l.status === 'active' && l.type?.toLowerCase() === 'area'));
+      }
     } catch (err) {
       console.error("Failed to fetch locations", err);
     }
@@ -169,6 +170,7 @@ export default function ProviderServiceSelection() {
             price: 0,
             subserviceIds: [],
             selectedLocations: [],
+            availability: [],
             documents: []
           }
         }));
@@ -213,7 +215,7 @@ export default function ProviderServiceSelection() {
         const details = serviceDetails[svcId];
         const service = Object.values(servicesMap).flat().find(s => s._id === svcId);
 
-        if (!details || (details.experience || 0) <= 0) {
+        if (!details || (details.experience ?? 0) < 0) {
           return setError(`Please enter years of experience for ${service?.service_name}.`);
         }
         if (!details || (details.price || 0) <= 0) {
@@ -224,9 +226,6 @@ export default function ProviderServiceSelection() {
         }
         if (!details.subserviceIds || details.subserviceIds.length === 0) {
           return setError(`Please select at least one sub-service for ${service?.service_name}.`);
-        }
-        if (!details.documents || details.documents.length === 0) {
-          return setError(`Please upload at least one experience certificate for ${service?.service_name}.`);
         }
       }
       setCurrentStep(3);
@@ -502,7 +501,7 @@ export default function ProviderServiceSelection() {
 
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 flex items-center gap-1"><FileText className="w-3 h-3" /> Experience Certificates</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 flex items-center gap-1"><FileText className="w-3 h-3" /> Experience Certificates <span className="lowercase text-slate-300 font-medium">(Optional)</span></label>
                       <div className="flex flex-wrap gap-2 mb-1">
                         {(details.documents || []).map((doc, idx) => (
                           <div key={idx} className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
@@ -525,7 +524,6 @@ export default function ProviderServiceSelection() {
                         }} />
                       </label>
                     </div>
-
                   </div>
                 );
               })}

@@ -128,11 +128,11 @@ const ProviderTable: React.FC = () => {
     setProviders([newProvider, ...providers]);
   };
 
-  const handleUpdateStatus = async (id: string, newStatus: string) => {
+  const handleUpdateStatus = async (id: string, newStatus: string, reason?: string) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.put(`${API_URL}/providers/${id}`,
-        { kyc_status: newStatus },
+        { status: newStatus, kyc_rejection_reason: reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setProviders(providers.map(p => p._id === id ? response.data : p));

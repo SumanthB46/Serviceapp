@@ -5,18 +5,18 @@ import Image from 'next/image';
 
 const AboutHero = () => {
     return (
-        <section className="relative pt-30 pb-20 overflow-hidden">
-            <div className="max-w-7xl mx-auto px-6">
+        <section className="relative pt-20 sm:pt-32 pb-12 sm:pb-20 overflow-hidden">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
                 {/* Text Content */}
-                <div className="text-center mb-12 animate-fade-in-up">
-                    <span className="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-[#1E3A8A] text-sm font-semibold tracking-wider mb-6">
-                        OUR STORY
+                <div className="text-center mb-8 sm:mb-12 animate-fade-in-up">
+                    <span className="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-[#1E3A8A] text-xs sm:text-sm font-semibold tracking-wider mb-4 sm:mb-6 uppercase">
+                        Our Story
                     </span>
-                    <h1 className="text-4xl md:text-6xl font-bold text-gray-900 leading-[1.1] mb-6">
+                    <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-[1.1] mb-4 sm:mb-6">
                         Crafting a Curated Sanctuary for <br className="hidden md:block" />
                         <span className="text-[#1E3A8A]">Your Home.</span>
                     </h1>
-                    <p className="max-w-2xl mx-auto text-lg text-gray-500 leading-relaxed">
+                    <p className="max-w-2xl mx-auto text-sm sm:text-lg text-gray-500 leading-relaxed">
                         We believe every space tells a story. At ArchitecturalService, we blend precision engineering
                         with artistic vision to transform your living spaces into masterpieces.
                     </p>
@@ -29,6 +29,7 @@ const AboutHero = () => {
                             src="/images/about/hero.jpg"
                             alt="Modern interior design"
                             fill
+                            sizes="100vw"
                             className="object-cover transition-transform duration-700 group-hover:scale-105"
                             priority
                         />

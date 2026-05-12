@@ -9,23 +9,38 @@ import {
   MapPin, Star, Briefcase, Calendar, ShieldCheck, Award, ShieldAlert, 
   FileSearch, CheckCircle2, Mail, Phone, Clock, FileText, UserCheck, UserX, Trash2, Eye
 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { BACKEND_URL } from '@/config/api';
 
 interface ApprovalModalProps {
   provider: Provider | null;
   onClose: () => void;
-  onUpdate: (id: string, status: string) => void;
+  onUpdate: (id: string, status: string, reason?: string) => void;
 }
 
 const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpdate }) => {
+  const [rejectionReason, setRejectionReason] = React.useState('');
+  const [isRejecting, setIsRejecting] = React.useState(false);
+
   if (!provider) return null;
 
   const handleAction = (status: string) => {
-    onUpdate(provider._id, status);
+    if (status === 'rejected' && !isRejecting) {
+      setIsRejecting(true);
+      return;
+    }
+    onUpdate(provider._id, status, status === 'rejected' ? rejectionReason : undefined);
+    setIsRejecting(false);
     onClose();
   };
 
   const statusVariant = provider.kyc_status === 'verified' ? 'success' : provider.kyc_status === 'pending' ? 'warning' : 'danger';
 
+  const openDocument = (url?: string) => {
+    if (!url) return;
+    const fullUrl = (url.startsWith('http') || url.startsWith('blob:')) ? url : `${BACKEND_URL}${url}`;
+    window.open(fullUrl, '_blank');
+  };
 
   return (
     <Modal
@@ -40,15 +55,24 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
            </div>
             <div className="flex items-center gap-2">
                <Button variant="outline" size="sm" onClick={onClose} className="text-[10px] uppercase font-black px-6">Close</Button>
-               {provider.kyc_status === 'pending' && (
+               {isRejecting ? (
+                 <div className="flex items-center gap-2">
+                   <Button variant="outline" size="sm" onClick={() => setIsRejecting(false)} className="text-[10px] uppercase font-black px-4">Cancel</Button>
+                   <Button variant="danger" size="sm" onClick={() => handleAction('rejected')} disabled={!rejectionReason.trim()} className="text-[10px] uppercase font-black bg-red-600 shadow-lg px-6">Confirm Rejection</Button>
+                 </div>
+               ) : (
                  <>
-                   <Button variant="outline" size="sm" onClick={onClose} className="text-[10px] uppercase font-black text-amber-600 border-amber-100 bg-amber-50 shadow-sm">Request Docs</Button>
-                   <Button variant="danger" size="sm" onClick={() => handleAction('rejected')} className="text-[10px] uppercase font-black bg-red-600 shadow-lg">Reject Entry</Button>
-                   <Button variant="success" size="sm" onClick={() => handleAction('verified')} className="text-[10px] uppercase font-black bg-green-600 shadow-lg">Approve Access</Button>
+                   {provider.kyc_status === 'pending' && (
+                     <>
+                       <Button variant="outline" size="sm" onClick={onClose} className="text-[10px] uppercase font-black text-amber-600 border-amber-100 bg-amber-50 shadow-sm">Request Docs</Button>
+                       <Button variant="danger" size="sm" onClick={() => handleAction('rejected')} className="text-[10px] uppercase font-black bg-red-600 shadow-lg">Reject Entry</Button>
+                       <Button variant="success" size="sm" onClick={() => handleAction('verified')} className="text-[10px] uppercase font-black bg-green-600 shadow-lg">Approve Access</Button>
+                     </>
+                   )}
+                   {provider.kyc_status === 'rejected' && (
+                     <Button variant="primary" size="sm" onClick={() => handleAction('pending')} className="text-[10px] uppercase font-black bg-blue-600 shadow-lg">Reconsider Application</Button>
+                   )}
                  </>
-               )}
-               {provider.kyc_status === 'rejected' && (
-                 <Button variant="primary" size="sm" onClick={() => handleAction('pending')} className="text-[10px] uppercase font-black bg-blue-600 shadow-lg">Reconsider Application</Button>
                )}
             </div>
 
@@ -106,7 +130,12 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
                     <p className="text-[11px] font-black">{provider.is_verified ? 'Verified' : 'Inspection Required'}</p>
                  </div>
               </div>
-              <button className="p-1.5 bg-white rounded-lg border border-gray-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><Eye size={12} /></button>
+              <button 
+                onClick={() => openDocument(provider.verification_docs?.id_proof_url)}
+                className="p-1.5 bg-white rounded-lg border border-gray-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+              >
+                <Eye size={12} />
+              </button>
             </div>
             <div className={`p-4 rounded-[1.5rem] border flex items-center justify-between transition-all ${provider.services && provider.services.length > 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
               <div className="flex items-center gap-3">
@@ -116,9 +145,40 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
                     <p className="text-[11px] font-black">{provider.services?.[0]?.experience || 0}Y Certification</p>
                  </div>
               </div>
-              <button className="p-1.5 bg-white rounded-lg border border-gray-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><Eye size={12} /></button>
+              <button 
+                onClick={() => openDocument(provider.services?.[0]?.documents?.[0]?.file_url)}
+                className="p-1.5 bg-white rounded-lg border border-gray-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+              >
+                <Eye size={12} />
+              </button>
             </div>
         </div>
+
+        {/* Rejection Intelligence */}
+        {isRejecting && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-red-50 border border-red-100 rounded-[2rem] space-y-3">
+            <div className="flex items-center gap-2 text-red-600">
+               <ShieldAlert size={16} />
+               <h4 className="text-[10px] font-black uppercase tracking-widest">Rejection Protocol</h4>
+            </div>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Specify precise reason for rejection (e.g., 'Aadhar image blurred', 'Bank mismatch')..."
+              className="w-full bg-white border border-red-100 rounded-2xl p-4 text-xs font-bold text-gray-800 focus:outline-none focus:ring-4 focus:ring-red-500/10 placeholder:text-gray-300 min-h-[100px] resize-none"
+            />
+          </motion.div>
+        )}
+
+        {(provider as any).kyc_rejection_reason && !isRejecting && (
+          <div className="p-5 bg-amber-50 border border-amber-100 rounded-[2rem] flex items-start gap-4">
+            <div className="p-2 bg-white rounded-xl text-amber-600 shadow-sm"><FileSearch size={16} /></div>
+            <div>
+               <p className="text-[8px] font-black uppercase tracking-widest text-amber-600 opacity-60 mb-1">Previous Rejection Intel</p>
+               <p className="text-[11px] font-black text-gray-700">{(provider as any).kyc_rejection_reason}</p>
+            </div>
+          </div>
+        )}
 
         {/* Dynamic Verification Hub */}
         <div className="bg-blue-600 rounded-[2rem] p-6 text-white shadow-lg overflow-hidden relative group">
@@ -132,13 +192,19 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
                  </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                 <div className="bg-white/10 hover:bg-white/20 transition-all rounded-[1.5rem] p-4 border border-white/10 flex flex-col items-center gap-3 group/doc cursor-pointer">
+                 <div 
+                   onClick={() => provider.verification_docs?.id_proof_url && openDocument(provider.verification_docs.id_proof_url)}
+                   className={`bg-white/10 hover:bg-white/20 transition-all rounded-[1.5rem] p-4 border border-white/10 flex flex-col items-center gap-3 group/doc ${provider.verification_docs?.id_proof_url ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
+                 >
                     <div className="w-12 h-12 bg-white text-blue-600 rounded-2xl flex items-center justify-center shadow-md transition-transform group-hover/doc:-rotate-6">
                        <FileText size={24} />
                     </div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-blue-100">National_ID.jpg</p>
                  </div>
-                 <div className="bg-white/10 hover:bg-white/20 transition-all rounded-[1.5rem] p-4 border border-white/10 flex flex-col items-center gap-3 group/doc cursor-pointer">
+                 <div 
+                   onClick={() => provider.services?.[0]?.documents?.[0]?.file_url && openDocument(provider.services[0].documents[0].file_url)}
+                   className={`bg-white/10 hover:bg-white/20 transition-all rounded-[1.5rem] p-4 border border-white/10 flex flex-col items-center gap-3 group/doc ${provider.services?.[0]?.documents?.[0]?.file_url ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
+                 >
                     <div className="w-12 h-12 bg-white text-blue-600 rounded-2xl flex items-center justify-center shadow-md transition-transform group-hover/doc:rotate-6">
                        <Award size={24} />
                     </div>
