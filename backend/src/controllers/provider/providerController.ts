@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { Provider } from '../../models/Provider';
 import { ProviderService } from '../../models/ProviderService';
 import { User } from '../../models/User';
+import { saveBase64File, deleteFile } from '../../utils/fileHelper';
 
 // @desc    Get all providers
 // @route   GET /api/providers
@@ -123,7 +124,10 @@ export const createProvider = async (req: Request, res: Response): Promise<void>
       is_verified: false,
       ...secureAadhar,
       bank_details: secureBank,
-      verification_docs
+      verification_docs: {
+        id_proof_url: verification_docs?.id_proof_url ? saveBase64File(verification_docs.id_proof_url, 'verification/pending') : '',
+        pan_url: verification_docs?.pan_url ? saveBase64File(verification_docs.pan_url, 'verification/pending') : '',
+      }
     });
 
     // 3. Create individual ProviderService entries if provided
@@ -161,11 +165,33 @@ export const updateProvider = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const { availability_status, is_verified, status, aadhar_id, bank_details, verification_docs } = req.body;
+    const { 
+      availability_status, 
+      is_verified, 
+      status, 
+      aadhar_id, 
+      bank_details, 
+      verification_docs,
+      kyc_rejection_reason 
+    } = req.body;
 
     provider.availability_status = availability_status ?? provider.availability_status;
     provider.is_verified         = is_verified         ?? provider.is_verified;
     provider.kyc_status          = status              ?? provider.kyc_status;
+    
+    // Handle Verification Logic
+    if (status === 'verified') {
+      provider.is_verified = true;
+      provider.verified_at = new Date();
+      // Set expiry for 30 days from now for auto-cleanup
+      provider.verification_docs_expiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      provider.kyc_rejection_reason = undefined; // Clear any previous rejection
+    }
+
+    if (status === 'rejected') {
+      provider.is_verified = false;
+      provider.kyc_rejection_reason = kyc_rejection_reason || 'Documents did not meet our verification standards.';
+    }
     
     if (aadhar_id !== undefined) {
       const salt = await bcrypt.genSalt(10);
@@ -184,7 +210,12 @@ export const updateProvider = async (req: Request, res: Response): Promise<void>
       provider.bank_details = secureBank as any;
     }
     
-    if (verification_docs !== undefined) provider.verification_docs = verification_docs;
+    if (verification_docs !== undefined) {
+      provider.verification_docs = {
+        id_proof_url: verification_docs?.id_proof_url ? saveBase64File(verification_docs.id_proof_url, 'verification/pending') : (provider.verification_docs?.id_proof_url || ''),
+        pan_url: verification_docs?.pan_url ? saveBase64File(verification_docs.pan_url, 'verification/pending') : (provider.verification_docs?.pan_url || ''),
+      };
+    }
 
     const updated = await provider.save();
     const populated = await updated.populate('user_id', 'name email phone profile_image status');
@@ -243,8 +274,18 @@ export const getMyProviderProfile = async (req: AuthRequest, res: Response): Pro
       isDeleted: false 
     }).populate('subservice_ids', 'subservice_name');
 
+    const profileData = provider.toObject();
+
+    // Urban Company Flow: Hide docs if not pending to reduce misuse
+    if (provider.kyc_status !== 'pending') {
+       if (profileData.verification_docs) {
+          profileData.verification_docs.id_proof_url = '';
+          profileData.verification_docs.pan_url = '';
+       }
+    }
+
     res.json({
-      ...provider.toObject(),
+      ...profileData,
       services
     });
   } catch (error: any) {

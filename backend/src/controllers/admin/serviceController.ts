@@ -7,8 +7,19 @@ import { Category } from '../../models/Category';
 // @access  Public
 export const getServices = async (req: Request, res: Response): Promise<void> => {
   try {
-    const filter: Record<string, any> = { isDeleted: false };
-    if (req.query.category_id) filter.category_id = req.query.category_id;
+    const filter: any = { isDeleted: false };
+    
+    if (req.query.category_id) {
+      // Validate if it's a valid ObjectId to prevent CastError
+      if (req.query.category_id.toString().match(/^[0-9a-fA-F]{24}$/)) {
+        filter.category_id = req.query.category_id;
+      } else {
+        // If invalid ID, we can either return empty or ignore it. 
+        // Returning empty is safer if the user expected a specific category.
+        res.json([]); 
+        return;
+      }
+    }
 
     const services = await Service.find(filter)
       .populate('category_id', 'category_name icon')

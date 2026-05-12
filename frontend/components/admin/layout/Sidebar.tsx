@@ -24,15 +24,13 @@ import {
 import { motion } from 'framer-motion';
 
 const sidebarLinks = [
-  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Providers', href: '/admin/providers', icon: Briefcase },
   { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
   { name: 'Categories', href: '/admin/categories', icon: List },
   { name: 'Services', href: '/admin/services', icon: Layers },
   { name: 'Sub-Services', href: '/admin/sub-services', icon: LayoutGrid },
-
-
   { name: 'Locations', href: '/admin/locations', icon: MapPin },
   { name: 'Offers', href: '/admin/offers', icon: Ticket },
   { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
@@ -47,15 +45,21 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const pathname = usePathname();
 
+  const handleSignOut = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  };
+
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0F172A] border-r border-white/5 transition-transform duration-500 ease-in-out lg:translate-x-0 lg:static lg:inset-auto flex-shrink-0 flex flex-col h-screen overflow-hidden ${isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
     >
-      {/* Branding Header - Slightly more compact */}
+      {/* Branding Header */}
       <div className="flex items-center justify-between h-20 px-6 relative overflow-hidden group">
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/10 to-transparent pointer-events-none" />
-        <Link href="/admin" className="flex items-center gap-3 relative z-10">
+        <Link href="/admin/dashboard" className="flex items-center gap-3 relative z-10">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:rotate-6 transition-transform">
             <span className="text-white font-black text-lg">F</span>
           </div>
@@ -71,14 +75,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </button>
       </div>
 
-      {/* Main Navigation - No scroll area, adjusted padding */}
-      <div className="flex-1 px-3 py-4 flex flex-col">
-
+      {/* Main Navigation */}
+      <div className="flex-1 px-3 py-4 flex flex-col overflow-y-auto custom-scrollbar">
         <nav className="space-y-1">
           {sidebarLinks.map((link) => {
             const isActive =
               pathname === link.href ||
-              (pathname.startsWith(link.href) && link.href !== '/admin');
+              (pathname.startsWith(link.href) && link.href !== '/admin/dashboard');
             const Icon = link.icon;
 
             return (
@@ -90,7 +93,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   : 'text-gray-400 hover:bg-white/5 hover:text-white'
                   }`}
               >
-                {/* Active Indicator Line */}
                 {isActive && (
                   <motion.div
                     layoutId="active-indicator"
@@ -115,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </nav>
       </div>
 
-      {/* Bottom Profile Section - More compact */}
+      {/* Bottom Profile Section */}
       <div className="p-4 border-t border-white/5 bg-white/[0.01]">
         <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer group mb-3">
           <div className="w-8 h-8 rounded-lg overflow-hidden bg-blue-600 flex items-center justify-center font-bold text-white shadow-inner text-xs">
@@ -128,7 +130,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <Settings size={14} className="text-gray-500 group-hover:text-blue-400 transition-colors" />
         </div>
 
-        <button className="w-full flex items-center gap-3 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-all text-[10px] font-bold uppercase tracking-widest">
+        <button 
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-3 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-all text-[10px] font-bold uppercase tracking-widest"
+        >
           <LogOut size={14} />
           Sign Out
         </button>

@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import DashboardOverview from "@/components/provider/DashboardOverview";
+import ProviderDashboard from "@/components/provider/dashboard/ProviderDashboard";
 
-export default function DashboardPage() {
-  return <DashboardOverview />;
+export default function ProviderDashboardPage() {
+  return <ProviderDashboard />;
 }

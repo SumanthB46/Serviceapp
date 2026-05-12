@@ -4,6 +4,8 @@ import { protect, admin } from '../../middleware/authMiddleware';
 
 const router = express.Router();
 
+router.get('/me', protect, getMe);
+router.put('/me', protect, updateMe);
 router.get('/', getUsers);
 router.post('/register', registerUser);
 router.post('/login', loginUser);
@@ -14,8 +16,6 @@ router.post('/verify-reset-otp', verifyResetOtp);
 router.post('/reset-password', resetPassword);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
-router.get('/me', protect, getMe);
-router.put('/me', protect, updateMe);
 
 export default router;
 

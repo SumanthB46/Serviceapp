@@ -38,7 +38,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   const handleServiceClick = (serviceId: string) => {
     onClose();
     // Navigate to the dynamic booking page for this specific sub-category
-    router.push(`/services/${serviceId}`);
+    router.push(`/service/${serviceId}`);
   };
 
   return (

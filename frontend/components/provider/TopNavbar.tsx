@@ -23,7 +23,7 @@ export default function TopNavbar({ onOpenSidebar }: TopNavbarProps) {
         // Initial load from storage for speed
         if (storedUser) setUser(JSON.parse(storedUser));
 
-        if (token) {
+        if (token && token !== "pending_auth_token") {
           const response = await axios.get(`${API_URL}/users/me`, {
             headers: { Authorization: `Bearer ${token}` }
           });

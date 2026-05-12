@@ -35,18 +35,18 @@ const HowItWorks = () => {
   return (
     <section 
       style={{ background: "linear-gradient(135deg, #0f1b3d, #1e3a8a)" }}
-      className="py-24 text-white overflow-hidden relative isolate"
+      className="py-16 sm:py-24 text-white overflow-hidden relative isolate"
     >
       {/* Background Decorative Blur */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -z-10 h-96 w-96 rounded-full bg-blue-500/10 blur-[100px]" />
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Heading */}
-        <div className="text-center mb-20">
-          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
+        <div className="text-center mb-16 sm:mb-20">
+          <h2 className="text-2xl sm:text-5xl font-extrabold tracking-tight mb-4">
             How It Works
           </h2>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+          <p className="text-slate-400 text-sm sm:text-lg max-w-2xl mx-auto">
             Get your home services done in four simple and transparent steps.
           </p>
         </div>
@@ -66,26 +66,26 @@ const HowItWorks = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="relative flex flex-col items-center text-center group"
+                className="relative flex flex-col items-center text-center group h-full"
               >
-                {/* Step Number Badge - Higher Z-index and explicit text color */}
+                {/* Step Number Badge */}
                 <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white shadow-[0_0_20px_rgba(37,99,235,0.5)] z-20 group-hover:scale-110 transition-transform duration-300">
                   {step.id}
                 </div>
 
-                {/* Card Container with glass effect requested */}
-                <div className="w-full bg-white/5 p-10 rounded-[2.5rem] backdrop-blur-xl border border-white/10 transition-all duration-300 group-hover:bg-white/[0.08] group-hover:border-white/20 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-blue-900/20 h-full">
+                {/* Card Container with glass effect */}
+                <div className="w-full bg-white/5 p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] backdrop-blur-xl border border-white/10 transition-all duration-300 group-hover:bg-white/[0.08] group-hover:border-white/20 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-blue-900/20 h-full">
                   
                   {/* Icon Circle */}
-                  <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-3xl bg-blue-500/10 text-blue-400 mx-auto transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-                    <Icon className="h-10 w-10" strokeWidth={1.5} />
+                  <div className="mb-6 sm:mb-8 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-3xl bg-blue-500/10 text-blue-400 mx-auto transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                    <Icon className="h-8 w-8 sm:h-10 sm:w-10" strokeWidth={1.5} />
                   </div>
                   
                   {/* Text Content */}
-                  <h3 className="text-xl font-bold mb-4 tracking-tight">
+                  <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 tracking-tight">
                     {step.title}
                   </h3>
-                  <p className="text-sm text-slate-400 leading-relaxed font-medium">
+                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-medium">
                     {step.description}
                   </p>
                 </div>

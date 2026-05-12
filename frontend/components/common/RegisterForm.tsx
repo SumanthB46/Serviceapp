@@ -114,9 +114,9 @@ export default function RegisterForm() {
       // Redirect depending on user role and whether it was a login or new registration
       if (data.user._id === "pending_verification") {
         if (data.user.role === "provider") {
-          router.push("/provider_register");
+          router.push("/signup/provider");
         } else {
-          router.push("/customer_register");
+          router.push("/signup/customer");
         }
       } else {
         // This is an existing user logging in
@@ -193,6 +193,16 @@ export default function RegisterForm() {
                     }
                     .PhoneInputCountry {
                       margin-right: 12px;
+                    }
+                    .PhoneInputCountryIcon {
+                      width: 24px !important;
+                      height: 18px !important;
+                      box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+                    }
+                    .PhoneInputCountryIconImg {
+                      display: block;
+                      width: 100%;
+                      height: 100%;
                     }
                   `}</style>
                 </div>
@@ -279,7 +289,11 @@ export default function RegisterForm() {
                 </div>
 
                 <div className="flex items-center justify-center gap-6 mb-8 text-sm font-bold opacity-100">
-                  <button className="text-[#8B93D6] hover:text-[#1D2B83]">
+                  <button 
+                    onClick={handleSendOtp}
+                    disabled={loading}
+                    className="text-[#8B93D6] hover:text-[#1D2B83] disabled:opacity-50"
+                  >
                     Resend OTP
                   </button>
                   <button onClick={handleEditIdentifier} className="text-[#8B93D6] hover:text-[#1D2B83]">

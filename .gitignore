@@ -66,8 +66,15 @@ next-env.d.ts
 # Backend (Node.js)
 # ========================
 logs/
+backend/logs.txt
 
 # ========================
 # Local / Utility Scripts
 # ========================
 backend/src/clean_db.ts
+backend/src/check_db.ts
+backend/src/check_services.ts
+backend/src/find_roshan.ts
+backend/src/find_user_by_id.ts
+backend/src/list_collections.ts
+frontend/update_fields.js

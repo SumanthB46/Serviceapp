@@ -141,9 +141,25 @@ export const updateMe = async (req: AuthRequest, res: Response): Promise<void> =
     user.gender        = req.body.gender        ?? user.gender;
 
     if (req.body.password) {
+      const { otp } = req.body;
+      if (!otp) {
+        res.status(400).json({ message: 'OTP is required to change password. Please verify your email first.' });
+        return;
+      }
+
+      const otpRecord = await Otp.findOne({ identifier: user.email, otpCode: otp });
+      if (!otpRecord) {
+        res.status(400).json({ message: 'Invalid or expired OTP.' });
+        return;
+      }
+
+      // Cleanup OTP
+      await Otp.deleteOne({ _id: otpRecord._id });
+
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(req.body.password, salt);
     }
+
 
     const updated = await user.save();
 
@@ -152,6 +168,7 @@ export const updateMe = async (req: AuthRequest, res: Response): Promise<void> =
       name:          updated.name,
       email:         updated.email,
       phone:         updated.phone,
+      gender:        updated.gender,
       role:          updated.role,
       profile_image: updated.profile_image,
       status:        updated.status,
@@ -251,6 +268,11 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
 
     if (mode === 'forgot-password' && !existingUser) {
       res.status(404).json({ message: 'No account found with this identifier.' });
+      return;
+    }
+
+    if (mode === 'update' && !existingUser) {
+      res.status(404).json({ message: 'User not found for update.' });
       return;
     }
 

@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import { Booking } from '../../models/Booking';
+import { Cart } from '../../models/Cart';
 import { AuthRequest } from '../../middleware/authMiddleware';
 export const getAllBookings = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const bookings = await Booking.find({})
-      .populate('customer_id', 'name email phone profile_image')
+      .populate('user_id', 'name email phone profile_image')
       .populate({
         path: 'provider_id',
         populate: {
@@ -13,12 +14,16 @@ export const getAllBookings = async (req: AuthRequest, res: Response): Promise<v
         }
       })
       .populate({
-        path: 'service_id',
+        path: 'subservice_id',
         populate: {
-          path: 'category_id',
-          select: 'category_name icon'
+          path: 'service_id',
+          populate: {
+            path: 'category_id',
+            select: 'category_name icon'
+          }
         }
       })
+      .populate('address_id')
       .sort({ createdAt: -1 });
 
     res.json(bookings);
@@ -31,17 +36,32 @@ export const getAllBookings = async (req: AuthRequest, res: Response): Promise<v
 // @route   GET /api/bookings/my
 // @access  Private
 export const getMyBookings = async (req: AuthRequest, res: Response): Promise<void> => {
+  console.log("Get My Bookings Request:", { 
+    userId: req.user?._id, 
+    role: req.user?.role,
+    user: req.user
+  });
   try {
     let query = {};
     
     if (req.user?.role === 'customer') {
-      query = { customer_id: req.user._id };
+      query = { 
+        $or: [
+          { user_id: req.user._id },
+          { customer_id: req.user._id }
+        ]
+      };
     } else if (req.user?.role === 'provider') {
-      query = { provider_id: req.user._id }; 
+      query = { 
+        $or: [
+          { provider_id: req.user._id },
+          { customer_id: req.user._id } // Fallback for old provider field if any
+        ]
+      }; 
     }
 
     const bookings = await Booking.find(query)
-      .populate('customer_id', 'name email phone profile_image')
+      .populate('user_id', 'name email phone profile_image')
       .populate({
         path: 'provider_id',
         populate: {
@@ -50,12 +70,16 @@ export const getMyBookings = async (req: AuthRequest, res: Response): Promise<vo
         }
       })
       .populate({
-        path: 'service_id',
+        path: 'subservice_id',
         populate: {
-          path: 'category_id',
-          select: 'category_name icon'
+          path: 'service_id',
+          populate: {
+            path: 'category_id',
+            select: 'category_name icon'
+          }
         }
       })
+      .populate('address_id')
       .sort({ createdAt: -1 });
 
     res.json(bookings);
@@ -70,7 +94,7 @@ export const getMyBookings = async (req: AuthRequest, res: Response): Promise<vo
 export const getBookingById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const booking = await Booking.findById(req.params.id)
-      .populate('customer_id', 'name email phone profile_image')
+      .populate('user_id', 'name email phone profile_image')
       .populate({
         path: 'provider_id',
         populate: {
@@ -79,12 +103,16 @@ export const getBookingById = async (req: AuthRequest, res: Response): Promise<v
         }
       })
       .populate({
-        path: 'service_id',
+        path: 'subservice_id',
         populate: {
-          path: 'category_id',
-          select: 'category_name icon'
+          path: 'service_id',
+          populate: {
+            path: 'category_id',
+            select: 'category_name icon'
+          }
         }
-      });
+      })
+      .populate('address_id');
 
     if (!booking) {
       res.status(404).json({ message: 'Booking not found' });
@@ -92,7 +120,7 @@ export const getBookingById = async (req: AuthRequest, res: Response): Promise<v
     }
 
     // Check authorization
-    if (req.user?.role === 'customer' && booking.customer_id.toString() !== req.user._id.toString()) {
+    if (req.user?.role === 'customer' && booking.user_id.toString() !== req.user._id.toString()) {
       res.status(403).json({ message: 'Not authorized' });
       return;
     }
@@ -107,38 +135,55 @@ export const getBookingById = async (req: AuthRequest, res: Response): Promise<v
 // @route   POST /api/bookings
 // @access  Private
 export const createBooking = async (req: AuthRequest, res: Response): Promise<void> => {
+  console.log("Create Booking Hit!", { body: req.body, user: req.user?._id });
   try {
     const { 
-      provider_id, 
-      service_id, 
-      provider_service_id,
       booking_date, 
       time_slot, 
-      address, 
-      total_amount,
-      booking_id 
+      address,
+      payment_method
     } = req.body;
 
-    const booking = await Booking.create({
-      booking_id: booking_id || `BK-${Date.now()}`,
-      customer_id: req.user?._id,
-      provider_id,
-      service_id,
-      provider_service_id,
-      scheduled_at: booking_date,
-      location: {
-        address: address.address,
-        city: address.city || '',
-        state: address.state || '',
-        pincode: address.pincode || '',
-        coordinates: address.coordinates || { type: 'Point', coordinates: [0, 0] }
-      },
-      total_amount,
-      payable_amount: total_amount, // Default to total
-      status: 'pending'
-    });
+    if (!address) {
+      res.status(400).json({ message: 'Please select an address' });
+      return;
+    }
 
-    res.status(201).json(booking);
+    const cart = await Cart.findOne({ user_id: req.user?._id });
+    if (!cart || cart.items.length === 0) {
+      res.status(400).json({ message: 'Cart is empty' });
+      return;
+    }
+
+    const createdBookings = [];
+
+    for (const item of cart.items) {
+      const booking = await Booking.create({
+        booking_id: `BK-${Math.floor(100000 + Math.random() * 900000)}`,
+        user_id: req.user?._id,
+        subservice_id: item.subservice_id,
+        address_id: address._id || address,
+        scheduled_at: booking_date,
+        booking_time: time_slot,
+        service_price: item.price_snapshot * item.quantity,
+        payable_amount: item.price_snapshot * item.quantity,
+        payment_method: payment_method || 'cod',
+        status: 'pending',
+        is_reviewed: false,
+        isDeleted: false
+      });
+      createdBookings.push(booking);
+    }
+
+    // Clear cart after successful booking
+    cart.items = [];
+    cart.total_amount = 0;
+    await cart.save();
+
+    res.status(201).json({
+      message: 'Bookings created successfully',
+      bookings: createdBookings
+    });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -172,8 +217,8 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response): Prom
 // @access  Private/Admin
 export const getBookingsByUserId = async (req: Request, res: Response): Promise<void> => {
   try {
-    const bookings = await Booking.find({ customer_id: req.params.userId })
-      .populate('customer_id', 'name email phone profile_image')
+    const bookings = await Booking.find({ user_id: req.params.userId })
+      .populate('user_id', 'name email phone profile_image')
       .populate({
         path: 'provider_id',
         populate: {
@@ -182,12 +227,16 @@ export const getBookingsByUserId = async (req: Request, res: Response): Promise<
         }
       })
       .populate({
-        path: 'service_id',
+        path: 'subservice_id',
         populate: {
-          path: 'category_id',
-          select: 'category_name icon'
+          path: 'service_id',
+          populate: {
+            path: 'category_id',
+            select: 'category_name icon'
+          }
         }
       })
+      .populate('address_id')
       .sort({ createdAt: -1 });
     res.json(bookings);
   } catch (error: any) {
@@ -208,7 +257,7 @@ export const verifyBookingOtp = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
-    if (booking.otp !== otp) {
+    if (booking.start_otp !== otp) {
       res.status(400).json({ message: 'Invalid OTP' });
       return;
     }
@@ -217,6 +266,55 @@ export const verifyBookingOtp = async (req: AuthRequest, res: Response): Promise
     await booking.save();
 
     res.json({ message: 'Booking verified successfully', booking });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Cancel booking
+// @route   PUT /api/bookings/:id/cancel
+// @access  Private
+export const cancelBooking = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      res.status(404).json({ message: 'Booking not found' });
+      return;
+    }
+
+    // Check authorization
+    if (booking.user_id.toString() !== req.user?._id.toString()) {
+      res.status(403).json({ message: 'Not authorized' });
+      return;
+    }
+
+    const allowedStatuses = ['pending', 'accepted'];
+    if (!allowedStatuses.includes(booking.status)) {
+      res.status(400).json({ message: 'Cannot cancel booking in current status' });
+      return;
+    }
+
+    // Time restriction: 1 hour before booking
+    const bookingDateTime = new Date(booking.scheduled_at);
+    const diff = bookingDateTime.getTime() - Date.now();
+    const oneHour = 60 * 60 * 1000;
+
+    if (diff < oneHour) {
+      res.status(400).json({ message: 'Cancellation window closed (within 1 hour of service)' });
+      return;
+    }
+
+    const { reason } = req.body;
+
+    booking.status = 'cancelled';
+    booking.cancelled_at = new Date();
+    booking.cancelled_by = 'customer';
+    booking.cancellation_reason = reason;
+
+    await booking.save();
+
+    res.json({ message: 'Booking cancelled successfully', booking });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

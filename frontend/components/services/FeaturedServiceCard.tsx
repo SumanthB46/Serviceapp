@@ -28,7 +28,7 @@ const FeaturedServiceCard: React.FC<FeaturedServiceCardProps> = ({
   return (
     <motion.div
       whileHover={{ scale: 1.01 }}
-      className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm transition-all hover:shadow-xl flex flex-col md:flex-row gap-8 items-center"
+      className="bg-white p-6 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm transition-all hover:shadow-xl flex flex-col md:flex-row gap-6 sm:gap-8 items-center"
     >
       {/* Image Section */}
       <div className="relative w-full md:w-48 h-48 rounded-2xl overflow-hidden flex-shrink-0">
@@ -36,6 +36,7 @@ const FeaturedServiceCard: React.FC<FeaturedServiceCardProps> = ({
           src={image}
           alt={title || "Featured service image"}
           fill
+          sizes="(max-width: 768px) 100vw, 192px"
           className="object-cover"
         />
       </div>
@@ -47,8 +48,8 @@ const FeaturedServiceCard: React.FC<FeaturedServiceCardProps> = ({
             {badge || category}
           </span>
         </div>
-        <h3 className="text-2xl font-bold text-slate-800 mb-2">{title}</h3>
-        <p className="text-sm text-slate-400 font-medium mb-6 leading-relaxed">
+        <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2">{title}</h3>
+        <p className="text-xs sm:text-sm text-slate-400 font-medium mb-6 leading-relaxed">
           {description}
         </p>
 
@@ -58,7 +59,7 @@ const FeaturedServiceCard: React.FC<FeaturedServiceCardProps> = ({
               <div className="w-4 h-4 bg-[#1D2B83] rounded-full flex items-center justify-center">
                 <Check className="w-2.5 h-2.5 text-white" />
               </div>
-              <span className="text-xs font-bold text-slate-700">{feature}</span>
+              <span className="text-[11px] sm:text-xs font-bold text-slate-700">{feature}</span>
             </div>
           ))}
         </div>

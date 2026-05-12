@@ -22,8 +22,13 @@ export default function BannersOverview() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBanners(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
   };
 
