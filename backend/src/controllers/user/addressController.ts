@@ -19,7 +19,7 @@ export const getAddresses = async (req: AuthRequest, res: Response): Promise<voi
 // @access  Private
 export const addAddress = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { address_line, city, state, pincode, landmark, is_default } = req.body;
+    const { address_line, city, state, pincode, landmark, is_default, coordinates } = req.body;
 
     // If this is the default address, unset other defaults for this user
     if (is_default) {
@@ -33,7 +33,8 @@ export const addAddress = async (req: AuthRequest, res: Response): Promise<void>
       state,
       pincode,
       landmark,
-      is_default: !!is_default
+      is_default: !!is_default,
+      coordinates
     });
 
     res.status(201).json(address);
@@ -43,7 +44,7 @@ export const addAddress = async (req: AuthRequest, res: Response): Promise<void>
 };
 
 // @desc    Update address
-// @route   PUT /api/address/:id
+// @route   PUT /api/addresses/:id
 // @access  Private
 export const updateAddress = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -54,7 +55,7 @@ export const updateAddress = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const { address_line, city, state, pincode, landmark, is_default } = req.body;
+    const { address_line, city, state, pincode, landmark, is_default, coordinates } = req.body;
 
     if (is_default && !address.is_default) {
       await Address.updateMany({ user_id: req.user?._id }, { is_default: false });
@@ -66,6 +67,7 @@ export const updateAddress = async (req: AuthRequest, res: Response): Promise<vo
     address.pincode      = pincode      ?? address.pincode;
     address.landmark     = landmark     ?? address.landmark;
     address.is_default   = is_default   ?? address.is_default;
+    address.coordinates  = coordinates  ?? address.coordinates;
 
     const updated = await address.save();
     res.json(updated);

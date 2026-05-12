@@ -12,14 +12,14 @@ interface HeaderProps { onMenuClick: () => void; }
 
 interface UserProfile {
   _id: string; name: string; email: string;
-  phone: string; role: string; profile_image?: string; status: string;
+  phone: string; gender?: string; role: string; profile_image?: string; status: string;
 }
 
-interface FormState { name: string; email: string; phone: string; password: string; }
+interface FormState { name: string; email: string; phone: string; gender: string; password: string; }
 interface ErrorState { name: string; email: string; phone: string; password: string; }
 
 /* ─── Validation helpers ─── */
-const validators = {
+const validators: Record<string, (v: string) => string> = {
   name: (v: string) => {
     if (!v.trim()) return "Name is required";
     if (!/^[A-Za-z\s]+$/.test(v)) return "Only letters and spaces allowed";
@@ -36,7 +36,8 @@ const validators = {
     if (!/^\d{10}$/.test(v)) return "Phone must be exactly 10 digits";
     return "";
   },
-  password: (v: string) => {
+  gender: (_v: string) => "",
+password: (v: string) => {
     if (!v) return "";
     if (v.length < 6) return "Minimum 6 characters";
     if (!/[A-Z]/.test(v)) return "Must include at least 1 uppercase letter";
@@ -103,10 +104,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   // profile image preview (local, before save)
   const [previewImg, setPreviewImg] = useState<string | null>(null);
 
-  const [form, setForm] = useState<FormState>({ name: "", email: "", phone: "", password: "" });
-  const [errors, setErrors] = useState<ErrorState>({ name: "", email: "", phone: "", password: "" });
+  const [form, setForm] = useState<FormState>({ name: "", email: "", phone: "", gender: "", password: "" });
+  const [errors, setErrors] = useState<ErrorState>({ name: "", email: "", password: "" });
   const [touched, setTouched] = useState<Record<keyof FormState, boolean>>({
-    name: false, email: false, phone: false, password: false,
+    name: false, email: false, password: false,
   });
 
   const modalRef = useRef<HTMLDivElement>(null);
@@ -119,7 +120,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
       try {
         const parsed: UserProfile = JSON.parse(stored);
         setUser(parsed);
-        setForm({ name: parsed.name, email: parsed.email, phone: parsed.phone, password: "" });
+        setForm({ name: parsed.name, email: parsed.email, phone: parsed.phone || "", gender: parsed.gender || "", password: "" });
       } catch { }
     }
   }, []);
@@ -141,9 +142,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   };
 
   const resetForm = () => {
-    if (user) setForm({ name: user.name, email: user.email, phone: user.phone, password: "" });
+    if (user) setForm({ name: user.name, email: user.email, phone: user.phone || "", gender: user.gender || "", password: "" });
     setErrors({ name: "", email: "", phone: "", password: "" });
-    setTouched({ name: false, email: false, phone: false, password: false });
+    setTouched({ name: false, email: false, phone: false, gender: false, password: false });
     setPreviewImg(null);
     setImgError(false);
   };
@@ -170,6 +171,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const handleChange = (field: keyof FormState, raw: string) => {
     let value = raw;
     if (field === "phone") value = raw.replace(/\D/g, "").slice(0, 10);
+    if (field === "phone") value = raw.replace(/\D/g, "").slice(0, 10);
     if (field === "name") value = raw.replace(/[^A-Za-z\s]/g, "");
     setForm((f) => ({ ...f, [field]: value }));
     if (touched[field]) setErrors((e) => ({ ...e, [field]: validateField(field, value) }));
@@ -188,7 +190,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
       password: validateField("password", form.password),
     };
     setErrors(newErrors);
-    setTouched({ name: true, email: true, phone: true, password: true });
+    setTouched({ name: true, email: true, phone: true, gender: true, password: true });
     return Object.values(newErrors).every((e) => !e);
   };
 
@@ -199,7 +201,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
     try {
       const token = localStorage.getItem("token");
       const body: Record<string, string> = {
-        name: form.name, email: form.email, phone: form.phone,
+        name: form.name, email: form.email, phone: form.phone, gender: form.gender,
       };
       if (form.password.trim()) body.password = form.password;
       if (previewImg) body.profile_image = previewImg;
@@ -298,187 +300,198 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </div>
       </header>
 
-      {/* ── Profile Modal ── */}
+                  {/* ══ PREMIUM PROFILE MODAL ══ */}
       <AnimatePresence>
         {modalOpen && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-start justify-end bg-black/30 backdrop-blur-sm pt-14 pr-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-6"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.25 }}
+            onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
           >
             <motion.div
               ref={modalRef}
-              className="bg-white rounded-2xl shadow-2xl shadow-blue-200/40 w-[360px] overflow-hidden border border-gray-100"
-              initial={{ opacity: 0, y: -12, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -12, scale: 0.97 }}
-              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+              className="relative w-full max-w-[480px] bg-white rounded-[32px] shadow-[0_25px_80px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col max-h-[90vh]"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              {/* Gradient banner */}
-              <div className="relative h-24 bg-gradient-to-br from-[#1D2B83] to-indigo-500">
-                <button
-                  onClick={closeModal}
-                  className="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition-all"
-                >
-                  <X size={14} />
-                </button>
-
-                {/* Avatar with camera overlay */}
-                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
-                  <div className="relative w-16 h-16 rounded-xl overflow-hidden border-[3px] border-white shadow-lg flex-shrink-0">
-                    {displayImage ? (
-                      <img
-                        src={displayImage}
-                        alt={user?.name}
-                        className="w-full h-full object-cover"
-                        onError={() => setImgError(true)}
-                      />
-                    ) : (
-                      <AvatarFallback name={user?.name || "Admin"} />
-                    )}
-
-                    {/* Camera overlay — only in edit mode */}
-                    {editMode && (
-                      <button
-                        onClick={() => fileInput.current?.click()}
-                        className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 hover:bg-black/60 transition-all group/cam"
-                        title="Change photo"
-                      >
-                        <Camera size={16} className="text-white group-hover/cam:scale-110 transition-transform" />
-                        <span className="text-white text-[8px] font-bold mt-0.5 leading-tight">CHANGE</span>
-                      </button>
-                    )}
+              <div className="overflow-y-auto w-full flex-1" style={{ scrollbarWidth: "none" }}>
+                
+                {/* ── HERO HEADER ── */}
+                <div className="relative h-[130px] shrink-0">
+                  {/* Background gradient with overflow-hidden for glows */}
+                  <div className="absolute inset-0 overflow-hidden bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4f46e5]">
+                    <div className="absolute -top-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+                    <div className="absolute -bottom-16 -right-10 w-56 h-56 bg-violet-500/20 rounded-full blur-3xl" />
+                    <div className="absolute top-6 left-1/2 w-24 h-24 bg-blue-300/10 rounded-full blur-2xl" />
+                    <div className="absolute top-10 right-16 w-16 h-16 bg-purple-400/15 rounded-full blur-xl" />
+                    <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "repeating-linear-gradient(0deg,#fff 0px,#fff 1px,transparent 1px,transparent 32px),repeating-linear-gradient(90deg,#fff 0px,#fff 1px,transparent 1px,transparent 32px)" }} />
                   </div>
 
-                  {/* Small camera badge when editing */}
-                  {editMode && (
-                    <button
-                      onClick={() => fileInput.current?.click()}
-                      className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#1D2B83] rounded-full flex items-center justify-center border-2 border-white shadow hover:bg-blue-700 transition-all"
-                    >
-                      <Camera size={9} className="text-white" />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Name / role / status row */}
-              <div className="pt-12 px-5 pb-4 border-b border-gray-100 flex flex-col items-center text-center gap-1">
-                <h3 className="text-sm font-bold text-gray-900">{user?.name}</h3>
-                <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${roleBadge[user?.role ?? "customer"] ?? roleBadge["customer"]}`}>
-                  {user?.role}
-                </span>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="w-2 h-2 rounded-full bg-green-500" />
-                  <span className="text-[10px] text-gray-400 font-semibold capitalize">{user?.status}</span>
-                </div>
-              </div>
-
-              {/* Preview notice */}
-              <AnimatePresence>
-                {previewImg && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                    className="mx-5 mt-3 flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2"
-                  >
-                    <Camera size={12} className="text-blue-500 flex-shrink-0" />
-                    <p className="text-[10px] text-blue-600 font-semibold">New photo selected — save to apply</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Fields */}
-              <div className="px-5 py-4 space-y-3 max-h-[50vh] overflow-y-auto">
-                <ValidatedField
-                  icon={<User2 size={13} className="text-blue-500" />}
-                  label="Full Name" value={form.name}
-                  error={touched.name ? errors.name : ""}
-                  editing={editMode} placeholder="Enter full name"
-                  onChange={(v) => handleChange("name", v)} onBlur={() => handleBlur("name")}
-                />
-                <ValidatedField
-                  icon={<Mail size={13} className="text-blue-500" />}
-                  label="Email" value={form.email}
-                  error={touched.email ? errors.email : ""}
-                  editing={editMode} type="email" placeholder="Enter email address"
-                  onChange={(v) => handleChange("email", v)} onBlur={() => handleBlur("email")}
-                />
-                <ValidatedField
-                  icon={<Phone size={13} className="text-blue-500" />}
-                  label="Phone" value={form.phone}
-                  error={touched.phone ? errors.phone : ""}
-                  editing={editMode} type="tel" maxLength={10} placeholder="10-digit number"
-                  onChange={(v) => handleChange("phone", v)} onBlur={() => handleBlur("phone")}
-                />
-                <ValidatedField
-                  icon={<ShieldCheck size={13} className="text-blue-500" />}
-                  label="Role" value={user?.role ?? ""} error=""
-                  editing={false} onChange={() => { }} onBlur={() => { }}
-                />
-
-                {/* Password — edit mode only */}
-                <AnimatePresence>
-                  {editMode && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }}
-                    >
-                      <ValidatedField
-                        icon={<Lock size={13} className="text-blue-500" />}
-                        label="New Password" value={form.password}
-                        error={touched.password ? errors.password : ""}
-                        editing={true} type="password" placeholder="Leave blank to keep current"
-                        onChange={(v) => handleChange("password", v)} onBlur={() => handleBlur("password")}
-                      />
-                      {!errors.password && (
-                        <p className="text-[9px] text-gray-400 ml-10 -mt-1">
-                          Min 6 chars · 1 uppercase · 1 lowercase · 1 digit · 1 symbol
-                        </p>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Save success */}
-                <AnimatePresence>
-                  {saveSuccess && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                      className="flex items-center gap-2 text-green-600 text-xs font-semibold bg-green-50 px-3 py-2 rounded-lg"
-                    >
-                      <CheckCircle2 size={14} /> Profile updated successfully!
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Action buttons */}
-              <div className="px-5 pb-5 flex gap-2">
-                {editMode ? (
-                  <>
-                    <button
-                      onClick={() => { setEditMode(false); resetForm(); }}
-                      className="flex-1 h-9 rounded-xl border border-gray-200 text-gray-600 text-xs font-bold hover:bg-gray-50 transition-all"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saving || hasErrors}
-                      className="flex-1 h-9 rounded-xl bg-[#1D2B83] text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-blue-900/20"
-                    >
-                      <Save size={13} />
-                      {saving ? "Saving..." : "Save Changes"}
-                    </button>
-                  </>
-                ) : (
+                  {/* Close button */}
                   <button
-                    onClick={() => setEditMode(true)}
-                    className="flex-1 h-9 rounded-xl bg-[#1D2B83] text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-800 transition-all shadow-md shadow-blue-900/20"
+                    onClick={closeModal}
+                    className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-xl border border-white/20 text-white transition-all duration-300 hover:scale-110 z-20"
                   >
-                    <Pencil size={13} /> Edit Profile
+                    <X size={16} />
                   </button>
-                )}
+
+                  {/* Floating avatar */}
+                  <div className="absolute -bottom-[36px] left-1/2 -translate-x-1/2 z-30">
+                    <div className="relative group">
+                      <div className="w-[80px] h-[80px] rounded-[24px] ring-4 ring-white shadow-xl overflow-hidden bg-gradient-to-br from-indigo-500 to-blue-700 cursor-pointer hover:scale-[1.02] transition-transform duration-300 flex items-center justify-center">
+                        {displayImage ? (
+                          <img src={displayImage} alt={user?.name} className="w-full h-full object-cover" onError={() => setImgError(true)} />
+                        ) : (
+                          <AvatarFallback name={user?.name || "Admin"} />
+                        )}
+                      </div>
+                      {/* Online pulse */}
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-[3px] border-white shadow-sm flex items-center justify-center">
+                        <span className="absolute w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping opacity-75" />
+                        <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                      </div>
+                      {/* Camera badge */}
+                      {editMode && (
+                        <button
+                          onClick={() => fileInput.current?.click()}
+                          className="absolute -top-1 -right-1 w-7 h-7 bg-gradient-to-br from-indigo-600 to-blue-500 rounded-full flex items-center justify-center border-2 border-white shadow hover:scale-110 transition-transform z-30"
+                        >
+                          <Camera size={12} className="text-white" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── PROFILE INFORMATION ── */}
+                <div className="pt-[48px] pb-5 px-6 text-center">
+                  <h2 className="text-2xl font-black text-gray-900 tracking-tight">{user?.name || "Super Admin"}</h2>
+                  <p className="text-[13px] font-bold text-slate-400 mt-0.5">Platform Administrator</p>
+                </div>
+
+                {/* ── IMAGE PREVIEW NOTICE ── */}
+                <AnimatePresence>
+                  {previewImg && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                      className="mx-6 mb-4 flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-2xl px-4 py-3"
+                    >
+                      <Camera size={14} className="text-blue-500 flex-shrink-0" />
+                      <p className="text-xs text-blue-600 font-semibold">New photo selected — save to apply</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* ── DETAILS SECTION ── */}
+                <div className="px-6 pb-5 space-y-3">
+                  <PremiumField icon={<User2 size={15} className="text-indigo-400" />} label="Full Name"
+                    value={form.name} error={touched.name ? errors.name : ""} editing={editMode}
+                    placeholder="Enter full name" onChange={(v) => handleChange("name", v)} onBlur={() => handleBlur("name")} />
+                  <PremiumField icon={<Mail size={15} className="text-indigo-400" />} label="Email Address"
+                    value={form.email} error={touched.email ? errors.email : ""} editing={editMode}
+                    type="email" placeholder="Enter email address"
+                    onChange={(v) => handleChange("email", v)} onBlur={() => handleBlur("email")} />
+                  
+                  {/* Phone + Gender in same row */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <PremiumField label="Phone Number"
+                      value={form.phone} error={touched.phone ? errors.phone : ""} editing={editMode}
+                      type="tel" maxLength={10} placeholder="10-digit number"
+                      onChange={(v) => handleChange("phone", v)} onBlur={() => handleBlur("phone")} />
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-semibold text-gray-800">Gender</label>
+                      {editMode ? (
+                        <select
+                          value={form.gender}
+                          onChange={(e) => setForm(f => ({ ...f, gender: e.target.value }))}
+                          className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-700 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all appearance-none"
+                        >
+                          <option value="">Select...</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                        </select>
+                      ) : (
+                        <div className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-700 capitalize">
+                          {form.gender || <span className="text-gray-400">—</span>}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Password — edit only */}
+                  <AnimatePresence>
+                    {editMode && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }}
+                      >
+                        <PremiumField icon={<Lock size={15} className="text-indigo-400" />} label="New Password"
+                          value={form.password} error={touched.password ? errors.password : ""}
+                          editing={true} type="password" placeholder="Leave blank to keep current"
+                          onChange={(v) => handleChange("password", v)} onBlur={() => handleBlur("password")} />
+                        {!errors.password && (
+                          <p className="text-[10px] text-slate-400 mt-1.5 ml-1">Min 6 chars · uppercase · lowercase · digit · symbol</p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Save success */}
+                  <AnimatePresence>
+                    {saveSuccess && (
+                      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                        className="flex items-center gap-2.5 text-emerald-700 text-sm font-semibold bg-emerald-50 border border-emerald-100 px-4 py-3 rounded-2xl shadow-sm"
+                      >
+                        <CheckCircle2 size={16} className="flex-shrink-0" />
+                        Profile updated successfully!
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* ── ACTION BUTTONS ── */}
+                <div className="px-6 pb-6 pt-1 flex gap-3">
+                  {editMode ? (
+                    <>
+                      <button
+                        onClick={() => { setEditMode(false); resetForm(); }}
+                        className="flex-1 h-12 rounded-2xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-all duration-200 hover:scale-[1.02]"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSave}
+                        disabled={saving || hasErrors}
+                        className="flex-1 h-12 rounded-2xl text-white text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/25"
+                        style={{ background: "linear-gradient(135deg, #4f46e5 0%, #2563eb 100%)" }}
+                      >
+                        <Save size={15} />
+                        {saving ? "Saving..." : "Save Changes"}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setEditMode(true)}
+                        className="flex-1 h-12 rounded-2xl text-white text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] shadow-lg shadow-indigo-500/25"
+                        style={{ background: "linear-gradient(135deg, #4f46e5 0%, #2563eb 100%)" }}
+                      >
+                        <Pencil size={15} />
+                        Edit Profile
+                      </button>
+                      <button
+                        onClick={closeModal}
+                        className="h-12 px-5 rounded-2xl border border-slate-200 text-slate-500 text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-50 transition-all duration-200 hover:scale-[1.02]"
+                      >
+                        Close
+                      </button>
+                    </>
+                  )}
+                </div>
+
               </div>
             </motion.div>
           </motion.div>
@@ -488,42 +501,41 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   );
 };
 
-/* ══════════════════════════════════════════
-   ValidatedField
-══════════════════════════════════════════ */
-interface ValidatedFieldProps {
-  icon: React.ReactNode; label: string; value: string; error: string;
+/* ══ PremiumField — clean label + rounded box field ══ */
+interface PremiumFieldProps {
+  icon?: React.ReactNode; label: string; value: string; error: string;
   editing: boolean; type?: string; maxLength?: number; placeholder?: string;
   onChange: (v: string) => void; onBlur: () => void;
 }
-
-const ValidatedField: React.FC<ValidatedFieldProps> = ({
-  icon, label, value, error, editing, type = "text", maxLength, placeholder, onChange, onBlur,
+const PremiumField: React.FC<PremiumFieldProps> = ({
+  label, value, error, editing, type = "text", maxLength, placeholder, onChange, onBlur,
 }) => (
-  <div className="flex gap-3">
-    <div className="w-7 h-7 mt-4 flex-shrink-0 rounded-lg bg-blue-50 flex items-center justify-center">
-      {icon}
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{label}</p>
-      {editing ? (
-        <>
-          <input
-            type={type} value={value} maxLength={maxLength} placeholder={placeholder}
-            onChange={(e) => onChange(e.target.value)} onBlur={onBlur}
-            className={`w-full text-xs font-medium text-gray-800 bg-gray-50 rounded-lg px-2 py-1.5 outline-none transition-all border ${error
-              ? "border-red-300 focus:ring-2 focus:ring-red-200 focus:border-red-400"
-              : "border-blue-200 focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
-              }`}
-          />
-          <AnimatePresence>
-            {error && <FieldError msg={error} />}
-          </AnimatePresence>
-        </>
-      ) : (
-        <p className="text-xs font-semibold text-gray-800 truncate mt-1">{value || "—"}</p>
-      )}
-    </div>
+  <div className="flex flex-col gap-1.5">
+    <label className="text-sm font-semibold text-gray-800">{label}</label>
+    {editing ? (
+      <>
+        <input
+          type={type} value={value} maxLength={maxLength} placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)} onBlur={onBlur}
+          className={`w-full px-4 py-2.5 rounded-xl bg-gray-50 border text-sm text-gray-700 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-indigo-100 transition-all ${
+            error ? "border-red-400 bg-red-50/30" : "border-gray-200 focus:border-indigo-400"
+          }`}
+        />
+        <AnimatePresence>
+          {error && (
+            <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="flex items-center gap-1 text-[10px] text-red-500 font-semibold"
+            >
+              <AlertCircle size={9} /> {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </>
+    ) : (
+      <div className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-700 truncate">
+        {value || <span className="text-gray-400">—</span>}
+      </div>
+    )}
   </div>
 );
 

@@ -21,7 +21,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 const sidebarLinks = [
-  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Providers', href: '/admin/providers', icon: Briefcase },
   { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
@@ -45,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }`}
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-[#1E293B]">
-          <Link href="/admin" className="flex items-center gap-3">
+          <Link href="/admin/dashboard" className="flex items-center gap-3">
             <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center">
               <span className="text-white font-bold text-lg">S</span>
             </div>
@@ -62,7 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-4 overflow-y-auto h-[calc(100vh-4rem)]">
           <div className="space-y-1.5">
             {sidebarLinks.map((link) => {
-              const isActive = pathname === link.href || (pathname.startsWith(link.href) && link.href !== '/admin');
+              const isActive = pathname === link.href || (pathname.startsWith(link.href) && link.href !== '/admin/dashboard');
               const Icon = link.icon;
               return (
                 <Link 

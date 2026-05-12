@@ -15,13 +15,6 @@ export interface IProviderService extends Document {
   final_price: number;
   subservice_ids: Types.ObjectId[];
   documents: IDocument[];
-  availability: {
-    day: string;
-    start_time: string;
-    end_time: string;
-    slot_duration: number;
-    buffer_time: number;
-  }[];
   is_featured: boolean;
   is_available: boolean;
   is_active: boolean;
@@ -81,15 +74,6 @@ const providerServiceSchema = new Schema<IProviderService>(
       type: [documentSchema],
       default: [],
     },
-    availability: [
-      {
-        day: { type: String, required: true },
-        start_time: { type: String, required: true },
-        end_time: { type: String, required: true },
-        slot_duration: { type: Number, default: 60 },
-        buffer_time: { type: Number, default: 0 },
-      },
-    ],
     is_featured: {
       type: Boolean,
       default: false,

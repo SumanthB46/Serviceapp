@@ -37,11 +37,16 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, isOpen, onClo
   const fetchUserHistory = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
+
       // Sequentially fetch for better stability and debugging
-      const bRes = await axios.get(`${API_URL}/bookings/user/${user.id}`);
+      const bRes = await axios.get(`${API_URL}/bookings/user/${user.id}`, config);
       setBookings(bRes.data);
 
-      const cRes = await axios.get(`${API_URL}/complaints/user/${user.id}`);
+      const cRes = await axios.get(`${API_URL}/complaints/user/${user.id}`, config);
       setComplaints(cRes.data);
     } catch (error: any) {
       console.error('BUREAU ERROR:', error);

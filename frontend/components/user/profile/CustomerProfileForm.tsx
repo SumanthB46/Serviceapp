@@ -115,7 +115,7 @@ export default function CustomerProfileForm() {
       
       // Redirect to main app/dashboard after success
       if (data.role === 'provider') {
-        router.push("/provider_register/services");
+        router.push("/signup/provider/services");
       } else {
         router.push("/");
       }
@@ -127,25 +127,25 @@ export default function CustomerProfileForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FC] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#F8F9FC] flex items-center justify-center p-4 py-12 sm:py-20">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-[500px] bg-white rounded-[2rem] shadow-xl p-8 sm:p-10"
+        className="w-full max-w-[500px] bg-white rounded-[1.5rem] sm:rounded-[2rem] shadow-xl p-6 sm:p-10"
       >
         {/* Stepper */}
-        <div className="flex items-center justify-center gap-2 mb-10">
+        <div className="flex items-center justify-center gap-2 mb-8 sm:mb-10">
           <div className="h-1.5 w-6 rounded-full bg-[#1D2B83]"></div>
           <div className="h-1.5 w-6 rounded-full bg-[#1D2B83]"></div>
           <div className="h-1.5 w-6 rounded-full bg-slate-200"></div>
         </div>
 
         {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-extrabold text-[#1D2B83] tracking-tight mb-3">
+        <div className="text-center mb-8 sm:mb-10">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1D2B83] tracking-tight mb-2 sm:mb-3">
             {role === 'provider' ? "Complete Your Profile" : "Tell us about you."}
           </h1>
-          <p className="text-slate-500 font-medium text-[15px] max-w-[320px] mx-auto text-balance">
+          <p className="text-slate-500 font-medium text-xs sm:text-[15px] max-w-[320px] mx-auto text-balance">
             {role === 'provider' 
               ? "Tell us more about yourself to start providing services."
               : "Personalize your experience to receive the highest standard of services."}

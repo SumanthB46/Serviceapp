@@ -30,11 +30,11 @@ const BookingServiceCard: React.FC<BookingServiceCardProps> = ({
   onRemove,
 }) => {
   return (
-    <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
-      <div className="flex flex-col md:flex-row gap-8">
+    <div className="bg-white rounded-[24px] sm:rounded-[32px] p-6 sm:p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
+      <div className="flex flex-col md:flex-row gap-6 sm:gap-8">
         {/* Left Side: Content */}
-        <div className="flex-1 space-y-4">
-          <h3 className="text-2xl font-black text-slate-800 tracking-tight">
+        <div className="flex-1 space-y-3 sm:space-y-4">
+          <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
             {title}
           </h3>
           
@@ -47,11 +47,11 @@ const BookingServiceCard: React.FC<BookingServiceCardProps> = ({
           </div>
 
           <div className="flex items-baseline gap-1">
-            <span className="text-xs font-bold text-slate-400 tracking-wider">Starts at</span>
-            <span className="text-xl font-black text-slate-800">₹{price}</span>
+            <span className="text-[10px] sm:text-xs font-bold text-slate-400 tracking-wider">Starts at</span>
+            <span className="text-lg sm:text-xl font-black text-slate-800">₹{price}</span>
           </div>
 
-          <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-lg">
+          <p className="text-xs sm:text-sm font-medium text-slate-500 leading-relaxed max-w-lg">
             {description}
           </p>
 
@@ -68,6 +68,7 @@ const BookingServiceCard: React.FC<BookingServiceCardProps> = ({
               src={image}
               alt={title || "Service image"}
               fill
+              sizes="(max-width: 768px) 100vw, 192px"
               className="object-cover transition-transform duration-500 group-hover:scale-110"
             />
           </div>

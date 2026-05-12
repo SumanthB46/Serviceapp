@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import StyledComponentsRegistry from "./AntdRegistry";
 import { ConfigProvider, App } from "antd";
+import { CartProvider } from "@/context/CartContext";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,8 +42,11 @@ export default function RootLayout({
             }}
           >
             <App>
-              {children}
+              <CartProvider>
+                {children}
+              </CartProvider>
             </App>
+
           </ConfigProvider>
         </StyledComponentsRegistry>
       </body>
