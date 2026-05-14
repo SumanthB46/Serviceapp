@@ -11,6 +11,7 @@ import {
   UserCircle, Contact2
 } from "lucide-react";
 import { API_URL } from '@/config/api';
+import CelebrationModal from "@/components/common/CelebrationModal";
 
 interface Category {
   _id: string;
@@ -33,8 +34,8 @@ interface LocationData {
 
 
 interface ServiceDetail {
-  experience: number;
-  price: number;
+  experience: number | null;
+  price: number | null;
   subserviceIds: string[];
   selectedLocations: string[];
   documents: DocUpload[];
@@ -58,6 +59,7 @@ export default function ProviderServiceSelection() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState<any>(null);
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
   // Steps: 0 (Categories), 1 (Services), 2 (Prof. Details), 3 (Identity & Bank)
   const [currentStep, setCurrentStep] = useState(0);
@@ -166,8 +168,8 @@ export default function ProviderServiceSelection() {
         setServiceDetails(curr => ({
           ...curr,
           [serviceId]: {
-            experience: 0,
-            price: 0,
+            experience: null,
+            price: null,
             subserviceIds: [],
             selectedLocations: [],
             availability: [],
@@ -184,6 +186,15 @@ export default function ProviderServiceSelection() {
       ...prev,
       [serviceId]: { ...prev[serviceId], [field]: value }
     }));
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   const handleNextStep = () => {
@@ -215,10 +226,10 @@ export default function ProviderServiceSelection() {
         const details = serviceDetails[svcId];
         const service = Object.values(servicesMap).flat().find(s => s._id === svcId);
 
-        if (!details || (details.experience ?? 0) < 0) {
+        if (!details || details.experience === null || details.experience === undefined) {
           return setError(`Please enter years of experience for ${service?.service_name}.`);
         }
-        if (!details || (details.price || 0) <= 0) {
+        if (!details || !details.price) {
           return setError(`Please enter a valid price for ${service?.service_name}.`);
         }
         if (!details.selectedLocations || details.selectedLocations.length === 0) {
@@ -268,6 +279,8 @@ export default function ProviderServiceSelection() {
       const providerId = pData._id;
 
       // 2. Update Identity Details via /me endpoint
+      const base64IdProof = idProof.file ? await fileToBase64(idProof.file) : "";
+      
       const updateMeRes = await fetch(`${API_URL}/providers/me`, {
         method: 'PUT',
         headers: {
@@ -278,7 +291,7 @@ export default function ProviderServiceSelection() {
           aadhar_id: aadharId,
           bank_details: bankDetails,
           verification_docs: {
-            id_proof_url: idProof.file_url || "",
+            id_proof_url: base64IdProof,
             selfie_url: ""
           }
         }),
@@ -292,6 +305,15 @@ export default function ProviderServiceSelection() {
         const service = Object.values(servicesMap).flat().find(s => s._id === serviceId);
         const details = serviceDetails[serviceId] || {};
 
+        // Convert service documents to base64
+        const processedDocs = await Promise.all((details.documents || []).map(async (doc: any) => {
+          if (doc.file) {
+            const base64 = await fileToBase64(doc.file);
+            return { ...doc, file_url: base64 };
+          }
+          return doc;
+        }));
+
         const psRes = await fetch(`${API_URL}/provider-services`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -301,7 +323,7 @@ export default function ProviderServiceSelection() {
             price: details.price || 0,
             subservice_ids: details.subserviceIds || [],
             location_ids: details.selectedLocations || [],
-            documents: (details.documents || []).map((d: any) => ({
+            documents: processedDocs.map((d: any) => ({
               doc_type: d.doc_type,
               file_url: d.file_url || ""
             }))
@@ -314,12 +336,17 @@ export default function ProviderServiceSelection() {
         }
       }
 
-      router.push("/provider/dashboard");
+      setIsSuccessOpen(true);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFinalSuccess = () => {
+    setIsSuccessOpen(false);
+    router.push("/provider/dashboard");
   };
 
   const getIcon = (iconName: string) => {
@@ -438,11 +465,11 @@ export default function ProviderServiceSelection() {
                       <div className="space-y-1"><label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Experience</label>
                         <input
                           type="number"
-                          value={details.experience === 0 ? "" : details.experience}
+                          value={details.experience === null ? "" : details.experience}
                           onFocus={(e) => e.target.select()}
                           onChange={(e) => {
-                            const val = e.target.value === "" ? 0 : parseInt(e.target.value);
-                            handleServiceDetailChange(serviceId, 'experience', isNaN(val) ? 0 : val);
+                            const val = e.target.value === "" ? null : parseInt(e.target.value);
+                            handleServiceDetailChange(serviceId, 'experience', val);
                           }}
                           className="w-full px-4 py-2 border rounded-xl text-sm"
                           placeholder="0"
@@ -451,11 +478,11 @@ export default function ProviderServiceSelection() {
                       <div className="space-y-1"><label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Price</label>
                         <input
                           type="number"
-                          value={details.price === 0 ? "" : details.price}
+                          value={details.price === null ? "" : details.price}
                           onFocus={(e) => e.target.select()}
                           onChange={(e) => {
-                            const val = e.target.value === "" ? 0 : parseInt(e.target.value);
-                            handleServiceDetailChange(serviceId, 'price', isNaN(val) ? 0 : val);
+                            const val = e.target.value === "" ? null : parseInt(e.target.value);
+                            handleServiceDetailChange(serviceId, 'price', val);
                           }}
                           className="w-full px-4 py-2 border rounded-xl text-sm"
                           placeholder="0"
@@ -660,6 +687,13 @@ export default function ProviderServiceSelection() {
           )}
         </div>
       </motion.div>
+
+      <CelebrationModal
+        open={isSuccessOpen}
+        onClose={handleFinalSuccess}
+        title="Registration Complete!"
+        subtitle="Your profile is now under review. We'll notify you once it's approved!"
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Menu, Bell, User, ChevronDown, UserCircle, Settings, LogOut } from "luc
 import Link from "next/link";
 import axios from "axios";
 import { API_URL } from "@/config/api";
+import Cookies from "js-cookie";
 
 interface TopNavbarProps {
   onOpenSidebar: () => void;
@@ -64,6 +65,8 @@ export default function TopNavbar({ onOpenSidebar }: TopNavbarProps) {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    Cookies.remove("token");
+    Cookies.remove("userRole");
     window.location.href = "/login";
   };
 

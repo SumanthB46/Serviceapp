@@ -51,8 +51,7 @@ export default function ProviderProfileModal({ isOpen, onClose, onUpdateSuccess 
       branch: ""
     },
     verification_docs: {
-      aadhar_card: "",
-      skill_certificate: ""
+      id_proof_url: ""
     }
   });
 
@@ -91,8 +90,7 @@ export default function ProviderProfileModal({ isOpen, onClose, onUpdateSuccess 
           branch: provider.bank_details?.branch || ""
         },
         verification_docs: {
-          aadhar_card: provider.verification_docs?.aadhar_card || "",
-          skill_certificate: provider.verification_docs?.skill_certificate || ""
+          id_proof_url: provider.verification_docs?.id_proof_url || ""
         }
       });
     } catch (err) {
@@ -126,7 +124,7 @@ export default function ProviderProfileModal({ isOpen, onClose, onUpdateSuccess 
         } else {
           setFormData(prev => ({
             ...prev,
-            verification_docs: { ...prev.verification_docs, [field]: reader.result as string }
+            verification_docs: { id_proof_url: reader.result as string }
           }));
         }
       };
@@ -364,23 +362,18 @@ export default function ProviderProfileModal({ isOpen, onClose, onUpdateSuccess 
                       />
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhar Copy</label>
-                        <label className="block p-8 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] text-center cursor-pointer hover:bg-slate-100 transition-all group">
-                          <Upload className="h-8 w-8 mx-auto text-slate-300 group-hover:text-primary mb-2" />
-                          <span className="text-[10px] font-black text-slate-500 uppercase">Upload Copy</span>
-                          <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => handleFileUpload(e, 'aadhar_card')} />
-                        </label>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Skill Certificate</label>
-                        <label className="block p-8 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] text-center cursor-pointer hover:bg-slate-100 transition-all group">
-                          <Upload className="h-8 w-8 mx-auto text-slate-300 group-hover:text-primary mb-2" />
-                          <span className="text-[10px] font-black text-slate-500 uppercase">Upload Cert</span>
-                          <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => handleFileUpload(e, 'skill_certificate')} />
-                        </label>
-                      </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Identity Proof Document</label>
+                      <label className="block p-12 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] text-center cursor-pointer hover:bg-slate-100 transition-all group">
+                        <Upload className="h-10 w-10 mx-auto text-slate-300 group-hover:text-primary mb-3" />
+                        <div className="space-y-1">
+                           <p className="text-[10px] font-black text-slate-900 uppercase">
+                              {formData.verification_docs.id_proof_url ? 'Document Attached' : 'Upload ID Proof'}
+                           </p>
+                           <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Aadhar, Voter ID, or Passport (Image/PDF)</p>
+                        </div>
+                        <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => handleFileUpload(e, 'id_proof_url')} />
+                      </label>
                     </div>
 
                     {error && (

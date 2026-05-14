@@ -33,6 +33,7 @@ import ProfileModal from "../user/profile/ProfileModal";
 import AddressModal from "../user/profile/AddressModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
+import Cookies from 'js-cookie';
 
 const Navbar = () => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
@@ -49,7 +50,7 @@ const Navbar = () => {
 
   useEffect(() => {
     setMounted(true);
-    
+
     const loadUser = () => {
       const token = localStorage.getItem("token");
       const userData = localStorage.getItem("user");
@@ -82,6 +83,11 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    
+    // Clear cookies
+    Cookies.remove('token');
+    Cookies.remove('userRole');
+    
     window.location.href = "/";
   };
 
@@ -116,31 +122,30 @@ const Navbar = () => {
 
   // ─── Drawer menu structure ───────────────────────────────────────────
   const mainNavItems = [
-    { icon: Home,         label: "Home",            href: "/" },
-    { icon: List,         label: "Categories",      href: "/categories" },
-    { icon: ShoppingCart, label: "Cart",             href: "/user/cart",     badge: itemCount > 0 ? itemCount : undefined },
-    { icon: Calendar,     label: "My Bookings",      href: "/user/bookings" },
-    { icon: CreditCard,   label: "Payments",         href: "/user/billing" },
+    { icon: Home, label: "Home", href: "/" },
+    { icon: List, label: "Categories", href: "/categories" },
+    { icon: ShoppingCart, label: "Cart", href: "/user/cart", badge: itemCount > 0 ? itemCount : undefined },
+    { icon: Calendar, label: "My Bookings", href: "/user/bookings" },
+    { icon: CreditCard, label: "Payments", href: "/user/billing" },
   ];
 
   const moreNavItems = [
-    { icon: Star,       label: "Membership",        href: "/user/membership" },
-    { icon: Ticket,     label: "Offers & Coupons",  href: "/user/offers" },
-    { icon: Heart,      label: "Saved Services",    href: "/user/saved" },
-    { icon: MapPin,     label: "Saved Addresses",   href: "#addresses", action: () => setIsAddressModalOpen(true) },
+    { icon: Star, label: "Membership", href: "/user/membership" },
+    { icon: Ticket, label: "Offers & Coupons", href: "/user/offers" },
+    { icon: MapPin, label: "Saved Addresses", href: "#addresses", action: () => setIsAddressModalOpen(true) },
   ];
 
   const supportItems = [
-    { icon: Gift,       label: "Refer & Earn",      href: "/user/refer" },
-    { icon: HelpCircle, label: "Help & Support",    href: "/user/support" },
-    { icon: Info,       label: "About FIXVO",       href: "/user/about" },
-    { icon: Settings,   label: "Settings",          href: "/user/settings" },
+    { icon: HelpCircle, label: "Help & Support", href: "/user/support" },
+    { icon: Info, label: "About FIXVO", href: "/about" },
+    { icon: Settings, label: "Settings", href: "/user/settings" },
+    { icon: Phone, label: "Contact Us", href: "/contact" },
   ];
 
   const profileMenuItems = [
-    { icon: User,   label: "My Profile",       action: () => setIsProfileModalOpenState(true) },
-    { icon: MapPin, label: "Saved Addresses",  action: () => setIsAddressModalOpen(true) },
-    { icon: Bell,   label: "Notifications",    href: "/user/notifications" },
+    { icon: User, label: "My Profile", action: () => setIsProfileModalOpenState(true) },
+    { icon: MapPin, label: "Saved Addresses", action: () => setIsAddressModalOpen(true) },
+    { icon: Bell, label: "Notifications", href: "/user/notifications" },
 
   ];
 

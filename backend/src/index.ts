@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import mongoose from 'mongoose';
 // Last updated: 2026-05-11T15:36
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -11,7 +12,7 @@ import addressRoutes  from './routes/user/addressRoutes';
 import bookingRoutes  from './routes/user/bookingRoutes';
 import reviewRoutes   from './routes/user/reviewRoutes';
 import bannerRoutes   from './routes/admin/bannerRoutes';
-import offerRoutes    from './routes/admin/offerRoutes';
+import couponRoutes from './routes/admin/couponRoutes';
 import adminReportRoutes from './routes/admin/adminReportRoutes';
 import notificationRoutes from './routes/user/notificationRoutes';
 import paymentRoutes   from './routes/user/paymentRoutes';
@@ -20,6 +21,8 @@ import complaintRoutes from './routes/admin/complaintRoutes';
 import locationRoutes from './routes/admin/locationRoutes';
 import subServiceRoutes from './routes/admin/subServiceRoutes';
 import cartRoutes from './routes/user/cartRoutes';
+import walletRoutes from './routes/provider/walletRoutes';
+import membershipRoutes from './routes/admin/membershipRoutes';
 
 
 
@@ -53,6 +56,7 @@ app.use(express.json({ limit: '10mb' })); // increased limit for base64 images
 app.use('/uploads', express.static('uploads'));
 
 // Routes
+app.use('/api/memberships', membershipRoutes);
 app.use('/api/users',      userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/services',   serviceRoutes);
@@ -61,7 +65,7 @@ app.use('/api/addresses',  addressRoutes);
 app.use('/api/bookings',   bookingRoutes);
 app.use('/api/reviews',    reviewRoutes);
 app.use('/api/banners',    bannerRoutes);
-app.use('/api/offers',     offerRoutes);
+app.use('/api/admin/coupons', couponRoutes);
 app.use('/api/reports',    adminReportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/payments',   paymentRoutes);
@@ -70,6 +74,7 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/sub-services', subServiceRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/wallets', walletRoutes);
 
 
 
@@ -103,8 +108,27 @@ process.on('unhandledRejection', (reason: any, promise) => {
   console.error('🔥 Unhandled Rejection at:', promise);
   console.error('Reason:', reason?.message || reason);
   if (reason?.stack) console.error(reason.stack);
-  process.exit(1);
+  // process.exit(1); // Don't exit on rejection, just log it
 });
+
+server.on('error', (err: any) => {
+  console.error('🔥 Server socket error:', err);
+});
+
+const gracefulShutdown = () => {
+  console.log('👋 Shutting down gracefully...');
+  server.close(() => {
+    console.log('🚀 Server closed.');
+    mongoose.connection.close(false).then(() => {
+        console.log('📂 MongoDB connection closed.');
+        process.exit(0);
+    });
+  });
+};
+
+process.on('SIGUSR2', gracefulShutdown); // For nodemon
+process.on('SIGINT', gracefulShutdown);  // For Ctrl+C
+process.on('SIGTERM', gracefulShutdown); // For kill commands
 
 // Port 5001 - Active
  

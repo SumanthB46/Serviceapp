@@ -37,7 +37,7 @@ const validators: Record<string, (v: string) => string> = {
     return "";
   },
   gender: (_v: string) => "",
-password: (v: string) => {
+  password: (v: string) => {
     if (!v) return "";
     if (v.length < 6) return "Minimum 6 characters";
     if (!/[A-Z]/.test(v)) return "Must include at least 1 uppercase letter";
@@ -105,9 +105,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const [previewImg, setPreviewImg] = useState<string | null>(null);
 
   const [form, setForm] = useState<FormState>({ name: "", email: "", phone: "", gender: "", password: "" });
-  const [errors, setErrors] = useState<ErrorState>({ name: "", email: "", password: "" });
+  const [errors, setErrors] = useState<ErrorState>({ name: "", email: "", phone: "", password: "" });
   const [touched, setTouched] = useState<Record<keyof FormState, boolean>>({
-    name: false, email: false, password: false,
+    name: false, email: false, phone: false, gender: false, password: false,
   });
 
   const modalRef = useRef<HTMLDivElement>(null);
@@ -171,7 +171,6 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const handleChange = (field: keyof FormState, raw: string) => {
     let value = raw;
     if (field === "phone") value = raw.replace(/\D/g, "").slice(0, 10);
-    if (field === "phone") value = raw.replace(/\D/g, "").slice(0, 10);
     if (field === "name") value = raw.replace(/[^A-Za-z\s]/g, "");
     setForm((f) => ({ ...f, [field]: value }));
     if (touched[field]) setErrors((e) => ({ ...e, [field]: validateField(field, value) }));
@@ -224,7 +223,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         setSaveSuccess(true);
         setPreviewImg(null);
         setErrors({ name: "", email: "", phone: "", password: "" });
-        setTouched({ name: false, email: false, phone: false, password: false });
+        setTouched({ name: false, email: false, phone: false, gender: false, password: false });
         setTimeout(() => setSaveSuccess(false), 3000);
       }
     } catch (err) {

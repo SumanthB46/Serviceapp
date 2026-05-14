@@ -1,59 +1,92 @@
-import fs from 'fs';
-import path from 'path';
+import { v2 as cloudinary } from "cloudinary";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export interface CloudinaryUploadResponse {
+  secure_url: string;
+  public_id: string;
+  resource_type: string;
+}
 
 /**
- * Saves a base64 string as a file in the specified directory.
- * @param base64Data The base64 string (can include data:image/... prefix)
- * @param subDir The subdirectory under 'uploads' (e.g., 'verification/pending')
- * @param fileName Custom filename (optional)
- * @returns The relative path to the saved file (e.g., '/uploads/verification/pending/file.jpg')
+ * Detects file type from base64 data URI and uploads to the correct
+ * Cloudinary bucket:
+ *  - PDFs  → resource_type: 'raw'   → /raw/upload/ → browser-openable
+ *  - Images → resource_type: 'image' → /image/upload/
  */
-export const saveBase64File = (base64Data: string, subDir: string, fileName?: string): string => {
-  if (!base64Data || !base64Data.startsWith('data:')) {
-    // If it's already a URL or invalid, return it
-    return base64Data;
+export const saveFileToCloud = async (
+  base64Data: string,
+  subDir: string
+): Promise<CloudinaryUploadResponse> => {
+  if (!base64Data) {
+    throw new Error("No file provided");
   }
 
-  const baseDir = path.join(process.cwd(), 'uploads');
-  const targetDir = path.join(baseDir, subDir);
-
-  // Ensure directories exist
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
+  // Already an uploaded URL — return as-is
+  if (base64Data.startsWith("http")) {
+    return {
+      secure_url: base64Data,
+      public_id: "",
+      resource_type: "image",
+    };
   }
 
-  // Extract extension and data
-  const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-  if (!matches || matches.length !== 3) {
-    throw new Error('Invalid base64 format');
+  // Extract MIME type from data URI: data:<mimeType>;base64,...
+  const mimeMatch = base64Data.match(/^data:([^;]+);base64,/);
+  const mimeType = mimeMatch?.[1]?.toLowerCase() ?? "";
+
+  console.log(`[CLOUDINARY UPLOAD] Detected MIME type: "${mimeType}"`);
+
+  // Route PDFs to the 'raw' bucket so browsers can open them natively.
+  // All other files (jpg, png, gif, webp, etc.) go to the 'image' bucket.
+  const isPdf = mimeType === "application/pdf" || mimeType.includes("pdf");
+  const resourceType: "raw" | "image" = isPdf ? "raw" : "image";
+
+  try {
+    const uploadResponse = await cloudinary.uploader.upload(base64Data, {
+      folder: `serviceapp/${subDir}`,
+      resource_type: resourceType,
+    });
+
+    console.log(
+      `[CLOUDINARY UPLOAD] Success — resource_type: "${uploadResponse.resource_type}", url: ${uploadResponse.secure_url}`
+    );
+
+    return {
+      secure_url: uploadResponse.secure_url,
+      public_id: uploadResponse.public_id,
+      resource_type: uploadResponse.resource_type,
+    };
+  } catch (err) {
+    console.error("[CLOUDINARY UPLOAD] Error:", err);
+    throw new Error("Failed to upload file to cloud storage");
   }
-
-  const extension = matches[1].split('/')[1];
-  const data = Buffer.from(matches[2], 'base64');
-  const finalFileName = fileName || `${Date.now()}-${Math.round(Math.random() * 1E9)}.${extension}`;
-  const filePath = path.join(targetDir, finalFileName);
-
-  fs.writeFileSync(filePath, data);
-
-  // Return relative path for database storage
-  return `/uploads/${subDir}/${finalFileName}`.replace(/\\/g, '/');
 };
 
 /**
- * Deletes a file from the filesystem.
- * @param relativePath The relative path stored in the database (e.g., '/uploads/...')
+ * Deletes a file from Cloudinary.
+ * @param publicId  The Cloudinary public_id stored in the database.
+ * @param resourceType  Must match the bucket used during upload ('image' | 'raw' | 'video').
  */
-export const deleteFile = (relativePath: string): void => {
-  if (!relativePath || !relativePath.startsWith('/uploads/')) return;
+export const deleteFileFromCloud = async (
+  publicId: string,
+  resourceType = "image"
+): Promise<void> => {
+  if (!publicId) return;
 
-  const fullPath = path.join(process.cwd(), relativePath.substring(1)); // remove leading /
-
-  if (fs.existsSync(fullPath)) {
-    try {
-      fs.unlinkSync(fullPath);
-      console.log(`[FILE SYSTEM] Deleted file: ${fullPath}`);
-    } catch (err) {
-      console.error(`[FILE SYSTEM] Error deleting file: ${fullPath}`, err);
-    }
+  try {
+    const result = await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+    });
+    console.log(`[CLOUDINARY DELETE] publicId: "${publicId}", result:`, result);
+  } catch (err) {
+    console.error("[CLOUDINARY DELETE] Error:", err);
   }
 };

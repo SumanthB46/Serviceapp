@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Edit, Mail, Phone, User as UserIcon, Save, RefreshCcw, MapPin, Activity, UserCheck } from 'lucide-react';
+import { X, Edit, Mail, Phone, User as UserIcon, Save, RefreshCcw, MapPin, Activity, UserCheck, Upload, FileText, Eye, Download } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '@/config/api';
 
@@ -20,6 +20,9 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
    const [errors, setErrors] = useState<Record<string, string>>({});
    const [mounted, setMounted] = useState(false);
    const [locations, setLocations] = useState<any[]>([]);
+   const [docPreviewUrl, setDocPreviewUrl] = useState<string | null>(null);
+   const [docLabel, setDocLabel] = useState<string>('document');
+   const [downloading, setDownloading] = useState(false);
 
    // User Fields
    const [userForm, setUserForm] = useState({
@@ -159,7 +162,90 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
       }
    };
 
+   const openDocument = (url: string, label = 'document') => {
+      setDocPreviewUrl(url);
+      setDocLabel(label);
+   };
+
+   const handleDownload = async () => {
+      if (!docPreviewUrl || downloading) return;
+      setDownloading(true);
+      try {
+         const urlPath = docPreviewUrl.split('?')[0];
+         const ext = urlPath.split('.').pop()?.toLowerCase() || 'pdf';
+         const shortId = (provider._id || '').slice(-4).toUpperCase();
+         const filename = `urban_${shortId}_${docLabel}.${ext}`;
+
+         const response = await fetch(docPreviewUrl);
+         const blob = await response.blob();
+         const blobUrl = URL.createObjectURL(blob);
+
+         const a = document.createElement('a');
+         a.href = blobUrl;
+         a.download = filename;
+         document.body.appendChild(a);
+         a.click();
+         document.body.removeChild(a);
+         URL.revokeObjectURL(blobUrl);
+      } catch (err) {
+         console.error('Download failed:', err);
+      } finally {
+         setDownloading(false);
+      }
+   };
+
    if (!mounted || !isOpen || !provider) return null;
+
+   // PDF Preview Modal
+   if (docPreviewUrl) {
+      return createPortal(
+         <div className="fixed inset-0 z-[99999] flex flex-col">
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setDocPreviewUrl(null)} />
+            {/* Modal */}
+            <div className="relative z-10 flex flex-col w-full h-full max-w-4xl mx-auto my-8 rounded-3xl overflow-hidden shadow-2xl">
+               {/* Header */}
+               <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100 flex-shrink-0">
+                  <div className="flex items-center gap-3">
+                     <div className="p-2 bg-blue-50 rounded-xl">
+                        <FileText size={18} className="text-blue-600" />
+                     </div>
+                     <div>
+                        <h3 className="text-sm font-black text-gray-900">Document Preview</h3>
+                        <p className="text-[10px] text-gray-400 font-medium">ID Proof Verification</p>
+                     </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                     <button
+                        onClick={handleDownload}
+                        disabled={downloading}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl text-xs font-bold hover:bg-green-100 transition-all disabled:opacity-50"
+                        title={`Download as urban_${(provider._id||'').slice(-4).toUpperCase()}_${docLabel}`}
+                     >
+                        <Download size={14} />
+                        {downloading ? 'Downloading...' : 'Download'}
+                     </button>
+                     <button
+                        onClick={() => setDocPreviewUrl(null)}
+                        className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                     >
+                        <X size={18} className="text-gray-400" />
+                     </button>
+                  </div>
+               </div>
+               {/* PDF iframe via Google Docs Viewer */}
+               <div className="flex-1 bg-gray-100">
+                  <iframe
+                     src={`https://docs.google.com/viewer?url=${encodeURIComponent(docPreviewUrl)}&embedded=true`}
+                     className="w-full h-full border-none"
+                     title="Document Preview"
+                  />
+               </div>
+            </div>
+         </div>,
+         document.body
+      );
+   }
 
    return createPortal(
       <AnimatePresence>
@@ -323,15 +409,44 @@ const ProviderDetailsModal: React.FC<ProviderDetailsModalProps> = ({ isOpen, onC
                               </div>
                               <div className="space-y-1">
                                  <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
-                                    <Activity size={12} className="text-blue-500" /> ID Proof URL
+                                    <FileText size={12} className="text-blue-500" /> ID Proof Document
                                  </label>
-                                 <input
-                                    type="text"
-                                    value={providerForm.verification_docs.id_proof_url}
-                                    onChange={(e) => setProviderForm({ ...providerForm, verification_docs: { id_proof_url: e.target.value } })}
-                                    className="w-full px-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-200 transition-all"
-                                    placeholder="ID Proof URL"
-                                 />
+                                 <div className="flex gap-2 relative group/upload">
+                                    <div className={`flex-1 px-4 py-3 bg-white border ${providerForm.verification_docs.id_proof_url ? 'border-green-200 bg-green-50/30' : 'border-gray-100'} rounded-2xl text-xs font-bold text-gray-700 flex items-center justify-between transition-all group-hover/upload:border-blue-200`}>
+                                       <span className="truncate max-w-[150px]">
+                                          {providerForm.verification_docs.id_proof_url ? 'Document Ready' : 'Select ID Proof'}
+                                       </span>
+                                       <Upload size={14} className="text-gray-400 group-hover/upload:text-blue-600" />
+                                       <input
+                                          type="file"
+                                          accept="image/*,.pdf"
+                                          onChange={(e) => {
+                                             const file = e.target.files?.[0];
+                                             if (file) {
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => {
+                                                   setProviderForm({ 
+                                                      ...providerForm, 
+                                                      verification_docs: { id_proof_url: reader.result as string } 
+                                                   });
+                                                };
+                                                reader.readAsDataURL(file);
+                                             }
+                                          }}
+                                          className="absolute inset-0 opacity-0 cursor-pointer"
+                                       />
+                                    </div>
+                                    {providerForm.verification_docs.id_proof_url && !providerForm.verification_docs.id_proof_url.startsWith('data:') && (
+                                       <button
+                                          type="button"
+                                          onClick={() => openDocument(providerForm.verification_docs.id_proof_url, 'national_id')}
+                                          className="p-3 bg-blue-50 text-blue-600 rounded-2xl hover:bg-blue-100 transition-all flex items-center justify-center shadow-sm"
+                                          title="Preview Document"
+                                       >
+                                          <Eye size={16} />
+                                       </button>
+                                    )}
+                                 </div>
                               </div>
                            </div>
 

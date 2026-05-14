@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import Cookies from 'js-cookie';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -34,6 +35,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } catch (err) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      Cookies.remove('token');
+      Cookies.remove('userRole');
       router.push('/login');
     }
   }, [router]);

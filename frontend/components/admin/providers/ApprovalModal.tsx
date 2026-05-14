@@ -1,13 +1,14 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
 import { Provider } from '../types';
 import { 
   MapPin, Star, Briefcase, Calendar, ShieldCheck, Award, ShieldAlert, 
-  FileSearch, CheckCircle2, Mail, Phone, Clock, FileText, UserCheck, UserX, Trash2, Eye
+  FileSearch, CheckCircle2, Mail, Phone, Clock, FileText, UserCheck, UserX, Trash2, Eye, Download
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BACKEND_URL } from '@/config/api';
@@ -21,6 +22,9 @@ interface ApprovalModalProps {
 const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpdate }) => {
   const [rejectionReason, setRejectionReason] = React.useState('');
   const [isRejecting, setIsRejecting] = React.useState(false);
+  const [docPreviewUrl, setDocPreviewUrl] = useState<string | null>(null);
+  const [docLabel, setDocLabel] = useState<string>('document');
+  const [downloading, setDownloading] = useState(false);
 
   if (!provider) return null;
 
@@ -36,14 +40,98 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
 
   const statusVariant = provider.kyc_status === 'verified' ? 'success' : provider.kyc_status === 'pending' ? 'warning' : 'danger';
 
-  const openDocument = (url?: string) => {
+  const openDocument = (url?: string, label = 'document') => {
     if (!url) return;
     const fullUrl = (url.startsWith('http') || url.startsWith('blob:')) ? url : `${BACKEND_URL}${url}`;
-    window.open(fullUrl, '_blank');
+    setDocPreviewUrl(fullUrl);
+    setDocLabel(label);
   };
 
+  // Download with proper urban_<userId>_<label>.<ext> naming
+  const handleDownload = async () => {
+    if (!docPreviewUrl || downloading) return;
+    setDownloading(true);
+    try {
+      // Extract extension from URL
+      const urlPath = docPreviewUrl.split('?')[0];
+      const ext = urlPath.split('.').pop()?.toLowerCase() || 'pdf';
+      // Short user ID: last 4 chars of provider._id
+      const shortId = (provider._id || '').slice(-4).toUpperCase();
+      const filename = `urban_${shortId}_${docLabel}.${ext}`;
+
+      const response = await fetch(docPreviewUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download failed:', err);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  // Inline document preview modal
+  const previewModal = docPreviewUrl ? createPortal(
+    <div className="fixed inset-0 z-[99999] flex flex-col">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setDocPreviewUrl(null)} />
+      <div className="relative z-10 flex flex-col w-full h-full max-w-4xl mx-auto my-8 rounded-3xl overflow-hidden shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-50 rounded-xl">
+              <FileText size={18} className="text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-gray-900">Document Preview</h3>
+              <p className="text-[10px] text-gray-400 font-medium">KYC Verification Document</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl text-xs font-bold hover:bg-green-100 transition-all disabled:opacity-50"
+              title={`Download as urban_${(provider._id||'').slice(-4).toUpperCase()}_${docLabel}`}
+            >
+              <Download size={14} />
+              {downloading ? 'Downloading...' : 'Download'}
+            </button>
+            <button
+              onClick={() => setDocPreviewUrl(null)}
+              className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+            >
+              <span className="text-gray-400 text-xl leading-none">&times;</span>
+            </button>
+          </div>
+        </div>
+        {/* Viewer: Google Docs for PDFs, img tag for images */}
+        <div className="flex-1 bg-gray-100">
+          {docPreviewUrl.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || docPreviewUrl.includes('/image/upload/') ? (
+            <img src={docPreviewUrl} alt="Document" className="w-full h-full object-contain" />
+          ) : (
+            <iframe
+              src={`https://docs.google.com/viewer?url=${encodeURIComponent(docPreviewUrl)}&embedded=true`}
+              className="w-full h-full border-none"
+              title="Document Preview"
+            />
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
   return (
-    <Modal
+    <>
+      {previewModal}
+      <Modal
       isOpen={!!provider}
       onClose={onClose}
       title="Partner Verification Bureau"
@@ -131,7 +219,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
                  </div>
               </div>
               <button 
-                onClick={() => openDocument(provider.verification_docs?.id_proof_url)}
+                onClick={() => openDocument(provider.verification_docs?.id_proof_url, 'national_id')}
                 className="p-1.5 bg-white rounded-lg border border-gray-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
               >
                 <Eye size={12} />
@@ -146,7 +234,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
                  </div>
               </div>
               <button 
-                onClick={() => openDocument(provider.services?.[0]?.documents?.[0]?.file_url)}
+                onClick={() => openDocument(provider.services?.[0]?.documents?.[0]?.file_url, 'experience_cert')}
                 className="p-1.5 bg-white rounded-lg border border-gray-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
               >
                 <Eye size={12} />
@@ -193,7 +281,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
               </div>
               <div className="grid grid-cols-2 gap-4">
                  <div 
-                   onClick={() => provider.verification_docs?.id_proof_url && openDocument(provider.verification_docs.id_proof_url)}
+                   onClick={() => provider.verification_docs?.id_proof_url && openDocument(provider.verification_docs.id_proof_url, 'national_id')}
                    className={`bg-white/10 hover:bg-white/20 transition-all rounded-[1.5rem] p-4 border border-white/10 flex flex-col items-center gap-3 group/doc ${provider.verification_docs?.id_proof_url ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
                  >
                     <div className="w-12 h-12 bg-white text-blue-600 rounded-2xl flex items-center justify-center shadow-md transition-transform group-hover/doc:-rotate-6">
@@ -202,7 +290,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
                     <p className="text-[9px] font-black uppercase tracking-widest text-blue-100">National_ID.jpg</p>
                  </div>
                  <div 
-                   onClick={() => provider.services?.[0]?.documents?.[0]?.file_url && openDocument(provider.services[0].documents[0].file_url)}
+                   onClick={() => provider.services?.[0]?.documents?.[0]?.file_url && openDocument(provider.services[0].documents[0].file_url, 'experience_cert')}
                    className={`bg-white/10 hover:bg-white/20 transition-all rounded-[1.5rem] p-4 border border-white/10 flex flex-col items-center gap-3 group/doc ${provider.services?.[0]?.documents?.[0]?.file_url ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
                  >
                     <div className="w-12 h-12 bg-white text-blue-600 rounded-2xl flex items-center justify-center shadow-md transition-transform group-hover/doc:rotate-6">
@@ -215,6 +303,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
         </div>
       </div>
     </Modal>
+    </>
   );
 };
 

@@ -18,10 +18,12 @@ import {
   ChevronRight,
   LogOut,
   Settings,
-  Ticket
+  Ticket,
+  Crown
 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Cookies from 'js-cookie';
 
 const sidebarLinks = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
@@ -32,7 +34,8 @@ const sidebarLinks = [
   { name: 'Services', href: '/admin/services', icon: Layers },
   { name: 'Sub-Services', href: '/admin/sub-services', icon: LayoutGrid },
   { name: 'Locations', href: '/admin/locations', icon: MapPin },
-  { name: 'Offers', href: '/admin/offers', icon: Ticket },
+  { name: 'Offers & Coupons', href: '/admin/offers', icon: Ticket },
+  { name: 'Memberships', href: '/admin/memberships', icon: Crown },
   { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
   { name: 'Reports', href: '/admin/reports', icon: BarChart2 },
 ];
@@ -48,6 +51,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const handleSignOut = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    Cookies.remove('token');
+    Cookies.remove('userRole');
     window.location.href = '/login';
   };
 
@@ -76,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       </div>
 
       {/* Main Navigation */}
-      <div className="flex-1 px-3 py-4 flex flex-col overflow-y-auto custom-scrollbar">
+      <div className="flex-1 px-3 py-4 flex flex-col overflow-hidden">
         <nav className="space-y-1">
           {sidebarLinks.map((link) => {
             const isActive =
@@ -88,7 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden ${isActive
+                className={`flex items-center justify-between gap-3 px-3 py-2 rounded-xl transition-all duration-300 group relative overflow-hidden ${isActive
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
                   : 'text-gray-400 hover:bg-white/5 hover:text-white'
                   }`}
@@ -100,12 +105,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   />
                 )}
 
-                <div className="flex items-center gap-3 relative z-10">
+                <div className="flex items-center gap-6 relative z-10">
                   <div className={`transition-all duration-300 ${isActive ? 'text-white' : 'group-hover:text-blue-400 group-hover:scale-110'
                     }`}>
-                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                    <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
                   </div>
-                  <span className={`text-[13px] font-bold tracking-tight transition-transform duration-300 ${isActive ? 'translate-x-1' : 'group-hover:translate-x-1'
+                  <span className={`text-[12px] font-bold tracking-tight transition-transform duration-300 ${isActive ? 'translate-x-1' : 'group-hover:translate-x-1'
                     }`}>
                     {link.name}
                   </span>
@@ -130,7 +135,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <Settings size={14} className="text-gray-500 group-hover:text-blue-400 transition-colors" />
         </div>
 
-        <button 
+        <button
           onClick={handleSignOut}
           className="w-full flex items-center gap-3 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-all text-[10px] font-bold uppercase tracking-widest"
         >

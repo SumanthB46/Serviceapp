@@ -1,23 +1,25 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  CreditCard, 
-  ChevronRight, 
-  User, 
-  Phone, 
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  CreditCard,
+  ChevronRight,
+  User,
+  Phone,
   Info,
   CheckCircle2,
   XCircle,
   AlertCircle,
   MoreVertical,
   ArrowRight,
-  Star
+  Star,
+  Navigation,
+  X
 } from "lucide-react";
-import { message, Modal, Tabs, Button, Tag, Divider, Empty, Skeleton } from "antd";
+import { message, Modal, Tabs, Button, Tag } from "antd";
 import { API_URL, BACKEND_URL } from "@/config/api";
 import Navbar from "@/components/common/Navbar";
 
@@ -45,6 +47,11 @@ const BookingHistory = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [modal, modalContextHolder] = Modal.useModal();
 
+  // Provider modal
+  const [providerModal, setProviderModal] = useState<{ open: boolean; provider: any | null }>({
+    open: false, provider: null,
+  });
+
   // Cancellation Modal State
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [cancellingBookingId, setCancellingBookingId] = useState<string | null>(null);
@@ -66,7 +73,7 @@ const BookingHistory = () => {
       });
       const data = await res.json();
       console.log("Bookings API Response:", data);
-      
+
       if (Array.isArray(data)) {
         setBookings(data);
       } else if (data.bookings && Array.isArray(data.bookings)) {
@@ -97,16 +104,16 @@ const BookingHistory = () => {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_URL}/bookings/${cancellingBookingId}/cancel`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           reason: cancelReason,
           cancelled_by: 'customer' // Explicitly set for backend clarity
         })
       });
-      
+
       if (res.ok) {
         messageApi.success("Booking cancelled successfully");
         setCancelModalVisible(false);
@@ -158,7 +165,7 @@ const BookingHistory = () => {
     ];
 
     const currentIndex = steps.findIndex(s => s.key === currentStatus);
-    
+
     // If cancelled, show a different timeline or handle specifically
     if (currentStatus === 'cancelled' || currentStatus === 'rejected') {
       return (
@@ -173,25 +180,22 @@ const BookingHistory = () => {
         {steps.map((step, idx) => {
           const isDone = currentIndex >= idx;
           const isNext = currentIndex + 1 === idx;
-          
+
           return (
             <React.Fragment key={step.key}>
               <div className="flex flex-col items-center relative">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold z-10 transition-all ${
-                  isDone ? 'bg-[#1D2B83] text-white' : 'bg-slate-100 text-slate-400'
-                }`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold z-10 transition-all ${isDone ? 'bg-[#1D2B83] text-white' : 'bg-slate-100 text-slate-400'
+                  }`}>
                   {isDone ? <CheckCircle2 size={12} /> : idx + 1}
                 </div>
-                <span className={`text-[8px] font-bold uppercase tracking-wider mt-2 whitespace-nowrap absolute -bottom-4 ${
-                  isDone ? 'text-[#1D2B83]' : 'text-slate-400'
-                }`}>
+                <span className={`text-[8px] font-bold uppercase tracking-wider mt-2 whitespace-nowrap absolute -bottom-4 ${isDone ? 'text-[#1D2B83]' : 'text-slate-400'
+                  }`}>
                   {step.label}
                 </span>
               </div>
               {idx < steps.length - 1 && (
-                <div className={`flex-1 h-[2px] mx-1 transition-all ${
-                  currentIndex > idx ? 'bg-[#1D2B83]' : 'bg-slate-100'
-                }`} />
+                <div className={`flex-1 h-[2px] mx-1 transition-all ${currentIndex > idx ? 'bg-[#1D2B83]' : 'bg-slate-100'
+                  }`} />
               )}
             </React.Fragment>
           );
@@ -205,16 +209,16 @@ const BookingHistory = () => {
       {contextHolder}
       {modalContextHolder}
       <Navbar />
-      
-      <div className="max-w-[1440px] mx-auto px-6 pt-24 pb-20">
+
+      <div className="max-w-[1440px] mx-auto px-1 pt-8 pb-10">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-black text-slate-800 tracking-tight">My Bookings</h1>
           <div className="w-12 h-1 bg-[#1D2B83] mx-auto mt-2 rounded-full opacity-20" />
         </div>
 
         <div className="mb-8">
-          <Tabs 
-            activeKey={activeTab} 
+          <Tabs
+            activeKey={activeTab}
             onChange={setActiveTab}
             className="custom-tabs"
             items={[
@@ -261,7 +265,7 @@ const BookingHistory = () => {
               const subservice = booking.subservice_id || booking.service_id;
               const imageUrl = subservice?.image ? (subservice.image.startsWith('http') ? subservice.image : `${BACKEND_URL}${subservice.image}`) : null;
               const statusCfg = getStatusConfig(booking.status);
-              
+
               return (
                 <div key={booking._id} className="bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col h-full group">
                   {/* Header: Image, Title, Price */}
@@ -297,48 +301,53 @@ const BookingHistory = () => {
                       </Tag>
                     </div>
 
-                    {/* Service Details with Icons */}
-                    <div className="space-y-3 mb-5 py-4 border-y border-slate-50">
-                      <div className="flex items-center gap-3 text-slate-600">
-                        <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
-                          <Calendar size={14} />
-                        </div>
-                        <span className="text-xs font-bold">{new Date(booking.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-slate-600">
-                        <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
-                          <Clock size={14} />
-                        </div>
-                        <span className="text-xs font-bold">{booking.booking_time}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-slate-600">
-                        <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500">
-                          <MapPin size={14} />
-                        </div>
-                        <span className="text-xs font-bold truncate">{booking.address_id?.city || booking.address_id?.address_line?.split(',')[0] || 'Bangalore'}</span>
-                      </div>
+                    {/* Compact date / time / location row */}
+                    <div className="flex items-center gap-2 flex-wrap px-5 py-2.5 border-y border-slate-50 bg-slate-50/40 text-[11px] font-bold text-slate-500">
+                      <span className="flex items-center gap-1">
+                        <Calendar size={11} className="text-blue-400" />
+                        {new Date(booking.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                      <span className="text-slate-200">·</span>
+                      <span className="flex items-center gap-1">
+                        <Clock size={11} className="text-orange-400" />
+                        {booking.booking_time}
+                      </span>
+                      <span className="text-slate-200">·</span>
+                      <span className="flex items-center gap-1 truncate max-w-[90px]">
+                        <MapPin size={11} className="text-emerald-500 flex-shrink-0" />
+                        {booking.address_id?.city || booking.address_id?.address_line?.split(',')[0] || 'Bangalore'}
+                      </span>
                     </div>
 
-                    {/* Provider Info */}
-                    <div className="mt-auto flex items-center gap-3 bg-slate-50/80 p-3 rounded-2xl">
-                      <div className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                    {/* Provider Info — clickable */}
+                    <button
+                      onClick={() => {
+                        const p = booking.provider_id;
+                        if (p?.user_id?.name) setProviderModal({ open: true, provider: p });
+                      }}
+                      className={`mt-3 flex items-center gap-3 bg-slate-50 hover:bg-blue-50 border border-transparent hover:border-blue-100 p-3 rounded-2xl transition-all w-full text-left ${booking.provider_id?.user_id?.name ? 'cursor-pointer' : 'cursor-default'
+                        }`}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm flex-shrink-0">
                         <User size={14} className="text-slate-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">Service Provider</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-0.5">Service Provider</p>
                         <p className="text-xs font-black text-slate-700 truncate">
                           {booking.provider_id?.user_id?.name || 'Searching...'}
                         </p>
                       </div>
-                    </div>
+                      {booking.provider_id?.user_id?.name && (
+                        <ChevronRight size={14} className="text-slate-300 flex-shrink-0" />
+                      )}
+                    </button>
                   </div>
-
                   {/* Footer Actions */}
                   <div className="p-4 bg-slate-50/30 flex gap-2 border-t border-slate-100">
                     {['pending', 'accepted'].includes(booking.status) && (
-                      <Button 
-                        danger 
-                        type="text" 
+                      <Button
+                        danger
+                        type="text"
                         size="small"
                         className="flex-1 font-black text-[10px] uppercase tracking-widest h-10 rounded-xl hover:bg-red-50 transition-colors"
                         onClick={() => handleCancelBooking(booking._id)}
@@ -346,8 +355,8 @@ const BookingHistory = () => {
                         Cancel
                       </Button>
                     )}
-                    <Button 
-                      type="primary" 
+                    <Button
+                      type="primary"
                       size="small"
                       className="flex-1 bg-[#1D2B83] border-none font-black text-[10px] uppercase tracking-widest h-10 rounded-xl shadow-md shadow-blue-900/10"
                     >
@@ -372,18 +381,18 @@ const BookingHistory = () => {
         open={cancelModalVisible}
         onCancel={() => !isCancelling && setCancelModalVisible(false)}
         footer={[
-          <Button 
-            key="back" 
+          <Button
+            key="back"
             onClick={() => setCancelModalVisible(false)}
             disabled={isCancelling}
             className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-10"
           >
             Go Back
           </Button>,
-          <Button 
-            key="submit" 
-            danger 
-            type="primary" 
+          <Button
+            key="submit"
+            danger
+            type="primary"
             loading={isCancelling}
             onClick={submitCancellation}
             className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-10 px-6"
@@ -399,7 +408,7 @@ const BookingHistory = () => {
           <p className="text-slate-500 text-sm font-medium mb-6">
             We're sorry to see you cancel. Please let us know the reason for cancellation to help us improve our service.
           </p>
-          
+
           <div className="space-y-4">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block ml-1">
               Select Reason
@@ -416,11 +425,10 @@ const BookingHistory = () => {
                 <button
                   key={reason}
                   onClick={() => setCancelReason(reason)}
-                  className={`text-left px-4 py-3 rounded-xl border-2 transition-all text-xs font-bold ${
-                    cancelReason === reason 
-                    ? 'border-[#1D2B83] bg-blue-50 text-[#1D2B83]' 
+                  className={`text-left px-4 py-3 rounded-xl border-2 transition-all text-xs font-bold ${cancelReason === reason
+                    ? 'border-[#1D2B83] bg-blue-50 text-[#1D2B83]'
                     : 'border-slate-100 text-slate-500 hover:border-slate-200'
-                  }`}
+                    }`}
                 >
                   {reason}
                 </button>
@@ -443,6 +451,100 @@ const BookingHistory = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Provider Detail Modal — pure CSS */}
+      {providerModal.open && providerModal.provider && (() => {
+        const p = providerModal.provider;
+        const name = p?.user_id?.name ?? "Provider";
+        const phone = p?.user_id?.phone ?? null;
+        const lat = p?.current_location?.coordinates?.[1];
+        const lng = p?.current_location?.coordinates?.[0];
+        const mapsUrl = lat && lng
+          ? `https://www.google.com/maps?q=${lat},${lng}`
+          : `https://www.google.com/maps/search/${encodeURIComponent(name + " service provider")}`;
+
+        return (
+          <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center animate-in fade-in duration-200">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setProviderModal({ open: false, provider: null })}
+            />
+
+            {/* Panel */}
+            <div className="relative z-10 w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+              {/* Handle (mobile) */}
+              <div className="flex justify-center pt-3 pb-1 sm:hidden">
+                <div className="w-10 h-1 rounded-full bg-slate-200" />
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Service Provider</p>
+                <button
+                  onClick={() => setProviderModal({ open: false, provider: null })}
+                  className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all"
+                >
+                  <X size={14} className="text-slate-500" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="px-6 py-5 space-y-4">
+
+                {/* Avatar + name */}
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1D2B83] to-[#3b4cb8] flex items-center justify-center shadow-lg shadow-blue-900/20 flex-shrink-0">
+                    <span className="text-xl font-black text-white">{name.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div>
+                    <p className="text-base font-black text-slate-900">{name}</p>
+                    <p className="text-[11px] text-slate-400 font-medium mt-0.5">Verified FIXVO Provider</p>
+                  </div>
+                </div>
+
+                {/* Phone */}
+                {phone ? (
+                  <a href={`tel:${phone}`}
+                    className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl hover:bg-emerald-100 transition-all group"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-emerald-100 group-hover:bg-emerald-200 flex items-center justify-center flex-shrink-0 transition-all">
+                      <Phone size={16} className="text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-emerald-500 uppercase tracking-wider">Tap to Call</p>
+                      <p className="text-sm font-black text-emerald-800">{phone}</p>
+                    </div>
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl">
+                    <Phone size={16} className="text-slate-300" />
+                    <p className="text-sm font-bold text-slate-400">Phone not available yet</p>
+                  </div>
+                )}
+
+                {/* Track / Maps */}
+                <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-100 rounded-2xl hover:bg-blue-100 transition-all group"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-[#1D2B83]/10 group-hover:bg-[#1D2B83]/20 flex items-center justify-center flex-shrink-0 transition-all">
+                    <Navigation size={16} className="text-[#1D2B83]" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-blue-500 uppercase tracking-wider">
+                      {lat && lng ? "Track Live Location" : "Search on Maps"}
+                    </p>
+                    <p className="text-sm font-black text-blue-800">
+                      {lat && lng ? `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E` : "Open Google Maps →"}
+                    </p>
+                  </div>
+                </a>
+
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <style jsx global>{`
         .premium-modal .ant-modal-content {
