@@ -18,6 +18,7 @@ import {
   Settings
 } from "lucide-react";
 import { motion } from "framer-motion";
+import Cookies from "js-cookie";
 
 const menuItems = [
   { name: "Dashboard", icon: LayoutDashboard, href: "/provider/dashboard" },
@@ -141,6 +142,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             onClick={() => {
               localStorage.removeItem("token");
               localStorage.removeItem("user");
+              Cookies.remove("token");
+              Cookies.remove("userRole");
               window.location.href = "/login";
             }}
             className="w-full flex items-center gap-3 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-all text-[10px] font-bold uppercase tracking-widest"

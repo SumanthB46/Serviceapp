@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { API_URL } from "@/config/api";
 import { Button, Input, Form, message } from "antd";
+import axios from 'axios';
 
 interface LocationObject {
   _id: string;
@@ -70,8 +71,8 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   const fetchCities = async () => {
     try {
       setLoadingCities(true);
-      const response = await fetch(`${API_URL}/locations`);
-      const data = await response.json();
+      const response = await axios.get(`${API_URL}/locations`);
+      const data = response.data;
       if (Array.isArray(data)) {
         const cityList = data
           .filter((l: any) => l.type === 'city' && l.status === 'active')
@@ -88,12 +89,12 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   const fetchAddresses = async (token: string) => {
     try {
       setLoadingAddresses(true);
-      const response = await fetch(`${API_URL}/addresses`, {
+      const response = await axios.get(`${API_URL}/addresses`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      const data = await response.json();
+      const data = response.data;
       if (Array.isArray(data)) {
         setAddresses(data);
         if (data.length > 0) {
@@ -114,26 +115,23 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     if (!token) return;
 
     try {
-      const response = await fetch(`${API_URL}/addresses`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ ...values, is_default: addresses.length === 0 })
-      });
+      const response = await axios.post(`${API_URL}/addresses`, 
+        { ...values, is_default: addresses.length === 0 },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
 
-      if (response.ok) {
-        messageApi.success("Address added successfully");
-        setShowAddForm(false);
-        form.resetFields();
-        fetchAddresses(token);
-      } else {
-        const errorData = await response.json();
-        messageApi.error(errorData.message || "Failed to add address");
-      }
-    } catch (err) {
-      messageApi.error("Failed to add address");
+      messageApi.success("Address added successfully");
+      setShowAddForm(false);
+      form.resetFields();
+      fetchAddresses(token);
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || "Failed to add address";
+      messageApi.error(errorMsg);
     }
   };
 
@@ -168,13 +166,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
 
           if (isLoggedIn) {
             const token = localStorage.getItem("token");
-            await fetch(`${API_URL}/addresses`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({
+            await axios.post(`${API_URL}/addresses`, {
                 address_line: addressLine,
                 city: cityName,
                 state: state,
@@ -184,7 +176,11 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                   type: 'Point',
                   coordinates: [longitude, latitude]
                 }
-              })
+              }, {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
             });
             fetchAddresses(token!);
           }

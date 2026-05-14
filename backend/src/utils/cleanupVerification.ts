@@ -1,5 +1,5 @@
 import { Provider } from '../models/Provider';
-import { deleteFile } from './fileHelper';
+import { deleteFileFromCloud } from './fileHelper';
 import { connectDB } from '../config/db';
 import dotenv from 'dotenv';
 
@@ -17,10 +17,7 @@ export const cleanupExpiredDocs = async () => {
     const expiredProviders = await Provider.find({
       verification_docs_expiry: { $lt: new Date() },
       kyc_status: 'verified',
-      $or: [
-        { 'verification_docs.id_proof_url': { $ne: '' } },
-        { 'verification_docs.pan_url': { $ne: '' } }
-      ]
+      'verification_docs.id_proof_url': { $ne: '' }
     });
 
     console.log(`[CLEANUP] Found ${expiredProviders.length} providers with expired documents.`);
@@ -29,17 +26,16 @@ export const cleanupExpiredDocs = async () => {
       console.log(`[CLEANUP] Purging documents for Provider: ${provider._id}`);
       
       // 1. Delete physical files
-      if (provider.verification_docs?.id_proof_url) {
-        deleteFile(provider.verification_docs.id_proof_url);
-      }
-      if (provider.verification_docs?.pan_url) {
-        deleteFile(provider.verification_docs.pan_url);
+      if (provider.verification_docs?.public_id) {
+        await deleteFileFromCloud(provider.verification_docs.public_id, provider.verification_docs.resource_type);
+      } else if (provider.verification_docs?.id_proof_url) {
+        // Fallback for older records
+        await deleteFileFromCloud(provider.verification_docs.id_proof_url);
       }
 
       // 2. Clear URLs in database to reclaim storage
       provider.verification_docs = {
-        id_proof_url: '',
-        pan_url: ''
+        id_proof_url: ''
       };
 
       await provider.save();

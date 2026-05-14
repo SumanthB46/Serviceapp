@@ -20,6 +20,7 @@ import {
   User
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Cookies from 'js-cookie';
 
 const sidebarLinks = [
   { icon: Briefcase, label: "Services", href: "/home" },
@@ -55,6 +56,8 @@ const CustomerSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const handleSignOut = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    Cookies.remove('token');
+    Cookies.remove('userRole');
     window.location.href = '/login';
   };
 

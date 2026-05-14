@@ -1,6 +1,6 @@
 import React from 'react';
-import OffersRegistry from '../../../components/admin/offers/OffersRegistry';
+import OffersManagement from '../../../components/admin/offers/OffersManagement';
 
 export default function OffersPage() {
-  return <OffersRegistry />;
+  return <OffersManagement />;
 }

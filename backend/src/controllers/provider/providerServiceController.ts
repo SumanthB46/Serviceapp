@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ProviderService } from '../../models/ProviderService';
 import { AuthRequest } from '../../middleware/authMiddleware';
 import mongoose from 'mongoose';
+import { saveFileToCloud } from '../../utils/fileHelper';
 
 // @desc    Add service to provider profile
 // @route   POST /api/provider-services
@@ -24,15 +25,47 @@ export const addProviderService = async (
       is_available
     } = req.body;
 
+    if (experience === undefined || experience === null) {
+      res.status(400).json({ message: 'Experience is required.' });
+      return;
+    }
+
+    if (!price) {
+      res.status(400).json({ message: 'Price is required.' });
+      return;
+    }
+
+    // Process documents to Cloudinary
+    const processedDocs = [];
+    if (Array.isArray(documents)) {
+      for (const doc of documents) {
+        if (doc.file_url && doc.file_url.startsWith('data:')) {
+          const cloudRes = await saveFileToCloud(doc.file_url, 'services/docs');
+          if (typeof cloudRes === 'object') {
+            processedDocs.push({ 
+              ...doc, 
+              file_url: cloudRes.secure_url,
+              public_id: cloudRes.public_id,
+              resource_type: cloudRes.resource_type
+            });
+          } else {
+            processedDocs.push({ ...doc, file_url: cloudRes });
+          }
+        } else {
+          processedDocs.push(doc);
+        }
+      }
+    }
+
     const providerService = await ProviderService.create({
       provider_id: new mongoose.Types.ObjectId(provider_id as string),
-      experience: experience || 0,
-      price: price || 0,
+      experience,
+      price,
       discount: discount || 0,
-      final_price: final_price || price || 0,
+      final_price: final_price || price,
       location_ids: location_ids || [],
       subservice_ids: subservice_ids || [],
-      documents: documents || [],
+      documents: processedDocs,
       is_featured: is_featured || false,
       is_available: is_available ?? true,
       is_active: true,

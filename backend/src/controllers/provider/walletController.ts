@@ -8,7 +8,18 @@ import { Provider } from '../../models/Provider';
 // @access  Private/Provider
 export const getMyWallet = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const provider = await Provider.findOne({ user_id: req.user?._id });
+    let provider = await Provider.findOne({ user_id: req.user?._id });
+    
+    // Auto-create provider profile if missing but user has provider role
+    if (!provider && req.user?.role === 'provider') {
+      provider = await Provider.create({
+        user_id: req.user._id,
+        availability_status: 'offline',
+        kyc_status: 'pending',
+        is_verified: false,
+      });
+    }
+
     if (!provider) {
       res.status(404).json({ message: 'Provider profile not found' });
       return;
@@ -37,8 +48,18 @@ export const getMyWallet = async (req: AuthRequest, res: Response): Promise<void
 export const withdrawMoney = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { amount } = req.body;
-    const provider = await Provider.findOne({ user_id: req.user?._id });
+    let provider = await Provider.findOne({ user_id: req.user?._id });
     
+    // Auto-create provider profile if missing but user has provider role
+    if (!provider && req.user?.role === 'provider') {
+      provider = await Provider.create({
+        user_id: req.user._id,
+        availability_status: 'offline',
+        kyc_status: 'pending',
+        is_verified: false,
+      });
+    }
+
     if (!provider) {
       res.status(404).json({ message: 'Provider profile not found' });
       return;

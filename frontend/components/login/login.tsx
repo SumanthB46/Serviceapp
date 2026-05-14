@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import { API_URL } from '@/config/api';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import Cookies from 'js-cookie';
 
 interface LoginFormProps {
     isModal?: boolean;
@@ -61,6 +62,10 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
                 message.success("Login successful!");
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("user", JSON.stringify(data));
+                
+                // Set cookies for middleware protection
+                Cookies.set('token', data.token, { expires: 7 }); // Expires in 7 days
+                Cookies.set('userRole', data.role, { expires: 7 });
 
                 if (onSuccess) {
                     onSuccess();
@@ -137,6 +142,10 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
             localStorage.setItem("token", data.user.token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
+            // Set cookies for middleware protection
+            Cookies.set('token', data.user.token, { expires: 7 });
+            Cookies.set('userRole', data.user.role, { expires: 7 });
+
             if (onSuccess) {
                 onSuccess();
             } else {
@@ -147,7 +156,9 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
                         router.push("/signup/customer");
                     }
                 } else {
-                    if (data.user.role === "provider") {
+                    if (data.user.role === "admin") {
+                        router.push("/admin/dashboard");
+                    } else if (data.user.role === "provider") {
                         router.push("/provider/dashboard");
                     } else {
                         router.push("/");
@@ -410,6 +421,17 @@ const LoginComponent = () => {
             <App>
                 <main className="min-h-screen bg-[#FCF8FF] flex flex-col">
                     <div className="flex-grow flex items-center justify-center px-4 sm:px-6 py-12 sm:py-24 relative overflow-hidden">
+                        {/* Back to Home Button */}
+                        <div className="absolute top-8 left-8 z-50">
+                            <Link 
+                                href="/" 
+                                className="group flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-100 rounded-2xl text-xs font-bold text-slate-600 hover:text-indigo-600 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/10 transition-all active:scale-95"
+                            >
+                                <ArrowLeftOutlined className="text-sm group-hover:-translate-x-1 transition-transform" />
+                                Back to Home
+                            </Link>
+                        </div>
+
                         <div className="absolute top-0 right-0 -z-10 translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-blue-100/40 rounded-full blur-3xl opacity-60" />
                         <div className="absolute bottom-0 left-0 -z-10 -translate-x-1/2 translate-y-1/2 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-indigo-50/50 rounded-full blur-3xl opacity-60" />
                         

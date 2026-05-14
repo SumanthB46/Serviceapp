@@ -16,7 +16,7 @@ import PaymentSummary from "./PaymentSummary";
 import AddressModal from "../profile/AddressModal";
 import CheckoutSummaryModal from "./CheckoutSummaryModal";
 import PaymentGatewayModal from "./PaymentGatewayModal";
-import PaymentSuccessModal from "./PaymentSuccessModal";
+import CelebrationModal from "@/components/common/CelebrationModal";
 import { useRouter } from "next/navigation";
 
 
@@ -270,10 +270,14 @@ export default function CartClient() {
         amount={finalTotal}
       />
 
-      <PaymentSuccessModal
-        isOpen={isSuccessModalOpen}
+      <CelebrationModal
+        open={isSuccessModalOpen}
         onClose={handleFinalSuccess}
-        bookingDetails={lastBookingDetails}
+        title={paymentMethod === "online" ? "Payment Successful!" : "Booking Confirmed!"}
+        subtitle={paymentMethod === "online" 
+          ? "Your payment was processed and your service is scheduled." 
+          : "Your service has been booked successfully via Cash on Delivery."
+        }
       />
     </div>
   );

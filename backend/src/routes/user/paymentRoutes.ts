@@ -1,8 +1,10 @@
 import express from 'express';
-import { processPayment, getPaymentByBooking, getAllPayments } from '../../controllers/user/paymentController';
+import { processPayment, getPaymentByBooking, getAllPayments, getMyPayments } from '../../controllers/user/paymentController';
 import { protect, admin } from '../../middleware/authMiddleware';
 
 const router = express.Router();
+
+router.get('/my', protect, getMyPayments);
 
 router.route('/')
   .get(protect, admin, getAllPayments)
@@ -11,6 +13,3 @@ router.route('/')
 router.get('/:bookingId', protect, getPaymentByBooking);
 
 export default router;
-
-
-

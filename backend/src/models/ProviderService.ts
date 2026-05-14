@@ -3,6 +3,8 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 interface IDocument {
   doc_type: string;
   file_url: string;
+  public_id?: string;
+  resource_type?: string;
   uploaded_at: Date;
 }
 
@@ -15,6 +17,7 @@ export interface IProviderService extends Document {
   final_price: number;
   subservice_ids: Types.ObjectId[];
   documents: IDocument[];
+  documents_expiry?: Date;
   is_featured: boolean;
   is_available: boolean;
   is_active: boolean;
@@ -27,6 +30,8 @@ const documentSchema = new Schema<IDocument>(
   {
     doc_type: { type: String, required: true },
     file_url: { type: String, required: true },
+    public_id: { type: String },
+    resource_type: { type: String },
     uploaded_at: { type: Date, default: Date.now },
   },
   { _id: false }
@@ -48,12 +53,10 @@ const providerServiceSchema = new Schema<IProviderService>(
     experience: {
       type: Number,
       required: true,
-      default: 0,
     },
     price: {
       type: Number,
       required: true,
-      default: 0,
     },
     discount: {
       type: Number,
@@ -62,7 +65,6 @@ const providerServiceSchema = new Schema<IProviderService>(
     final_price: {
       type: Number,
       required: true,
-      default: 0,
     },
     subservice_ids: [
       {
@@ -73,6 +75,9 @@ const providerServiceSchema = new Schema<IProviderService>(
     documents: {
       type: [documentSchema],
       default: [],
+    },
+    documents_expiry: {
+      type: Date,
     },
     is_featured: {
       type: Boolean,

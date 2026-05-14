@@ -9,17 +9,19 @@ const ContactForm = () => {
     const [formState, setFormState] = useState({
         name: '',
         email: '',
+        phone: '',
+        subject: '',
         message: '',
     });
+
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const [focusedField, setFocusedField] = useState<string | null>(null);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitted(true);
         setTimeout(() => {
             setIsSubmitted(false);
-            setFormState({ name: '', email: '', message: '' });
+            setFormState({ name: '', email: '', phone: '', subject: '', message: '' });
         }, 3000);
     };
 
@@ -28,117 +30,129 @@ const ContactForm = () => {
             ref={reveal.ref}
             className={`scroll-hidden ${reveal.isVisible ? 'scroll-visible' : ''}`}
         >
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-black/[0.04] p-8 md:p-10">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
-                    Send a Message
-                </h2>
+            <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-blue-500/5 p-8 md:p-10 h-full flex flex-col">
+                <div className="flex-grow">
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-8 text-center">
+                        Send a Message
+                    </h2>
 
-                {isSubmitted ? (
-                    <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in-up">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center mb-5 shadow-lg shadow-green-200">
-                            <CheckCircle size={32} className="text-white" />
+                    {isSubmitted ? (
+                        <div className="flex flex-col items-center justify-center py-20 text-center">
+                            <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-6">
+                                <CheckCircle size={32} className="text-blue-600" />
+                            </div>
+                            <h3 className="text-xl font-black text-slate-900 mb-2">
+                                Message Sent!
+                            </h3>
+                            <p className="text-slate-500 text-xs font-medium">
+                                We'll get back to you within 24 hours.
+                            </p>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">
-                            Message Sent!
-                        </h3>
-                        <p className="text-gray-500">
-                            We&apos;ll get back to you within 24 hours.
-                        </p>
-                    </div>
-                ) : (
-                    <form onSubmit={handleSubmit} className="space-y-7">
-                        {/* Name Field */}
-                        <div className="relative">
-                            <label
-                                htmlFor="contact-name"
-                                className={`absolute left-0 transition-all duration-300 pointer-events-none ${
-                                    focusedField === 'name' || formState.name
-                                        ? '-top-5 text-xs font-semibold text-indigo-600 tracking-wide'
-                                        : 'top-3 text-sm text-gray-400'
-                                }`}
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            {/* Name Field */}
+                            <div className="space-y-1.5">
+                                <label htmlFor="contact-name" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                    Full Name
+                                </label>
+                                <input
+                                    id="contact-name"
+                                    type="text"
+                                    required
+                                    placeholder="e.g. John Doe"
+                                    value={formState.name}
+                                    onChange={(e) => setFormState({ ...formState, name: e.target.value })}
+                                    className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 placeholder-slate-300 focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition-all"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {/* Email Field */}
+                                <div className="space-y-1.5">
+                                    <label htmlFor="contact-email" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                        Email Address
+                                    </label>
+                                    <input
+                                        id="contact-email"
+                                        type="email"
+                                        required
+                                        placeholder="name@example.com"
+                                        value={formState.email}
+                                        onChange={(e) => setFormState({ ...formState, email: e.target.value })}
+                                        className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 placeholder-slate-300 focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition-all"
+                                    />
+                                </div>
+
+                                {/* Phone Field */}
+                                <div className="space-y-1.5">
+                                    <label htmlFor="contact-phone" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                        Phone Number
+                                    </label>
+                                    <input
+                                        id="contact-phone"
+                                        type="tel"
+                                        required
+                                        placeholder="+1 (555) 000-0000"
+                                        value={formState.phone}
+                                        onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
+                                        className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 placeholder-slate-300 focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Subject Field */}
+                            <div className="space-y-1.5">
+                                <label htmlFor="contact-subject" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                    Subject
+                                </label>
+                                <input
+                                    id="contact-subject"
+                                    type="text"
+                                    required
+                                    placeholder="How can we help you?"
+                                    value={formState.subject}
+                                    onChange={(e) => setFormState({ ...formState, subject: e.target.value })}
+                                    className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 placeholder-slate-300 focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition-all"
+                                />
+                            </div>
+
+                            {/* Message Field */}
+                            <div className="space-y-1.5">
+                                <label htmlFor="contact-message" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                    Message
+                                </label>
+                                <textarea
+                                    id="contact-message"
+                                    required
+                                    rows={4}
+                                    placeholder="Tell us about your project..."
+                                    value={formState.message}
+                                    onChange={(e) => setFormState({ ...formState, message: e.target.value })}
+                                    className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 placeholder-slate-300 focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition-all resize-none"
+                                />
+                            </div>
+
+                            {/* Submit Button */}
+                            <button
+                                type="submit"
+                                className="w-full group relative inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-4 rounded-2xl font-black text-[10px] tracking-widest uppercase shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
                             >
-                                Name
-                            </label>
-                            <input
-                                id="contact-name"
-                                type="text"
-                                required
-                                value={formState.name}
-                                onFocus={() => setFocusedField('name')}
-                                onBlur={() => setFocusedField(null)}
-                                onChange={(e) =>
-                                    setFormState({ ...formState, name: e.target.value })
-                                }
-                                className="w-full pt-3 pb-3 bg-transparent border-b-2 border-gray-200 focus:border-indigo-500 outline-none transition-colors duration-300 text-gray-900"
-                            />
-                        </div>
+                                <span>SUBMIT INQUIRY</span>
+                                <Send size={14} strokeWidth={2.5} className="group-hover:translate-x-1 transition-transform" />
+                            </button>
+                        </form>
+                    )}
+                </div>
 
-                        {/* Email Field */}
-                        <div className="relative">
-                            <label
-                                htmlFor="contact-email"
-                                className={`absolute left-0 transition-all duration-300 pointer-events-none ${
-                                    focusedField === 'email' || formState.email
-                                        ? '-top-5 text-xs font-semibold text-indigo-600 tracking-wide'
-                                        : 'top-3 text-sm text-gray-400'
-                                }`}
-                            >
-                                Email
-                            </label>
-                            <input
-                                id="contact-email"
-                                type="email"
-                                required
-                                value={formState.email}
-                                onFocus={() => setFocusedField('email')}
-                                onBlur={() => setFocusedField(null)}
-                                onChange={(e) =>
-                                    setFormState({ ...formState, email: e.target.value })
-                                }
-                                className="w-full pt-3 pb-3 bg-transparent border-b-2 border-gray-200 focus:border-indigo-500 outline-none transition-colors duration-300 text-gray-900"
-                            />
-                        </div>
-
-                        {/* Message Field */}
-                        <div className="relative">
-                            <label
-                                htmlFor="contact-message"
-                                className={`absolute left-0 transition-all duration-300 pointer-events-none ${
-                                    focusedField === 'message' || formState.message
-                                        ? '-top-5 text-xs font-semibold text-indigo-600 tracking-wide'
-                                        : 'top-3 text-sm text-gray-400'
-                                }`}
-                            >
-                                Message
-                            </label>
-                            <textarea
-                                id="contact-message"
-                                required
-                                rows={4}
-                                value={formState.message}
-                                onFocus={() => setFocusedField('message')}
-                                onBlur={() => setFocusedField(null)}
-                                onChange={(e) =>
-                                    setFormState({ ...formState, message: e.target.value })
-                                }
-                                className="w-full pt-3 pb-3 bg-transparent border-b-2 border-gray-200 focus:border-indigo-500 outline-none transition-colors duration-300 text-gray-900 resize-none"
-                            />
-                        </div>
-
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            className="group relative inline-flex items-center gap-3 bg-gradient-to-r from-[#15157D] to-[#2E3192] text-white px-8 py-3.5 rounded-lg font-bold text-sm tracking-widest uppercase shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
-                        >
-                            <span>SUBMIT INQUIRY</span>
-                            {/* <Send
-                                size={16} 
-                                strokeWidth={2.5}
-                                className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"
-                            /> */}
-                        </button>
-                    </form>
-                )}
+                {/* Bottom Image to Fill All Remaining Space */}
+                <div className="relative overflow-hidden rounded-2xl min-h-[280px] flex-grow group">
+                    <img
+                        src="https://images.pexels.com/photos/34432794/pexels-photo-34432794.jpeg"
+                        alt="Architectural detail"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-transparent pointer-events-none" />
+                </div>
             </div>
         </div>
     );

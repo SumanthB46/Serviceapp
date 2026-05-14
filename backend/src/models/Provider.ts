@@ -21,7 +21,8 @@ export interface IProvider extends Document {
   
   verification_docs?: {
     id_proof_url: string;
-    pan_url?: string;
+    public_id?: string;
+    resource_type?: string;
   };
   kyc_rejection_reason?: string;
   verified_at?: Date;
@@ -72,7 +73,8 @@ const providerSchema = new Schema<IProvider>(
     },
     verification_docs: {
       id_proof_url: { type: String, trim: true },
-      pan_url: { type: String, trim: true },
+      public_id: { type: String, trim: true },
+      resource_type: { type: String, trim: true },
     },
     kyc_rejection_reason: { type: String },
     verified_at: { type: Date },

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import CustomerSidebar from './CustomerSidebar';
 import CustomerHeader from './CustomerHeader';
+import Cookies from 'js-cookie';
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,6 +41,8 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
     } catch (err) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      Cookies.remove('token');
+      Cookies.remove('userRole');
       router.push('/login');
     }
   }, [router]);

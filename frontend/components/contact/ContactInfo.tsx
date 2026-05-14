@@ -31,39 +31,50 @@ const ContactInfo = () => {
     return (
         <div
             ref={reveal.ref}
-            className={`space-y-8 scroll-hidden ${reveal.isVisible ? 'scroll-visible' : ''}`}
+            className={`space-y-4 scroll-hidden ${reveal.isVisible ? 'scroll-visible' : ''}`}
         >
-            {/* Info Card */}
-        <div className="bg-[#F5F2FB] backdrop-blur-xl rounded-3xl border border-gray-100 shadow-lg shadow-black/[0.03] p-8 md:p-10">
-                <div className="space-y-8">
-                    {contactDetails.map(({ icon: Icon, label, lines, color }) => (
-                        <div key={label} className="flex items-start gap-5 group">
-                            <div className={`flex-shrink-0 w-12 h-12 rounded-2xl bg-[#E1E0FF] flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                            <Icon size={20} className="text-[#15157D]" strokeWidth={2} />
-                            </div>
-                            <div>
-                                <p className="text-xs font-bold text-[#15157D] tracking-[0.15em] uppercase mb-1.5">
-                                    {label}
-                                </p>
-                                {lines.map((line) => (
-                                    <p key={line} className="text-gray-600 text-[15px] leading-relaxed">
-                                        {line}
-                                    </p>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+            {/* Separate Info Cards */}
+            {contactDetails.map(({ icon: Icon, label, lines }) => (
+                <div key={label} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-blue-500/5 p-6 transition-all duration-300 hover:shadow-blue-500/10 group flex items-start gap-6">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center transition-all duration-300 group-hover:bg-blue-600 group-hover:scale-110">
+                        <Icon size={20} className="text-blue-600 transition-colors group-hover:text-white" strokeWidth={2.5} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-blue-600 tracking-widest uppercase mb-1">
+                            {label}
+                        </p>
+                        {lines.map((line) => (
+                            <p key={line} className="text-slate-600 text-sm font-bold leading-relaxed">
+                                {line}
+                            </p>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            ))}
 
-            {/* Architecture Image */}
-            <div className="relative overflow-hidden rounded-3xl shadow-lg shadow-black/[0.06] group">
-                <img
-                    src="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80&auto=format&fit=crop"
-                    alt="Modern architectural building"
-                    className="w-full h-56 md:h-64 object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+            {/* Architectural Gallery Grid */}
+            <div className="grid grid-cols-2 gap-3 mt-2">
+                {[
+                    "https://images.pexels.com/photos/9461213/pexels-photo-9461213.jpeg",
+                    "https://images.pexels.com/photos/18194839/pexels-photo-18194839.jpeg",
+                    "https://images.pexels.com/photos/36842620/pexels-photo-36842620.jpeg",
+                    "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80&auto=format&fit=crop"
+                ].map((src, idx) => (
+                    <div key={idx} className="relative overflow-hidden rounded-3xl shadow-lg shadow-blue-500/5 group aspect-square">
+                        <img
+                            src={src}
+                            alt={`Architecture detail ${idx + 1}`}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        {idx === 3 && (
+                            <div className="absolute bottom-4 left-4 text-white">
+                                <p className="text-[8px] font-black tracking-widest uppercase mb-0.5 opacity-80">Our Vision</p>
+                                <p className="text-xs font-black tracking-tight">Curating Spaces.</p>
+                            </div>
+                        )}
+                    </div>
+                ))}
             </div>
         </div>
     );

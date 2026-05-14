@@ -29,14 +29,19 @@ export default function EarningsPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token") || localStorage.getItem("jwt");
+      console.log("[DEBUG] API_URL:", `${API_URL}`);
+      console.log("[DEBUG] token:", token ? "present" : "MISSING");
       const [walletRes, profileRes] = await Promise.all([
         axios.get(`${API_URL}/wallets/me`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API_URL}/providers/me`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setWallet(walletRes.data);
       setProfile(profileRes.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching earnings data:", error);
+      console.error("[DEBUG] Failed URL:", error?.config?.url);
+      console.error("[DEBUG] Status:", error?.response?.status);
+      console.error("[DEBUG] Response:", error?.response?.data);
     } finally {
       setLoading(false);
     }
