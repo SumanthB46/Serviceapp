@@ -4,20 +4,35 @@ import React from 'react';
 import Badge from '../common/Badge';
 
 interface StatusBadgeProps {
-  status: 'Confirmed' | 'Pending' | 'Completed' | 'Cancelled';
+  status: string;
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-  const variants = {
-    Confirmed: 'info',
-    Pending: 'warning',
-    Completed: 'success',
-    Cancelled: 'danger',
-  } as const;
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status = '' }) => {
+  const s = status.toLowerCase();
+  
+  const variants: Record<string, 'info' | 'warning' | 'success' | 'danger' | 'primary'> = {
+    pending: 'warning',
+    accepted: 'info',
+    confirmed: 'info',
+    in_progress: 'primary',
+    completed: 'success',
+    cancelled: 'danger',
+    rejected: 'danger',
+  };
+
+  const labels: Record<string, string> = {
+    pending: 'Pending',
+    accepted: 'Accepted',
+    confirmed: 'Confirmed',
+    in_progress: 'In Progress',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+    rejected: 'Rejected',
+  };
 
   return (
-    <Badge variant={variants[status]} size="sm" rounded>
-      {status}
+    <Badge variant={variants[s] || 'info'} size="sm" rounded>
+      {labels[s] || status}
     </Badge>
   );
 };

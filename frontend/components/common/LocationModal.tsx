@@ -57,10 +57,11 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token && token !== "null" && token !== "undefined");
+    const validToken = token && token !== "null" && token !== "undefined" && token.trim() !== "";
+    setIsLoggedIn(!!validToken);
     
-    if (token && token !== "null" && token !== "undefined") {
-      fetchAddresses(token);
+    if (validToken) {
+      fetchAddresses(token.trim());
     }
   }, [isOpen]);
 
@@ -101,8 +102,15 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
           setActiveTab("addresses");
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to fetch addresses", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setIsLoggedIn(false);
+        setAddresses([]);
+        window.location.reload();
+      }
     } finally {
       setLoadingAddresses(false);
     }
@@ -377,13 +385,38 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                       </motion.div>
                     ) : (
                       <>
-                        <button
-                          onClick={() => setShowAddForm(true)}
-                          className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#1D2B83]/30 hover:bg-slate-50 transition-all text-[#1D2B83] font-bold text-sm"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Add New Address
-                        </button>
+                        <div className="grid grid-cols-1 gap-3">
+                          <button
+                            onClick={handleGetCurrentLocation}
+                            disabled={isLocating}
+                            className="w-full flex items-center gap-4 p-4 rounded-2xl bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 transition-all group"
+                          >
+                            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                              {isLocating ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                              ) : (
+                                <Navigation className="w-5 h-5" />
+                              )}
+                            </div>
+                            <div className="flex-1 text-left">
+                              <p className="font-bold text-sm">
+                                Use my current location
+                              </p>
+                              <p className="text-[10px] opacity-70 font-bold uppercase tracking-wide">
+                                Detect live GPS coordinates
+                              </p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 opacity-50" />
+                          </button>
+
+                          <button
+                            onClick={() => setShowAddForm(true)}
+                            className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#1D2B83]/30 hover:bg-slate-50 transition-all text-[#1D2B83] font-bold text-sm"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Enter Address Manually
+                          </button>
+                        </div>
 
                         <div className="space-y-3">
                           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">

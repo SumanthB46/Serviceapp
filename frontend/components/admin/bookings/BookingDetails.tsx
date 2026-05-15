@@ -4,7 +4,6 @@ import React from 'react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
 import StatusBadge from './StatusBadge';
-import { Booking } from '../types';
 import { User, Briefcase, Calendar, DollarSign, Hash } from 'lucide-react';
 
 interface BookingDetailsProps {
@@ -19,9 +18,9 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
     { icon: Hash,       label: 'Booking ID', value: booking._id ? String(booking._id).slice(-6).toUpperCase() : '' },
     { icon: User,       label: 'Customer',   value: booking.user_id?.name || 'Unknown' },
     { icon: Briefcase,  label: 'Provider',   value: booking.provider_id?.user_id?.name || 'Unassigned' },
-    { icon: Briefcase,  label: 'Service',    value: booking.service_id?.service_name || 'N/A' },
-    { icon: Calendar,   label: 'Date',       value: `${new Date(booking.booking_date).toLocaleDateString()} ${booking.time_slot || ''}` },
-    { icon: DollarSign, label: 'Amount',     value: `₹${booking.total_amount}` },
+    { icon: Briefcase,  label: 'Service',    value: booking.subservice_id?.service_id?.service_name || booking.subservice_id?.name || 'N/A' },
+    { icon: Calendar,   label: 'Date',       value: `${booking.scheduled_at ? new Date(booking.scheduled_at).toLocaleDateString() : 'N/A'} ${booking.booking_time || ''}` },
+    { icon: DollarSign, label: 'Amount',     value: `₹${booking.payable_amount || booking.service_price || 0}` },
   ];
 
   return (
@@ -37,7 +36,7 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ booking, onClose }) => 
           <p className="text-xs text-gray-500 font-medium mb-1">Status</p>
           <StatusBadge status={booking.status} />
         </div>
-        <span className="text-2xl font-bold text-gray-900">₹{booking.total_amount}</span>
+        <span className="text-2xl font-bold text-gray-900">₹{booking.payable_amount || booking.service_price || 0}</span>
       </div>
 
       <div className="space-y-3">

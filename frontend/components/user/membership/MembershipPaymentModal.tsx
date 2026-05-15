@@ -93,7 +93,7 @@ const MembershipPaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, 
           </button>
         </div>
 
-        <div className="p-8 overflow-y-auto max-h-[70vh] custom-scrollbar">
+        <div className="p-8 overflow-y-auto max-h-[85vh] no-scrollbar">
           <AnimatePresence mode="wait">
             {step === 1 ? (
               <motion.div
@@ -287,15 +287,12 @@ const MembershipPaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, 
       </motion.div>
 
       <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #f1f5f9;
-          border-radius: 10px;
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>

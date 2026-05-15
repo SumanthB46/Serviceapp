@@ -74,30 +74,53 @@ export default function BookingsPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token") || localStorage.getItem("jwt");
-      const response = await axios.get(`${API_URL}/bookings/my`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
       
-      // Map backend data to UI format
-      const mappedBookings = response.data.map((b: any) => ({
-        id: b.booking_id,
-        _id: b._id,
-        customer: b.customer_id?.name || "Unknown Customer",
-        service: b.service_id?.category_id?.category_name || "General Service",
-        dateTime: new Date(b.scheduled_at).toLocaleString('en-IN', {
+      const [bookingsRes, requestsRes] = await Promise.all([
+        axios.get(`${API_URL}/bookings/my`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/providers/job-requests`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      
+      // Map requests to booking format
+      const mappedRequests = requestsRes.data.map((r: any) => ({
+        id: r.display_id || r.booking_id?.booking_id || "NEW JOB",
+        _id: r._id,
+        booking_id_raw: r.booking_id?._id,
+        isRequest: true,
+        customer: r.booking_id?.user_id?.name || "Customer",
+        service: r.service_name || "Service",
+        dateTime: new Date(r.scheduled_at).toLocaleString('en-IN', {
           day: 'numeric',
           month: 'short',
           hour: '2-digit',
           minute: '2-digit'
         }),
-        address: `${b.location.address}, ${b.location.city}, ${b.location.pincode}`,
+        address: r.location?.address || r.booking_id?.address_id?.address_line || "Address",
+        amount: `₹${r.amount}`,
+        status: "Pending",
+        phone: r.booking_id?.user_id?.phone || "N/A",
+        avatar: r.booking_id?.user_id?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.booking_id?.user_id?.name || 'Customer'}`
+      }));
+
+      // Map backend data to UI format
+      const mappedBookings = bookingsRes.data.map((b: any) => ({
+        id: b.booking_id,
+        _id: b._id,
+        customer: b.user_id?.name || "Customer",
+        service: b.subservice_id?.service_id?.service_name || b.subservice_id?.subservice_name || "General Service",
+        dateTime: b.scheduled_at ? new Date(b.scheduled_at).toLocaleString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : "N/A",
+        address: b.address_id ? `${b.address_id.address_line}, ${b.address_id.city}` : "Address not available",
         amount: `₹${b.payable_amount}`,
         status: b.status.charAt(0).toUpperCase() + b.status.slice(1).replace('_', ' '),
-        phone: b.customer_id?.phone || "N/A",
-        avatar: b.customer_id?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.customer_id?.name || 'Customer'}`
+        phone: b.user_id?.phone || "N/A",
+        avatar: b.user_id?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.user_id?.name || 'Customer'}`
       }));
       
-      setBookings(mappedBookings);
+      setBookings([...mappedRequests, ...mappedBookings]);
     } catch (error) {
       console.error("Error fetching bookings:", error);
     } finally {
@@ -105,16 +128,29 @@ export default function BookingsPage() {
     }
   };
 
-  const handleUpdateStatus = async (id: string, newStatus: string) => {
+  const handleUpdateStatus = async (id: string, newStatus: string, isRequest?: boolean) => {
     try {
       const token = localStorage.getItem("token") || localStorage.getItem("jwt");
-      await axios.put(`${API_URL}/bookings/${id}/status`, 
-        { status: newStatus.toLowerCase().replace(' ', '_') },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      
+      if (isRequest) {
+        if (newStatus === "Accepted") {
+          await axios.post(`${API_URL}/providers/job-requests/${id}/accept`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } else if (newStatus === "Rejected") {
+          await axios.post(`${API_URL}/providers/job-requests/${id}/reject`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        }
+      } else {
+        await axios.put(`${API_URL}/bookings/${id}/status`, 
+          { status: newStatus.toLowerCase().replace(' ', '_') },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
       fetchBookings(); // Refresh list
-    } catch (error) {
-      console.error("Error updating booking status:", error);
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Error updating booking status");
     }
   };
 
@@ -144,6 +180,7 @@ export default function BookingsPage() {
         isOpen={!!selectedBooking} 
         onClose={() => setSelectedBooking(null)} 
         booking={selectedBooking} 
+        onUpdateStatus={handleUpdateStatus}
       />
       <div className="space-y-8">
         {/* Header */}
@@ -313,14 +350,14 @@ export default function BookingsPage() {
                       {booking.status === "Pending" ? (
                         <>
                           <button 
-                            onClick={() => handleUpdateStatus(booking._id, "Accepted")}
+                            onClick={() => handleUpdateStatus(booking._id, "Accepted", booking.isRequest)}
                             className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
                           >
                             <Check className="h-4 w-4" />
                             Accept
                           </button>
                           <button 
-                            onClick={() => handleUpdateStatus(booking._id, "Rejected")}
+                            onClick={() => handleUpdateStatus(booking._id, "Rejected", booking.isRequest)}
                             className="p-2.5 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition-all border border-rose-100"
                           >
                             <X className="h-4 w-4" />

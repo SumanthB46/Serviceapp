@@ -45,6 +45,8 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
     const onFinishPassword = async (values: any) => {
         try {
             setLoading(true);
+            console.log(`[AUTH] Attempting login at: ${API_URL}/users/login`);
+            
             const response = await fetch(`${API_URL}/users/login`, {
                 method: "POST",
                 headers: {
@@ -59,7 +61,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
             const data = await response.json();
 
             if (response.ok) {
-                message.success("Login successful!");
+                message?.success("Login successful!");
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("user", JSON.stringify(data));
                 
@@ -70,20 +72,28 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
                 if (onSuccess) {
                     onSuccess();
                 } else {
-                    if (data.role === "admin") {
+                    if (data.role?.toLowerCase() === "admin") {
                         router.push("/admin/dashboard");
-                    } else if (data.role === "provider") {
+                    } else if (data.role?.toLowerCase() === "provider") {
                         router.push("/provider/dashboard");
                     } else {
                         router.push("/");
                     }
                 }
             } else {
-                message.error(data.message || "Login failed");
+                message?.error(data.message || "Login failed");
             }
-        } catch (error) {
-            console.error("Login error:", error);
-            message.error("Something went wrong. Please try again.");
+        } catch (error: any) {
+            console.error("Login error details:", error);
+            const errorMsg = error.message === "Failed to fetch" 
+                ? "Cannot connect to server. Please ensure the backend is running at " + API_URL 
+                : "Something went wrong. Please try again.";
+            
+            if (message) {
+                message.error(errorMsg);
+            } else {
+                alert(errorMsg);
+            }
         } finally {
             setLoading(false);
         }
@@ -95,11 +105,11 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
         if (useEmail) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(identifier)) {
-                message.error("Please enter a valid email address.");
+                message?.error("Please enter a valid email address.");
                 return;
             }
         } else if (!isValidPhoneNumber(identifier)) {
-            message.error("Please enter a valid phone number.");
+            message?.error("Please enter a valid phone number.");
             return;
         }
 
@@ -114,10 +124,10 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
 
             if (!res.ok) throw new Error(data.message || "Failed to send OTP");
 
-            message.success("OTP sent successfully!");
+            message?.success("OTP sent successfully!");
             setOtpSent(true);
         } catch (err: any) {
-            message.error(err.message);
+            message?.error(err.message);
         } finally {
             setLoading(false);
         }
@@ -138,7 +148,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
 
             if (!res.ok) throw new Error(data.message || "Invalid OTP");
 
-            message.success("Login successful!");
+            message?.success("Login successful!");
             localStorage.setItem("token", data.user.token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -156,9 +166,9 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
                         router.push("/signup/customer");
                     }
                 } else {
-                    if (data.user.role === "admin") {
+                    if (data.user.role?.toLowerCase() === "admin") {
                         router.push("/admin/dashboard");
-                    } else if (data.user.role === "provider") {
+                    } else if (data.user.role?.toLowerCase() === "provider") {
                         router.push("/provider/dashboard");
                     } else {
                         router.push("/");
@@ -166,7 +176,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
                 }
             }
         } catch (err: any) {
-            message.error(err.message);
+            message?.error(err.message);
         } finally {
             setLoading(false);
         }

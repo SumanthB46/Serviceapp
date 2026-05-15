@@ -11,10 +11,12 @@ import {
   Home, 
   CheckCircle2, 
   ChevronLeft,
-  Loader2
+  Loader2,
+  Navigation
 } from "lucide-react";
 import { API_URL } from "@/config/api";
 import { Button, Input, Form, message, Switch, Popconfirm } from "antd";
+import axios from 'axios';
 
 interface AddressModalProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ interface AddressModalProps {
 export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
   const [addresses, setAddresses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const [view, setView] = useState<"list" | "form">("list");
   const [editingAddress, setEditingAddress] = useState<any | null>(null);
   
@@ -32,13 +35,22 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
 
   const fetchAddresses = useCallback(async () => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token || token === "null" || token === "undefined" || token.trim() === "") return;
 
     try {
       setLoading(true);
       const response = await fetch(`${API_URL}/addresses`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token.trim()}` }
       });
+      
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setAddresses([]);
+        window.location.reload();
+        return;
+      }
+
       if (response.ok) {
         const data = await response.json();
         setAddresses(data);
@@ -127,6 +139,25 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
     }
   };
 
+  const handlePincodeBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const pincode = e.target.value;
+    if (pincode && pincode.length === 6) {
+      try {
+        const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+        const data = await response.json();
+        if (data[0].Status === "Success") {
+          const info = data[0].PostOffice[0];
+          form.setFieldsValue({
+            city: info.District,
+            state: info.State
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch pincode info", error);
+      }
+    }
+  };
+
   const handleSetDefault = async (address: any) => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -142,6 +173,65 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
       });
       fetchAddresses();
     } catch (e) {}
+  };
+
+  const handleGetCurrentLocation = () => {
+    setIsLocating(true);
+
+    if (!navigator.geolocation) {
+      messageApi.error("Geolocation is not supported by your browser");
+      setIsLocating(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+          );
+          const data = await response.json();
+          
+          const addr = data.address;
+          const cityName = addr.city || addr.town || addr.village || addr.state_district || "Unknown Location";
+          const state = addr.state || "";
+          const pincode = addr.postcode || "";
+          const addressLine = [addr.road, addr.suburb, addr.neighbourhood].filter(Boolean).join(", ") || addr.display_name;
+
+          const token = localStorage.getItem("token");
+          if (!token) throw new Error("No token found");
+
+          await axios.post(`${API_URL}/addresses`, {
+            address_line: addressLine,
+            city: cityName,
+            state: state,
+            pincode: pincode,
+            is_default: addresses.length === 0,
+            coordinates: {
+              type: 'Point',
+              coordinates: [longitude, latitude]
+            }
+          }, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          messageApi.success(`Located and saved: ${cityName}`);
+          fetchAddresses();
+        } catch (err) {
+          messageApi.error("Failed to detect location details");
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (err) => {
+        messageApi.error("Permission denied or location unavailable");
+        setIsLocating(false);
+      }
+    );
   };
 
   return (
@@ -202,15 +292,32 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
                     exit={{ opacity: 0, x: 20 }}
                     className="space-y-4"
                   >
-                    <button 
-                      onClick={handleAddNew}
-                      className="w-full flex items-center justify-center gap-3 py-5 rounded-[1.5rem] border-2 border-dashed border-blue-200 bg-blue-50/50 text-[#1D2B83] font-bold hover:bg-blue-50 hover:border-blue-300 transition-all group"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                        <Plus className="w-4 h-4" />
-                      </div>
-                      Add New Address
-                    </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button 
+                        onClick={handleGetCurrentLocation}
+                        disabled={isLocating}
+                        className="flex items-center justify-center gap-3 py-5 rounded-[1.5rem] bg-[#1D2B83] text-white font-bold hover:bg-[#16226b] shadow-lg shadow-blue-900/10 transition-all group disabled:opacity-70"
+                      >
+                        {isLocating ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                            <Navigation className="w-4 h-4" />
+                          </div>
+                        )}
+                        {isLocating ? "Locating..." : "Use Live Location"}
+                      </button>
+
+                      <button 
+                        onClick={handleAddNew}
+                        className="flex items-center justify-center gap-3 py-5 rounded-[1.5rem] border-2 border-dashed border-slate-200 bg-white text-slate-600 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all group"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                          <Plus className="w-4 h-4" />
+                        </div>
+                        Add Manually
+                      </button>
+                    </div>
 
                     {loading ? (
                       <div className="flex justify-center py-10">
@@ -347,6 +454,7 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
                         >
                           <Input 
                             placeholder="123456"
+                            onBlur={handlePincodeBlur}
                             className="h-12 rounded-2xl font-bold border-slate-200 focus:border-[#1D2B83]"
                           />
                         </Form.Item>

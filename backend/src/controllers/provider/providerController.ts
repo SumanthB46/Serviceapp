@@ -5,7 +5,10 @@ import bcrypt from 'bcryptjs';
 import { Provider } from '../../models/Provider';
 import { ProviderService } from '../../models/ProviderService';
 import { User } from '../../models/User';
+import { JobRequest } from '../../models/JobRequest';
+import { Booking } from '../../models/Booking';
 import { saveFileToCloud, deleteFileFromCloud } from '../../utils/fileHelper';
+import { emitToUser } from '../../services/socketService';
 
 // @desc    Get all providers
 // @route   GET /api/providers
@@ -483,5 +486,171 @@ export const cleanupExpiredDocuments = async (): Promise<{ deletedCount: number 
   } catch (error) {
     console.error('[STORAGE CLEANUP] Task failed:', error);
     return { deletedCount: 0 };
+  }
+};
+
+// @desc    Get pending job requests for current provider
+// @route   GET /api/providers/job-requests
+// @access  Private/Provider
+export const getMyJobRequests = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const provider = await Provider.findOne({ user_id: req.user?._id });
+    if (!provider) {
+      res.status(404).json({ message: 'Provider not found' });
+      return;
+    }
+
+    const requests = await JobRequest.find({
+      provider_id: provider._id,
+      status: 'pending',
+      expires_at: { $gt: new Date() }
+    }).populate({
+      path: 'booking_id',
+      populate: [
+        { path: 'user_id', select: 'name email phone profile_image' },
+        { path: 'address_id' },
+        { path: 'subservice_id', populate: { path: 'service_id' } }
+      ]
+    }).sort({ createdAt: -1 });
+
+    res.json(requests);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Accept a job request
+// @route   POST /api/providers/job-requests/:id/accept
+// @access  Private/Provider
+export const acceptJobRequest = async (req: AuthRequest, res: Response): Promise<void> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const provider = await Provider.findOne({ user_id: req.user?._id }).session(session);
+    if (!provider) {
+      res.status(404).json({ message: 'Provider not found' });
+      return;
+    }
+
+    const request = await JobRequest.findById(req.params.id).session(session);
+    if (!request || request.status !== 'pending' || request.expires_at < new Date()) {
+      res.status(400).json({ message: 'Request is no longer valid' });
+      return;
+    }
+
+    const booking = await Booking.findById(request.booking_id).session(session);
+    if (!booking || booking.status !== 'pending') {
+      res.status(400).json({ message: 'Booking is already assigned or unavailable' });
+      return;
+    }
+
+    // 1. Assign booking to provider
+    booking.provider_id = provider._id;
+    booking.status = 'accepted';
+    await booking.save({ session });
+
+    // 2. Update current request status
+    request.status = 'accepted';
+    await request.save({ session });
+
+    // 3. Mark other requests for this booking as 'removed'
+    await JobRequest.updateMany(
+      { booking_id: booking._id, _id: { $ne: request._id } },
+      { status: 'removed' }
+    ).session(session);
+
+    // 4. Update provider status to busy
+    provider.availability_status = 'busy';
+    provider.isBusy = true;
+    await provider.save({ session });
+
+    await session.commitTransaction();
+
+    // Notify user via socket
+    emitToUser(booking.user_id.toString(), 'booking_accepted', {
+      booking_id: booking._id,
+      provider: {
+        name: req.user?.name,
+        profile_image: req.user?.profile_image
+      }
+    });
+
+    res.json({ message: 'Job accepted successfully', booking });
+  } catch (error: any) {
+    await session.abortTransaction();
+    res.status(500).json({ message: error.message });
+  } finally {
+    session.endSession();
+  }
+};
+
+// @desc    Reject a job request
+// @route   POST /api/providers/job-requests/:id/reject
+// @access  Private/Provider
+export const rejectJobRequest = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const request = await JobRequest.findById(req.params.id);
+    if (!request) {
+      res.status(404).json({ message: 'Request not found' });
+      return;
+    }
+
+    request.status = 'rejected';
+    await request.save();
+
+    res.json({ message: 'Job rejected successfully' });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update provider live location
+// @route   PATCH /api/providers/live-location
+// @access  Private/Provider
+export const updateLiveLocation = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { latitude, longitude } = req.body;
+    const provider = await Provider.findOneAndUpdate(
+      { user_id: req.user?._id },
+      {
+        live_location: { type: 'Point', coordinates: [longitude, latitude] },
+        lastActiveAt: new Date(),
+        isOnline: true
+      },
+      { new: true }
+    );
+    res.json({ message: 'Live location updated', location: provider?.live_location });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update provider availability status
+// @route   PUT /api/providers/availability
+// @access  Private/Provider
+export const updateMyAvailability = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { status } = req.body; // 'available', 'busy', 'offline'
+    
+    const update: any = { availability_status: status };
+    if (status === 'offline') {
+      update.isOnline = false;
+      update.isBusy = false;
+    } else if (status === 'available') {
+      update.isOnline = true;
+      update.isBusy = false;
+    } else if (status === 'busy') {
+      update.isOnline = true;
+      update.isBusy = true;
+    }
+
+    const provider = await Provider.findOneAndUpdate(
+      { user_id: req.user?._id },
+      update,
+      { new: true }
+    );
+    res.json({ message: 'Availability updated', status: provider?.availability_status, isOnline: provider?.isOnline });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
   }
 };

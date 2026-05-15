@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Booking } from '../../models/Booking';
 import { Cart } from '../../models/Cart';
 import { AuthRequest } from '../../middleware/authMiddleware';
+import { dispatchNearbyProviders } from '../../services/bookingDispatchService';
 export const getAllBookings = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const bookings = await Booking.find({})
@@ -173,6 +174,9 @@ export const createBooking = async (req: AuthRequest, res: Response): Promise<vo
         isDeleted: false
       });
       createdBookings.push(booking);
+      
+      // Notify multiple nearby providers
+      await dispatchNearbyProviders(booking._id.toString());
     }
 
     // Clear cart after successful booking

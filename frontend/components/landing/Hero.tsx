@@ -61,37 +61,6 @@ const Hero = () => {
                 </button>
               </div>
             </div>
-
-            <div className="mt-8 sm:mt-10 flex justify-center lg:justify-start">
-              <motion.div
-                whileHover="hover"
-                whileTap={{ scale: 0.95 }}
-                initial="initial"
-                variants={{
-                  initial: { scale: 1 },
-                  hover: { scale: 1.05 }
-                }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              >
-                <Link
-                  href="/services"
-                  className="relative overflow-hidden bg-[#1D2B83] text-white text-[10px] sm:text-[12px] font-bold uppercase tracking-[0.2em] px-8 sm:px-12 py-4 sm:py-5 rounded-[40px] shadow-2xl flex items-center gap-3 isolate w-fit border-2 border-[#1D2B83] transition-all duration-400 hover:border-[#1D2B83] hover:bg-[#1D2B83]"
-                >
-                  <motion.div
-                    variants={{
-                      initial: { scale: 0 },
-                      hover: { scale: 4 }
-                    }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="absolute inset-0 pointer-events-none -z-10"
-                    style={{
-                      background: "radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 70%)",
-                    }}
-                  />
-                  <span className="relative z-10">Book Now</span>
-                </Link>
-              </motion.div>
-            </div>
           </motion.div>
 
           {/* Right Column: Image & Carousel */}
@@ -136,7 +105,7 @@ const Hero = () => {
               </div>
             </div>
 
-            {/* Decorative background blur */}
+              {/* Decorative background blur */}
             <motion.div
               style={{ y: bgY }}
               className="absolute -z-10 -top-10 -right-10 h-32 w-32 sm:h-64 sm:w-64 rounded-full bg-blue-50 blur-3xl opacity-50"

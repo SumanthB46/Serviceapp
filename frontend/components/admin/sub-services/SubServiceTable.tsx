@@ -11,7 +11,7 @@ import Badge from '../common/Badge';
 import SubServiceModal from './SubServiceModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConfirmationModal from '../common/ConfirmationModal';
-import CategorySelectCard from './CategorySelectCard';
+import CategorySelectCard from '../categories/CategorySelectCard';
 import axios from 'axios';
 
 import { API_URL } from '@/config/api';
