@@ -50,13 +50,40 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
   const fileInput = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    const fetchFreshUser = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_URL}/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const freshUser = await res.json();
+          onUpdate(freshUser); // Sync back to parent/localStorage
+          setForm({ 
+            name: freshUser.name || "", 
+            email: freshUser.email || freshUser.email || "", 
+            phone: freshUser.phone || "", 
+            gender: freshUser.gender || "", 
+            password: "" 
+          });
+        }
+      } catch (e) {
+        console.error("Failed to refresh profile", e);
+      }
+    };
+
     if (isOpen && user) {
+      // Set initial state from prop
       setForm({ name: user.name || "", email: user.email || "", phone: user.phone || "", gender: user.gender || "", password: "" });
       setIsEditing(false);
       setShowOtp(false);
       setSaveSuccess(false);
+      
+      // Then fetch fresh data in background to ensure gender/other fields are there
+      fetchFreshUser();
     }
-  }, [isOpen, user]);
+  }, [isOpen]);
 
   const handleCancel = () => {
     setIsEditing(false);

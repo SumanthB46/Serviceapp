@@ -185,7 +185,7 @@ const CouponModal: React.FC<CouponModalProps> = ({ isOpen, onClose, onSuccess, e
               name="status"
               label={<span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</span>}
             >
-              <Select className="h-12 rounded-xl font-bold border-gray-100 bg-gray-50/50" popupClassName="rounded-xl">
+              <Select className="h-12 rounded-xl font-bold border-gray-100 bg-gray-50/50" classNames={{ popup: { root: 'rounded-xl' } }}>
                 <Option value="active">Active</Option>
                 <Option value="inactive">Inactive</Option>
               </Select>
@@ -333,7 +333,7 @@ const CouponModal: React.FC<CouponModalProps> = ({ isOpen, onClose, onSuccess, e
               name="allowedMemberships"
               label={<span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Restricted Memberships</span>}
             >
-              <Select mode="multiple" placeholder="Select memberships..." className="rounded-xl min-h-[48px]" popupClassName="rounded-xl">
+              <Select mode="multiple" placeholder="Select memberships..." className="rounded-xl min-h-[48px]" classNames={{ popup: { root: 'rounded-xl' } }}>
                 {memberships.map((m: any) => (
                   <Option key={m._id} value={m._id}>{m.name}</Option>
                 ))}
@@ -344,7 +344,7 @@ const CouponModal: React.FC<CouponModalProps> = ({ isOpen, onClose, onSuccess, e
               name="allowedCategories"
               label={<span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Restrict to Categories</span>}
             >
-              <Select mode="multiple" placeholder="Select categories..." className="rounded-xl min-h-[48px]" popupClassName="rounded-xl">
+              <Select mode="multiple" placeholder="Select categories..." className="rounded-xl min-h-[48px]" classNames={{ popup: { root: 'rounded-xl' } }}>
                 {categories.map((c: any) => (
                   <Option key={c._id} value={c._id}>{c.category_name}</Option>
                 ))}
@@ -355,7 +355,7 @@ const CouponModal: React.FC<CouponModalProps> = ({ isOpen, onClose, onSuccess, e
               name="allowedServices"
               label={<span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Restrict to Services</span>}
             >
-              <Select mode="multiple" placeholder="Select services..." className="rounded-xl min-h-[48px]" popupClassName="rounded-xl">
+              <Select mode="multiple" placeholder="Select services..." className="rounded-xl min-h-[48px]" classNames={{ popup: { root: 'rounded-xl' } }}>
                 {filteredServices.map((s: any) => (
                   <Option key={s._id} value={s._id}>{s.service_name}</Option>
                 ))}
@@ -368,7 +368,7 @@ const CouponModal: React.FC<CouponModalProps> = ({ isOpen, onClose, onSuccess, e
               name="highlightGradient"
               label={<span className="text-[10px] font-black text-purple-900 uppercase tracking-widest">Custom Highlight Gradient</span>}
             >
-              <Select className="h-10 rounded-lg" popupClassName="rounded-xl">
+              <Select className="h-10 rounded-lg" classNames={{ popup: { root: 'rounded-xl' } }}>
                 <Option value="from-blue-600 to-indigo-600">Blue-Indigo</Option>
                 <Option value="from-purple-600 to-pink-600">Purple-Pink</Option>
                 <Option value="from-emerald-600 to-teal-600">Emerald-Teal</Option>
@@ -429,7 +429,6 @@ const CouponModal: React.FC<CouponModalProps> = ({ isOpen, onClose, onSuccess, e
         body: { padding: '0px', maxHeight: '60vh', overflowY: 'auto' }
       }}
       bodyProps={{ className: 'custom-scrollbar' }}
-      closeIcon={<div className="p-2 hover:bg-gray-100 rounded-full transition-colors mt-4 mr-4"><X size={20} className="text-gray-400" /></div>}
     >
       <Form
         form={form}

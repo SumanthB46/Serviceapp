@@ -36,18 +36,18 @@ export function middleware(request: NextRequest) {
   if (token) {
     // Prevent logged in users from accessing login/signup pages
     if (pathname === "/login" || pathname === "/signup") {
-        if (userRole === "admin") return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-        if (userRole === "provider") return NextResponse.redirect(new URL("/provider/dashboard", request.url));
+        if (userRole?.toLowerCase() === "admin") return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+        if (userRole?.toLowerCase() === "provider") return NextResponse.redirect(new URL("/provider/dashboard", request.url));
         return NextResponse.redirect(new URL("/", request.url));
     }
 
     // Protect Admin routes
-    if (pathname.startsWith("/admin") && userRole !== "admin") {
+    if (pathname.startsWith("/admin") && userRole?.toLowerCase() !== "admin") {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
     // Protect Provider routes
-    if (pathname.startsWith("/provider") && userRole !== "provider") {
+    if (pathname.startsWith("/provider") && userRole?.toLowerCase() !== "provider") {
       return NextResponse.redirect(new URL("/", request.url));
     }
 

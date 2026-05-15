@@ -3,13 +3,26 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 export interface IProvider extends Document {
   user_id: Types.ObjectId;
   availability_status: 'available' | 'busy' | 'offline';
+  isOnline: boolean;
+  isBusy: boolean;
   kyc_status: 'pending' | 'verified' | 'rejected';
   is_verified: boolean;
   
-  // Security-focused Aadhar storage
+  // Service Areas
+  service_locations: Types.ObjectId[]; // IDs from Locations collection
+
+  // Live Tracking
+  live_location: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  };
+  serviceRadius: number; // in meters (default 10000)
+  socketId?: string;
+  lastActiveAt?: Date;
+
+  // Legacy/Other
   aadhar_last4?: string;
   aadhar_hash?: string;
-  
   bank_details?: {
     account_holder_name: string;
     account_number_last4: string;
@@ -18,7 +31,6 @@ export interface IProvider extends Document {
     bank_name: string;
     branch: string;
   };
-  
   verification_docs?: {
     id_proof_url: string;
     public_id?: string;
@@ -45,8 +57,19 @@ const providerSchema = new Schema<IProvider>(
       type: String,
       enum: ['available', 'busy', 'offline'],
       default: 'offline',
-      required: true,
     },
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+    isBusy: {
+      type: Boolean,
+      default: false,
+    },
+    service_locations: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Location',
+    }],
     kyc_status: {
       type: String,
       enum: ['pending', 'verified', 'rejected'],
@@ -56,13 +79,30 @@ const providerSchema = new Schema<IProvider>(
       type: Boolean,
       default: false,
     },
-    aadhar_last4: {
-      type: String,
-      trim: true,
+    live_location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number],
+        default: [0, 0],
+      },
     },
-    aadhar_hash: {
+    serviceRadius: {
+      type: Number,
+      default: 10000, // 10km in meters
+    },
+    socketId: {
       type: String,
     },
+    lastActiveAt: {
+      type: Date,
+      default: Date.now,
+    },
+    aadhar_last4: { type: String, trim: true },
+    aadhar_hash: { type: String },
     bank_details: {
       account_holder_name: { type: String, trim: true },
       account_number_last4: { type: String, trim: true },
@@ -89,4 +129,8 @@ const providerSchema = new Schema<IProvider>(
   }
 );
 
+providerSchema.index({ live_location: '2dsphere' });
+providerSchema.index({ service_locations: 1 });
+
 export const Provider = mongoose.model<IProvider>('Provider', providerSchema);
+

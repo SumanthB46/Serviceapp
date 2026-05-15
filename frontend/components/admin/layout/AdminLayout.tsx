@@ -27,7 +27,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       // If the login response structure was different, handle both cases
       const userData = user.user || user; 
       
-      if (userData.role !== 'admin') {
+      if (userData.role?.toLowerCase() !== 'admin') {
         router.push('/'); // Redirect non-admins to home
         return;
       }

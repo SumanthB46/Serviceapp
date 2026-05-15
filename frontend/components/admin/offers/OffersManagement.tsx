@@ -271,7 +271,7 @@ const OffersManagement = () => {
               defaultValue="all" 
               onChange={setStatusFilter}
               className="h-11 min-w-[140px] rounded-xl"
-              popupClassName="rounded-xl"
+              classNames={{ popup: { root: 'rounded-xl' } }}
             >
               <Select.Option value="all">All Status</Select.Option>
               <Select.Option value="active">Active</Select.Option>

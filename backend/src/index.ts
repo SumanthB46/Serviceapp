@@ -45,14 +45,15 @@ app.use(cors({
     return callback(null, true);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 });
-app.use(express.json({ limit: '10mb' })); // increased limit for base64 images
+app.use(express.json({ limit: '50mb' })); // increased limit for large base64 uploads (PDFs/Images)
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 // Routes
@@ -86,7 +87,14 @@ app.get('/api/health', (req: Request, res: Response) => {
 //   res.send("API is working");
 // });
 
-const server = app.listen(Number(port), '0.0.0.0', () => {
+import http from 'http';
+import { initSocket } from './services/socketService';
+
+const server = http.createServer(app);
+
+initSocket(server);
+
+server.listen(Number(port), '0.0.0.0', () => {
   console.log(`🚀 Server ready at http://localhost:${port}`);
 });
 

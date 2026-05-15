@@ -43,7 +43,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       email: email || undefined,
       phone: phone || undefined,
       password: hashedPassword,
-      role: role || 'customer',
+      role: (role || 'customer').toLowerCase(),
       gender,
       profile_image: profile_image || '',
       isEmailVerified: !!email,
@@ -68,6 +68,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
         email: user.email,
         phone: user.phone,
         role: user.role,
+        gender: user.gender,
         profile_image: user.profile_image,
         token: generateToken(user._id.toString()),
       });
@@ -96,6 +97,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        gender: user.gender,
         profile_image: user.profile_image,
         token: generateToken(user._id.toString()),
       });
@@ -211,6 +213,10 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
        user.status = req.body.status.toLowerCase();
     }
 
+    if (req.body.role) {
+       user.role = req.body.role.toLowerCase() as any;
+    }
+
     if (req.body.password) {
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(req.body.password, salt);
@@ -224,6 +230,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       email:         updated.email,
       phone:         updated.phone,
       role:          updated.role,
+      gender:        updated.gender,
       profile_image: updated.profile_image,
       status:        updated.status,
     });
@@ -389,6 +396,7 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
           email: existingUser.email,
           phone: existingUser.phone,
           role: existingUser.role,
+          gender: existingUser.gender,
           profile_image: existingUser.profile_image,
           token: generateToken(existingUser._id.toString()),
         }

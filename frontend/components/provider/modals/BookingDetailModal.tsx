@@ -4,26 +4,19 @@ import React, { useState } from 'react';
 import Modal from '@/components/admin/common/Modal';
 import { 
   Calendar, Clock, MapPin, Phone, User, 
-  CheckCircle2, AlertCircle, X 
+  CheckCircle2, AlertCircle, X, Play, CheckCircle
 } from 'lucide-react';
 
 interface BookingDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  booking: {
-    id: string;
-    customer: string;
-    service: string;
-    dateTime: string;
-    address: string;
-    amount: string;
-    status: string;
-    phone: string;
-    avatar: string;
-  } | null;
+  booking: any | null;
+  onUpdateStatus: (id: string, newStatus: string, isRequest?: boolean) => Promise<void>;
 }
 
-export default function BookingDetailModal({ isOpen, onClose, booking }: BookingDetailModalProps) {
+export default function BookingDetailModal({ isOpen, onClose, booking, onUpdateStatus }: BookingDetailModalProps) {
+  const [updating, setUpdating] = useState(false);
+
   if (!booking) return null;
 
   const statusColors: Record<string, string> = {
@@ -31,6 +24,19 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
     Accepted: "bg-blue-50 text-blue-600 border-blue-100",
     "In Progress": "bg-purple-50 text-purple-600 border-purple-100",
     Completed: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    "In progress": "bg-purple-50 text-purple-600 border-purple-100",
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      setUpdating(true);
+      await onUpdateStatus(booking._id, newStatus, booking.isRequest);
+      onClose();
+    } catch (error) {
+      console.error("Failed to update status:", error);
+    } finally {
+      setUpdating(false);
+    }
   };
 
   return (
@@ -40,25 +46,56 @@ export default function BookingDetailModal({ isOpen, onClose, booking }: Booking
       title="Booking Details"
       size="lg"
       footer={
-        <>
+        <div className="flex items-center justify-end gap-3 w-full">
           <button 
             onClick={onClose}
             className="px-6 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all"
           >
             Close
           </button>
+          
           {booking.status === "Pending" && (
-            <button className="px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4" />
-              Accept Booking
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => handleStatusChange("Accepted")}
+                disabled={updating}
+                className="px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 flex items-center gap-2 disabled:opacity-50"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {updating ? "Processing..." : "Accept Booking"}
+              </button>
+              <button 
+                onClick={() => handleStatusChange("Rejected")}
+                disabled={updating}
+                className="px-6 py-2.5 bg-rose-50 text-rose-600 text-sm font-bold rounded-xl hover:bg-rose-100 transition-all border border-rose-100 disabled:opacity-50"
+              >
+                Reject
+              </button>
+            </div>
+          )}
+
+          {(booking.status === "Accepted" || booking.status === "Confirmed") && (
+            <button 
+              onClick={() => handleStatusChange("In Progress")}
+              disabled={updating}
+              className="px-6 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center gap-2 disabled:opacity-50"
+            >
+              <Play className="h-4 w-4" />
+              {updating ? "Starting..." : "Start Job"}
             </button>
           )}
-          {booking.status === "Accepted" && (
-            <button className="px-6 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
-              Mark as Started
+
+          {(booking.status === "In Progress" || booking.status === "In progress") && (
+            <button 
+              onClick={() => handleStatusChange("Completed")}
+              disabled={updating}
+              className="px-6 py-2.5 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition-all shadow-lg shadow-purple-100 flex items-center gap-2 disabled:opacity-50"
+            >
+              <CheckCircle className="h-4 w-4" />
+              {updating ? "Completing..." : "Mark as Completed"}
             </button>
           )}
-        </>
+        </div>
       }
     >
       <div className="space-y-6">
