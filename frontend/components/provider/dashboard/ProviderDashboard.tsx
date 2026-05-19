@@ -10,7 +10,8 @@ import {
   MoreHorizontal,
   Zap,
   Clock,
-  MapPin
+  MapPin,
+  Navigation
 } from "lucide-react";
 import { API_URL } from "@/config/api";
 import { connectSocket, disconnectSocket } from "@/services/socket";
@@ -313,6 +314,12 @@ export default function ProviderDashboard() {
                           <Wallet size={14} />
                           <span>Earn ₹{req.amount}</span>
                        </div>
+                       {(req.location?.latitude && req.location?.longitude) && (
+                         <div className="flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-wider bg-blue-50 p-2 rounded-lg mt-2">
+                            <Navigation size={12} />
+                            <span>Lat: {Number(req.location.latitude).toFixed(4)}, Lng: {Number(req.location.longitude).toFixed(4)}</span>
+                         </div>
+                       )}
                     </div>
 
                     <div className="flex gap-2">
@@ -375,6 +382,12 @@ export default function ProviderDashboard() {
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-slate-700">{booking.booking_time}</span>
                         <span className="text-xs font-medium text-slate-400">{new Date(booking.scheduled_at).toLocaleDateString()}</span>
+                        {(booking.address_id?.coordinates?.coordinates && booking.address_id.coordinates.coordinates.length >= 2) && (
+                           <span className="text-[10px] font-bold text-blue-500 mt-1 flex items-center gap-1">
+                             <Navigation size={10} />
+                             {Number(booking.address_id.coordinates.coordinates[1]).toFixed(4)}, {Number(booking.address_id.coordinates.coordinates[0]).toFixed(4)}
+                           </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">

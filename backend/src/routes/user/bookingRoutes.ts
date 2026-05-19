@@ -5,13 +5,19 @@ import {
   getAllBookings, 
   getMyBookings, 
   getBookingsByUserId,
+  getBookingsByProvider,
   verifyBookingOtp,
-  cancelBooking
+  cancelBooking,
+  debugDispatch
 } from '../../controllers/user/bookingController';
 import { protect, admin } from '../../middleware/authMiddleware';
 import { Booking } from '../../models/Booking';
 
 const router = express.Router();
+
+router.get('/provider/:providerId', protect, getBookingsByProvider);
+
+router.get('/debug-dispatch', debugDispatch);
 
 router.route('/')
   .post(protect, createBooking)

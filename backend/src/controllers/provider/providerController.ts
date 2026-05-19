@@ -513,11 +513,45 @@ export const getMyJobRequests = async (req: AuthRequest, res: Response): Promise
       ]
     }).sort({ createdAt: -1 });
 
-    res.json(requests);
+    const mappedRequests = requests.map(r => {
+      const booking = r.booking_id as any;
+      if (!booking) return null;
+
+      const subservice = booking.subservice_id as any;
+      const serviceName = subservice?.subservice_name || subservice?.service_id?.service_name || 'New Service Request';
+      const address = booking.address_id as any;
+
+      return {
+        _id: r._id,
+        request_id: r._id,
+        booking_id: {
+          _id: booking._id,
+          booking_id: booking.booking_id,
+          user_id: booking.user_id,
+          address_id: booking.address_id
+        },
+        display_id: booking.booking_id,
+        service_name: serviceName,
+        amount: booking.payable_amount,
+        location: {
+          address: address?.address_line || 'Address',
+          city: address?.city || 'City',
+          distance: r.distance ? (r.distance / 1000).toFixed(1) + ' km' : 'Nearby'
+        },
+        scheduled_at: booking.scheduled_at,
+        booking_time: booking.booking_time,
+        expires_at: r.expires_at,
+        status: r.status
+      };
+    }).filter(Boolean);
+
+    res.json(mappedRequests);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 };
+
+
 
 // @desc    Accept a job request
 // @route   POST /api/providers/job-requests/:id/accept

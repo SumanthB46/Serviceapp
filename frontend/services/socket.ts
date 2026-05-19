@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
+import { BACKEND_URL } from '@/config/api';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5005';
+const SOCKET_URL = BACKEND_URL;
 
 let socket: Socket | null = null;
 

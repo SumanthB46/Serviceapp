@@ -12,6 +12,7 @@ export const getLocations = async (req: Request, res: Response): Promise<void> =
 
     res.json(locations);
   } catch (error: any) {
+    console.error('[locationController] getLocations error:', error.message);
     res.status(500).json({ message: error.message });
   }
 };

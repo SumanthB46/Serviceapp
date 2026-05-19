@@ -81,25 +81,33 @@ export default function BookingsPage() {
       ]);
       
       // Map requests to booking format
-      const mappedRequests = requestsRes.data.map((r: any) => ({
-        id: r.display_id || r.booking_id?.booking_id || "NEW JOB",
-        _id: r._id,
-        booking_id_raw: r.booking_id?._id,
-        isRequest: true,
-        customer: r.booking_id?.user_id?.name || "Customer",
-        service: r.service_name || "Service",
-        dateTime: new Date(r.scheduled_at).toLocaleString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          hour: '2-digit',
-          minute: '2-digit'
-        }),
-        address: r.location?.address || r.booking_id?.address_id?.address_line || "Address",
-        amount: `₹${r.amount}`,
-        status: "Pending",
-        phone: r.booking_id?.user_id?.phone || "N/A",
-        avatar: r.booking_id?.user_id?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.booking_id?.user_id?.name || 'Customer'}`
-      }));
+      const mappedRequests = requestsRes.data.map((r: any) => {
+        const booking = r.booking_id || {};
+        const serviceName = r.service_name || booking.subservice_id?.subservice_name || booking.subservice_id?.service_id?.service_name || "Service";
+        const amt = r.amount !== undefined ? r.amount : (booking.payable_amount || 0);
+        const schedAt = r.scheduled_at || booking.scheduled_at;
+        const addr = r.location?.address || booking.address_id?.address_line || "Address";
+        
+        return {
+          id: r.display_id || booking.booking_id || "NEW JOB",
+          _id: r._id,
+          booking_id_raw: booking._id,
+          isRequest: true,
+          customer: booking.user_id?.name || "Customer",
+          service: serviceName,
+          dateTime: schedAt ? new Date(schedAt).toLocaleString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit'
+          }) : "N/A",
+          address: addr,
+          amount: `₹${amt}`,
+          status: "Pending",
+          phone: booking.user_id?.phone || "N/A",
+          avatar: booking.user_id?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${booking.user_id?.name || 'Customer'}`
+        };
+      });
 
       // Map backend data to UI format
       const mappedBookings = bookingsRes.data.map((b: any) => ({

@@ -6,6 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, MapPin, Globe2, Activity, Building2, Map as MapIcon } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '@/config/api';
+import dynamic from 'next/dynamic';
+
+const InteractiveMapPicker = dynamic(() => import('./InteractiveMapPicker'), {
+  ssr: false,
+  loading: () => <div className="w-full h-64 bg-slate-50 animate-pulse rounded-[2rem] flex items-center justify-center text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Initialising Spatial Engine...</div>
+});
 
 interface LocationModalProps {
   isOpen: boolean;
@@ -163,27 +169,52 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, location
                   </div>
 
                   {formData.type === 'area' && (
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
-                        <Building2 size={12} className="text-blue-500" /> Parent Operational Hub
-                      </label>
-                      {cities.length > 0 ? (
-                        <select
-                          required
-                          value={formData.parent_id}
-                          onChange={(e) => setFormData({ ...formData, parent_id: e.target.value })}
-                          className="w-full px-5 py-4 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:border-blue-200 focus:ring-4 focus:ring-blue-500/5 transition-all appearance-none"
-                        >
-                          <option value="">Select Target Hub</option>
-                          {cities.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-                        </select>
-                      ) : (
-                        <div className="px-5 py-4 bg-amber-50 border border-amber-100 border-dashed rounded-2xl text-[10px] font-bold text-amber-700 uppercase tracking-tight flex items-center gap-3">
-                          <Activity size={14} className="animate-pulse" />
-                          Zero City Hubs Found. Create a Hub First.
+                    <>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                          <Building2 size={12} className="text-blue-500" /> Parent Operational Hub
+                        </label>
+                        {cities.length > 0 ? (
+                          <select
+                            required
+                            value={formData.parent_id}
+                            onChange={(e) => setFormData({ ...formData, parent_id: e.target.value })}
+                            className="w-full px-5 py-4 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:border-blue-200 focus:ring-4 focus:ring-blue-500/5 transition-all appearance-none"
+                          >
+                            <option value="">Select Target Hub</option>
+                            {cities.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                          </select>
+                        ) : (
+                          <div className="px-5 py-4 bg-amber-50 border border-amber-100 border-dashed rounded-2xl text-[10px] font-bold text-amber-700 uppercase tracking-tight flex items-center gap-3">
+                            <Activity size={14} className="animate-pulse" />
+                            Zero City Hubs Found. Create a Hub First.
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Premium Interactive Picker Map */}
+                      {formData.parent_id && (
+                        <div className="space-y-1.5 pt-2">
+                          <label className="text-[10px] font-black text-gray-400 tracking-widest ml-1 flex items-center gap-2">
+                            <MapIcon size={12} className="text-blue-500" /> Choose Location via Interactive Map
+                          </label>
+                          <InteractiveMapPicker
+                            latitude={formData.latitude}
+                            longitude={formData.longitude}
+                            parentCityName={cities.find(c => c._id === formData.parent_id)?.name}
+                            onLocationPicked={(data) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                name: data.name,
+                                pincode: data.pincode || prev.pincode,
+                                latitude: data.latitude,
+                                longitude: data.longitude
+                              }));
+                            }}
+                          />
                         </div>
                       )}
-                    </div>
+                    </>
                   )}
 
                   <div className="space-y-1">

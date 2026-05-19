@@ -17,18 +17,27 @@ import {
 import { API_URL } from "@/config/api";
 import { Button, Input, Form, message, Switch, Popconfirm } from "antd";
 import axios from 'axios';
+import dynamic from 'next/dynamic';
+
+const InteractiveMapPicker = dynamic(() => import('@/components/admin/location/InteractiveMapPicker'), {
+  ssr: false,
+  loading: () => <div className="w-full h-64 bg-slate-50 animate-pulse rounded-[2rem] flex items-center justify-center text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">Initialising Spatial Engine...</div>
+});
 
 interface AddressModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Optional: called when user selects or saves an address (e.g. from cart checkout flow) */
+  onAddressSelect?: (address: any) => void;
 }
 
-export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
+export default function AddressModal({ isOpen, onClose, onAddressSelect }: AddressModalProps) {
   const [addresses, setAddresses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [view, setView] = useState<"list" | "form">("list");
   const [editingAddress, setEditingAddress] = useState<any | null>(null);
+  const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
   
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -67,20 +76,49 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
       fetchAddresses();
       setView("list");
       setEditingAddress(null);
+      setMapCoords(null);
     }
   }, [isOpen, fetchAddresses]);
 
+  useEffect(() => {
+    if (isOpen) {
+      if (editingAddress) {
+        form.setFieldsValue(editingAddress);
+        if (editingAddress.coordinates && editingAddress.coordinates.coordinates) {
+          setMapCoords({
+            lat: editingAddress.coordinates.coordinates[1],
+            lng: editingAddress.coordinates.coordinates[0]
+          });
+        } else {
+          setMapCoords({ lat: 12.9716, lng: 77.5946 }); // Default Bangalore
+        }
+      } else {
+        form.resetFields();
+        setMapCoords({ lat: 12.9716, lng: 77.5946 }); // Default Bangalore
+      }
+    }
+  }, [editingAddress, isOpen, form]);
+
   const handleAddNew = () => {
     setEditingAddress(null);
+    form.resetFields();
+    setMapCoords({ lat: 12.9716, lng: 77.5946 });
     setView("form");
   };
-
 
   const handleEdit = (address: any) => {
     setEditingAddress(address);
+    form.setFieldsValue(address);
+    if (address.coordinates && address.coordinates.coordinates) {
+      setMapCoords({
+        lat: address.coordinates.coordinates[1],
+        lng: address.coordinates.coordinates[0]
+      });
+    } else {
+      setMapCoords({ lat: 12.9716, lng: 77.5946 });
+    }
     setView("form");
   };
-
 
   const handleDelete = async (id: string) => {
     const token = localStorage.getItem("token");
@@ -115,19 +153,32 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
       
       const method = editingAddress ? "PUT" : "POST";
 
+      const payload = {
+        ...values,
+        coordinates: mapCoords ? {
+          type: 'Point',
+          coordinates: [mapCoords.lng, mapCoords.lat]
+        } : undefined
+      };
+
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(values)
+        body: JSON.stringify(payload)
       });
 
       if (response.ok) {
+        const savedAddress = await response.json();
         messageApi.success(`Address ${editingAddress ? 'updated' : 'added'} successfully`);
         fetchAddresses();
         setView("list");
+        // Notify parent (e.g. cart checkout) with the newly saved address
+        if (onAddressSelect) {
+          onAddressSelect(savedAddress);
+        }
       } else {
         const data = await response.json();
         messageApi.error(data.message || "Failed to save address");
@@ -139,8 +190,7 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
     }
   };
 
-  const handlePincodeBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
-    const pincode = e.target.value;
+  const resolvePincode = async (pincode: string) => {
     if (pincode && pincode.length === 6) {
       try {
         const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
@@ -158,6 +208,11 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
     }
   };
 
+  const handlePincodeBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const pincode = e.target.value;
+    await resolvePincode(pincode);
+  };
+
   const handleSetDefault = async (address: any) => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -172,6 +227,10 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
         body: JSON.stringify({ ...address, is_default: true })
       });
       fetchAddresses();
+      // Notify parent (e.g. cart checkout) that an address was selected
+      if (onAddressSelect) {
+        onAddressSelect({ ...address, is_default: true });
+      }
     } catch (e) {}
   };
 
@@ -202,7 +261,7 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
           const token = localStorage.getItem("token");
           if (!token) throw new Error("No token found");
 
-          await axios.post(`${API_URL}/addresses`, {
+          const savedRes = await axios.post(`${API_URL}/addresses`, {
             address_line: addressLine,
             city: cityName,
             state: state,
@@ -221,6 +280,10 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
 
           messageApi.success(`Located and saved: ${cityName}`);
           fetchAddresses();
+          // Notify parent (e.g. cart checkout) with the newly saved location address
+          if (onAddressSelect) {
+            onAddressSelect(savedRes.data);
+          }
         } catch (err) {
           messageApi.error("Failed to detect location details");
         } finally {
@@ -410,6 +473,31 @@ export default function AddressModal({ isOpen, onClose }: AddressModalProps) {
                       initialValues={editingAddress || { is_default: false }}
                       className="space-y-4"
                     >
+                      {/* Interactive Map Location Picker */}
+                      <div className="space-y-2 mb-6">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">
+                          Choose Precise Location on Map
+                        </label>
+                        <InteractiveMapPicker
+                          latitude={mapCoords?.lat || 12.9716}
+                          longitude={mapCoords?.lng || 77.5946}
+                          onLocationPicked={(data) => {
+                            setMapCoords({ lat: data.latitude, lng: data.longitude });
+                            if (data.name) {
+                              form.setFieldsValue({
+                                address_line: data.name
+                              });
+                            }
+                            if (data.pincode) {
+                              form.setFieldsValue({
+                                pincode: data.pincode
+                              });
+                              resolvePincode(data.pincode);
+                            }
+                          }}
+                        />
+                      </div>
+
                       <Form.Item
                         label={<span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Address Line / Building / Flat</span>}
                         name="address_line"

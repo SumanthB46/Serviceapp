@@ -53,9 +53,12 @@ export const getMyBookings = async (req: AuthRequest, res: Response): Promise<vo
         ]
       };
     } else if (req.user?.role === 'provider') {
+      const { Provider } = await import('../../models/Provider');
+      const provider = await Provider.findOne({ user_id: req.user._id });
+      
       query = { 
         $or: [
-          { provider_id: req.user._id },
+          { provider_id: provider?._id },
           { customer_id: req.user._id } // Fallback for old provider field if any
         ]
       }; 
@@ -245,6 +248,58 @@ export const getBookingsByUserId = async (req: Request, res: Response): Promise<
     res.json(bookings);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get bookings for a specific provider
+// @route   GET /api/bookings/provider/:providerId
+// @access  Private/Provider
+export const getBookingsByProvider = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const bookings = await Booking.find({ provider_id: req.params.providerId })
+      .populate('user_id', 'name email phone profile_image')
+      .populate({
+        path: 'subservice_id',
+        populate: {
+          path: 'service_id',
+          populate: {
+            path: 'category_id',
+            select: 'category_name icon'
+          }
+        }
+      })
+      .populate('address_id')
+      .sort({ createdAt: -1 });
+    res.json(bookings);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const debugDispatch = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const booking = await Booking.findOne().sort({ createdAt: -1 });
+    if (!booking) {
+      res.json({ message: "No bookings found" });
+      return;
+    }
+    
+    const { dispatchNearbyProviders } = await import('../../services/bookingDispatchService');
+    
+    // Call the actual dispatch service logic and wait for it
+    await dispatchNearbyProviders(booking._id.toString());
+    
+    // Fetch the updated booking to see if provider_id got assigned
+    const updatedBooking = await Booking.findById(booking._id);
+    
+    res.json({
+      message: "Dispatch manually triggered",
+      bookingId: booking._id,
+      assignedProvider: updatedBooking?.provider_id || "None",
+      status: updatedBooking?.status
+    });
+  } catch(e: any) {
+    res.json({ error: e.message });
   }
 };
 

@@ -1,6 +1,3 @@
-import dns from 'node:dns';
-dns.setServers(['8.8.8.8', '8.8.4.4']);
-
 import mongoose from 'mongoose';
 
 export const connectDB = async () => {
@@ -14,8 +11,5 @@ export const connectDB = async () => {
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error: any) {
     console.error(`❌ MongoDB Error: ${error.message}`);
-    // Instead of exiting, we can log and let the app stay alive 
-    // to respond with 500 errors instead of crashing the process
-    // process.exit(1);
   }
 };
