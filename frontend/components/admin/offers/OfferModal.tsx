@@ -197,7 +197,7 @@ const OfferModal: React.FC<OfferModalProps> = ({ isOpen, onClose, onSave, offerS
                                 const providerName = typeof ps.provider_id === 'object' ? ps.provider_id.user_id.name : 'Unknown';
                                 return (
                                     <option key={ps._id} value={ps._id}>
-                                        {providerName} - {ps.service_name} (₹{ps.price})
+                                        {providerName} - {ps.subservice_ids?.[0]?.subservice_name || 'Service'} (₹{ps.price})
                                     </option>
                                 );
                             })}

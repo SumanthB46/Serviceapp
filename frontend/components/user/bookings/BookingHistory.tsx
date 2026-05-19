@@ -67,7 +67,7 @@ const BookingHistory = () => {
       try {
         const user = JSON.parse(userData);
         if (user && user._id) {
-          const socket = connectSocket(user._id, 'customer');
+          const socket = connectSocket(user._id, 'user');
           socket.on('booking_status_update', () => {
             fetchBookings();
             messageApi.info("Booking status updated!");
