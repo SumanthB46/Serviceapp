@@ -22,6 +22,7 @@ import {
 import { message, Modal, Tabs, Button, Tag } from "antd";
 import { API_URL, BACKEND_URL } from "@/config/api";
 import Navbar from "@/components/common/Navbar";
+import { connectSocket } from "@/services/socket";
 
 interface Booking {
   _id: string;
@@ -60,6 +61,23 @@ const BookingHistory = () => {
 
   useEffect(() => {
     fetchBookings();
+
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user && user._id) {
+          const socket = connectSocket(user._id, 'user');
+          socket.on('booking_status_update', () => {
+            fetchBookings();
+            messageApi.info("Booking status updated!");
+          });
+          return () => {
+            socket.off('booking_status_update');
+          };
+        }
+      } catch (e) {}
+    }
   }, []);
 
   const fetchBookings = async () => {
@@ -336,6 +354,11 @@ const BookingHistory = () => {
                         <p className="text-xs font-black text-slate-700 truncate">
                           {booking.provider_id?.user_id?.name || 'Searching...'}
                         </p>
+                        {(booking.provider_id?.live_location?.coordinates && booking.provider_id.live_location.coordinates.length >= 2) && (
+                           <p className="text-[9px] font-bold text-blue-500 mt-0.5 truncate">
+                             Lat: {Number(booking.provider_id.live_location.coordinates[1]).toFixed(4)}, Lng: {Number(booking.provider_id.live_location.coordinates[0]).toFixed(4)}
+                           </p>
+                        )}
                       </div>
                       {booking.provider_id?.user_id?.name && (
                         <ChevronRight size={14} className="text-slate-300 flex-shrink-0" />
@@ -359,6 +382,20 @@ const BookingHistory = () => {
                       type="primary"
                       size="small"
                       className="flex-1 bg-[#1D2B83] border-none font-black text-[10px] uppercase tracking-widest h-10 rounded-xl shadow-md shadow-blue-900/10"
+                      onClick={() => {
+                        const p = booking.provider_id;
+                        if (p?.user_id?.name) {
+                          if (['accepted', 'in_progress'].includes(booking.status)) {
+                            setProviderModal({ open: true, provider: p });
+                          } else if (booking.status === 'pending') {
+                            messageApi.info("Provider details will be visible once they accept the request.");
+                          } else {
+                            setProviderModal({ open: true, provider: p });
+                          }
+                        } else {
+                          messageApi.info("Awaiting provider assignment...");
+                        }
+                      }}
                     >
                       Details
                     </Button>
@@ -457,9 +494,9 @@ const BookingHistory = () => {
         const p = providerModal.provider;
         const name = p?.user_id?.name ?? "Provider";
         const phone = p?.user_id?.phone ?? null;
-        const lat = p?.current_location?.coordinates?.[1];
-        const lng = p?.current_location?.coordinates?.[0];
-        const mapsUrl = lat && lng
+        const lat = p?.live_location?.coordinates?.[1];
+        const lng = p?.live_location?.coordinates?.[0];
+        const mapsUrl = (lat !== undefined && lng !== undefined)
           ? `https://www.google.com/maps?q=${lat},${lng}`
           : `https://www.google.com/maps/search/${encodeURIComponent(name + " service provider")}`;
 
@@ -532,10 +569,10 @@ const BookingHistory = () => {
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-blue-500 uppercase tracking-wider">
-                      {lat && lng ? "Track Live Location" : "Search on Maps"}
+                      {(lat !== undefined && lng !== undefined) ? "Track Live Location" : "Search on Maps"}
                     </p>
                     <p className="text-sm font-black text-blue-800">
-                      {lat && lng ? `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E` : "Open Google Maps →"}
+                      {(lat !== undefined && lng !== undefined) ? `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E` : "Open Google Maps →"}
                     </p>
                   </div>
                 </a>

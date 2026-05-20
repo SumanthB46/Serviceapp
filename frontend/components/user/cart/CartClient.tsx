@@ -61,9 +61,21 @@ export default function CartClient() {
   const discount = couponCode === "FIXVO50" ? 50 : 0;
   const finalTotal = totalAmount + platformFee - discount;
 
+  /**
+   * Called by AddressModal when the user saves a new address or clicks an
+   * existing one to make it default. We store it and close the modal
+   * immediately — no need for the user to see it again.
+   */
+  const handleAddressSelected = (address: any) => {
+    setDefaultAddress(address);
+    setIsAddressModalOpen(false);
+  };
+
   const handleCheckout = async () => {
     if (!defaultAddress) {
-      messageApi.warning("Please add or select a service address");
+      // Only prompt the user if they truly have no address yet
+      messageApi.info("Please add a service address to continue");
+      setIsAddressModalOpen(true);
       return;
     }
     if (!selectedSlot) {
@@ -243,8 +255,9 @@ export default function CartClient() {
         isOpen={isAddressModalOpen}
         onClose={() => {
           setIsAddressModalOpen(false);
-          fetchDefaultAddress(); // Refresh addresses after closing
+          fetchDefaultAddress(); // Refresh in case the user changed something without selecting
         }}
+        onAddressSelect={handleAddressSelected}
       />
 
       <CheckoutSummaryModal

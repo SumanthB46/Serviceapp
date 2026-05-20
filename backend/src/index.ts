@@ -1,6 +1,9 @@
+import dns from 'dns';
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
-// Last updated: 2026-05-11T15:36
+// Last updated: 2026-05-18T10:24
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
@@ -139,4 +142,4 @@ process.on('SIGINT', gracefulShutdown);  // For Ctrl+C
 process.on('SIGTERM', gracefulShutdown); // For kill commands
 
 // Port 5001 - Active
- 
+// Triggering restart...

@@ -10,11 +10,11 @@ interface StatusBadgeProps {
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status = '' }) => {
   const s = status.toLowerCase();
   
-  const variants: Record<string, 'info' | 'warning' | 'success' | 'danger' | 'primary'> = {
+  const variants: Record<string, 'info' | 'warning' | 'success' | 'danger'> = {
     pending: 'warning',
     accepted: 'info',
     confirmed: 'info',
-    in_progress: 'primary',
+    in_progress: 'info',
     completed: 'success',
     cancelled: 'danger',
     rejected: 'danger',

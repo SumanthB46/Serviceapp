@@ -25,7 +25,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, onView, onEdit, onBlock, onDele
               alt={user.name}
               className="w-9 h-9 rounded-xl object-cover shadow-sm ring-2 ring-transparent group-hover:ring-blue-100 transition-all"
             />
-            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white shadow-sm ${user.status === 'Active' ? 'bg-green-500' : user.status === 'Blocked' ? 'bg-red-500' : 'bg-yellow-500'
+            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white shadow-sm ${user.status === 'active' ? 'bg-green-500' : user.status === 'blocked' ? 'bg-red-500' : 'bg-yellow-500'
               }`} />
           </div>
           <div className="cursor-pointer group/name" onClick={() => onView(user)}>
@@ -48,7 +48,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, onView, onEdit, onBlock, onDele
       </td>
       <td className="px-6 py-3">
         <div className="scale-[0.85] origin-left">
-          <Badge variant={user.status === 'Active' ? 'success' : user.status === 'Blocked' ? 'danger' : 'warning'}>
+          <Badge variant={user.status === 'active' ? 'success' : user.status === 'blocked' ? 'danger' : 'warning'}>
             {user.status}
           </Badge>
         </div>

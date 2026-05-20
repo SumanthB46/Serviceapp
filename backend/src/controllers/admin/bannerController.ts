@@ -9,6 +9,7 @@ export const getBanners = async (req: Request, res: Response): Promise<void> => 
     const banners = await Banner.find({ status: 'active', isDeleted: { $ne: true } }).sort({ display_order: 1 });
     res.json(banners);
   } catch (error: any) {
+    console.error('[bannerController] getBanners error:', error.message);
     res.status(500).json({ message: error.message });
   }
 };

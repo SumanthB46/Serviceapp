@@ -5,7 +5,7 @@ export interface ILocation extends Document {
   type: string;
   parent_id?: Types.ObjectId | null;
   pincode?: string;
-  coordinates: {
+  coordinates?: {
     type: 'Point';
     coordinates: [number, number];
   };
@@ -37,8 +37,8 @@ const locationSchema = new Schema<ILocation>(
       trim: true,
     },
     coordinates: {
-      type: { type: String, enum: ['Point'], default: 'Point' },
-      coordinates: { type: [Number], default: [0, 0] },
+      type: { type: String, enum: ['Point'] },
+      coordinates: { type: [Number] },
     },
     status: {
       type: String,
@@ -55,6 +55,7 @@ const locationSchema = new Schema<ILocation>(
   }
 );
 
-locationSchema.index({ coordinates: '2dsphere' });
+// Note: 2dsphere index intentionally removed — Location is used for city/area lookups only.
+// Geospatial dispatch ($geoNear) runs on the Provider model, not Location.
 
 export const Location = mongoose.model<ILocation>('Location', locationSchema);

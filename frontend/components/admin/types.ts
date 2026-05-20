@@ -90,6 +90,8 @@ export interface ILocation {
   type: string;
   parent_id?: string | ILocation | null;
   pincode?: string;
+  state?: string;
+  country?: string;
   coordinates: {
     type: 'Point';
     coordinates: [number, number];
