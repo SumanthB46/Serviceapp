@@ -111,6 +111,55 @@ const BookingTable: React.FC = () => {
     completed: bookings.filter(b => b.status === 'completed').length,
   };
 
+  const exportToCSV = () => {
+    if (!filtered || filtered.length === 0) {
+      alert("No data available to export");
+      return;
+    }
+
+    const headers = ['Ref ID', 'Customer Profile', 'Expert Assigned', 'Service', 'Schedule', 'Cost', 'Status'];
+    const csvRows = [headers.join(',')];
+
+    filtered.forEach(booking => {
+      const refId = String(booking._id).slice(-6).toUpperCase();
+      const customer = booking.user_id?.name || 'Unknown';
+      const expert = booking.provider_id?.user_id?.name || 'Unassigned';
+      const service = booking.subservice_id?.service_id?.service_name || booking.subservice_id?.name || 'N/A';
+      
+      const scheduleDate = booking.scheduled_at 
+        ? new Date(booking.scheduled_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) 
+        : 'N/A';
+      const scheduleTime = booking.booking_time ? `, ${booking.booking_time}` : '';
+      const schedule = `"${scheduleDate}${scheduleTime}"`; // Quote to avoid comma splitting
+      
+      const cost = booking.payable_amount || booking.service_price || 0;
+      const status = booking.status ? booking.status.toUpperCase() : 'UNKNOWN';
+
+      // Ensure strings that might contain commas are quoted
+      const row = [
+        refId,
+        `"${customer}"`,
+        `"${expert}"`,
+        `"${service}"`,
+        schedule,
+        cost,
+        status
+      ];
+      
+      csvRows.push(row.join(','));
+    });
+
+    const csvData = csvRows.join('\n');
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `bookings_export_${new Date().getTime()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Confirmation Modal */}
@@ -141,12 +190,12 @@ const BookingTable: React.FC = () => {
               <p className="text-xs font-black text-gray-900 mt-1">{totals.completed}</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" icon={Download} className="shadow-sm bg-white border-gray-100 text-[11px]">Export CSV</Button>
+          <Button onClick={exportToCSV} variant="outline" size="sm" icon={Download} className="shadow-sm bg-white border-gray-100 text-[11px]">Export CSV</Button>
         </div>
       </div>
 
       {/* Dynamic Filter Bar */}
-      <div className="bg-white/40 backdrop-blur-xl p-3 px-5 rounded-2xl border border-white/60 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
         <div className="relative w-full md:w-auto md:min-w-[400px] group">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
           <input
@@ -236,31 +285,18 @@ const BookingTable: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-3 font-black text-gray-900 tracking-tighter text-[12px]">₹{booking.payable_amount || booking.service_price || 0}</td>
-                    <td className="px-6 py-3">
-                      <div className="relative">
-                        <select
-                          value={booking.status}
-                          onChange={(e) => handleStatusChangeClick(booking._id, e.target.value, booking.status)}
-                          className={`
-                            appearance-none pl-3 pr-8 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer outline-none shadow-sm
-                            ${booking.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' : 
-                              booking.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                              booking.status === 'cancelled' || booking.status === 'rejected' ? 'bg-rose-50 text-rose-600 border-rose-200' :
-                              'bg-blue-50 text-blue-600 border-blue-200'}
-                          `}
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="accepted">Accepted</option>
-                          <option value="confirmed">Confirmed</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="completed">Completed</option>
-                          <option value="cancelled">Cancelled</option>
-                          <option value="rejected">Rejected</option>
-                        </select>
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
-                          <RefreshCw size={10} className="animate-spin-slow" />
-                        </div>
-                      </div>
+                    <td className="px-6 py-3 cursor-pointer" onClick={() => setSelected(booking)}>
+                      <span
+                        className={`
+                          inline-block px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-widest text-center shadow-sm min-w-[80px]
+                          ${booking.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' : 
+                            booking.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                            booking.status === 'cancelled' || booking.status === 'rejected' ? 'bg-rose-50 text-rose-600 border-rose-200' :
+                            'bg-blue-50 text-blue-600 border-blue-200'}
+                        `}
+                      >
+                        {booking.status}
+                      </span>
                     </td>
                   </motion.tr>
                 ))

@@ -26,6 +26,7 @@ import subServiceRoutes from './routes/admin/subServiceRoutes';
 import cartRoutes from './routes/user/cartRoutes';
 import walletRoutes from './routes/provider/walletRoutes';
 import membershipRoutes from './routes/admin/membershipRoutes';
+import contactRoutes from './routes/user/contactRoutes';
 
 
 
@@ -79,6 +80,7 @@ app.use('/api/locations', locationRoutes);
 app.use('/api/sub-services', subServiceRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wallets', walletRoutes);
+app.use('/api/contact', contactRoutes);
 
 
 

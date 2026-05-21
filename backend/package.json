@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "predev": "npx kill-port 5005",
-    "dev": "nodemon --watch src --exec ts-node src/index.ts",
+    "dev": "nodemon --watch src --exec \"npx ts-node\" src/index.ts",
     "build": "tsc"
   },
   "dependencies": {
@@ -19,7 +19,7 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.0",
-    "nodemailer": "^8.0.5",
+    "nodemailer": "^8.0.7",
     "socket.io": "^4.8.3",
     "twilio": "^5.13.1"
   },

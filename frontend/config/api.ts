@@ -9,7 +9,7 @@ const getBackendUrl = () => {
   if (isBrowser && window.location.hostname && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
     return `http://${window.location.hostname}:5005`;
   }
-  return "http://127.0.0.1:5005";
+  return "http://localhost:5005";
 };
 
 export const BACKEND_URL = getBackendUrl();

@@ -17,22 +17,18 @@ import {
    DollarSign,
    XCircle,
    ShieldCheck,
-   RefreshCw,
    ChevronDown,
    Calendar,
-   MapPin,
    TrendingUp,
    LayoutGrid
 } from 'lucide-react';
+import axios from 'axios';
+import { API_URL } from '@/config/api';
 
 export default function DashboardOverview() {
-   const [revenueTimeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
-   
-   // State for filter dropdowns
    const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
    const [selectedDate, setSelectedDate] = useState('Last 7 Days');
    const [selectedCategory, setSelectedCategory] = useState('All Categories');
-   const [selectedLocation, setSelectedLocation] = useState('All Locations');
    const [startDate, setStartDate] = useState('');
    const [endDate, setEndDate] = useState('');
 
@@ -65,19 +61,57 @@ export default function DashboardOverview() {
       setActiveDropdown(null);
    };
 
-   const dateOptions = ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'Custom Range'];
    const categoryOptions = ['All Categories', 'Cleaning', 'Repair', 'Installation', 'Moving', 'Plumbing', 'Electrical'];
-   const locationOptions = ['All Locations', 'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Pune', 'Chennai'];
 
-   // ... (stats definition remains same or adjusted for glass)
-   const stats = [
-      { title: 'Total Users', value: '1,245', icon: Users, trend: 12.5, trendLabel: 'vs last month' },
-      { title: 'Service Providers', value: '320', icon: Briefcase, trend: 4.2, trendLabel: 'vs last month' },
-      { title: 'Total Bookings', value: '8,924', icon: CalendarCheck, trend: 18.2, trendLabel: 'vs last month' },
-      { title: 'Revenue', value: '₹1.25L', icon: DollarSign, trend: 14.8, trendLabel: 'vs last month' },
-      { title: 'Pending Approvals', value: '42', icon: ShieldCheck, trend: 8.4, trendLabel: 'waiting' },
-      { title: 'Cancelled Orders', value: '18', icon: XCircle, trend: -12.5, trendLabel: 'this week' },
+   const [apiStats, setApiStats] = useState<any[]>([]);
+   const [apiBookings, setApiBookings] = useState<any[]>([]);
+   const [chartData, setChartData] = useState<any>(null);
+
+   const fetchDashboardData = async () => {
+      try {
+         const token = localStorage.getItem('token');
+         const params = new URLSearchParams();
+         if (startDate) params.append('startDate', startDate);
+         if (endDate) params.append('endDate', endDate);
+         if (selectedCategory && selectedCategory !== 'All Categories') params.append('category', selectedCategory);
+         
+         const res = await axios.get(`${API_URL}/reports/dashboard?${params.toString()}`, {
+            headers: { Authorization: `Bearer ${token}` }
+         });
+         
+         const rawStats = res.data.stats || [];
+         const mappedStats = rawStats.map((stat: any) => {
+            let icon = Users;
+            if (stat.title.includes('Providers')) icon = Briefcase;
+            if (stat.title.includes('Bookings')) icon = CalendarCheck;
+            if (stat.title.includes('Revenue')) icon = DollarSign;
+            if (stat.title.includes('Pending')) icon = ShieldCheck;
+            if (stat.title.includes('Cancelled')) icon = XCircle;
+            return { ...stat, icon };
+         });
+         
+         setApiStats(mappedStats);
+         setApiBookings(res.data.recentBookings || []);
+         setChartData(res.data.charts || null);
+      } catch (err) {
+         console.error('Failed to fetch dashboard stats', err);
+      }
+   };
+
+   React.useEffect(() => {
+      fetchDashboardData();
+   }, [startDate, endDate, selectedCategory]);
+
+   const defaultStats = [
+      { title: 'Total Users', value: '0', icon: Users, trend: 0, trendLabel: 'filtered' },
+      { title: 'Service Providers', value: '0', icon: Briefcase, trend: 0, trendLabel: 'filtered' },
+      { title: 'Total Bookings', value: '0', icon: CalendarCheck, trend: 0, trendLabel: 'filtered' },
+      { title: 'Revenue', value: '₹0', icon: DollarSign, trend: 0, trendLabel: 'filtered' },
+      { title: 'Pending Approvals', value: '0', icon: ShieldCheck, trend: 0, trendLabel: 'waiting' },
+      { title: 'Cancelled Orders', value: '0', icon: XCircle, trend: 0, trendLabel: 'filtered' },
    ];
+
+   const stats = apiStats.length > 0 ? apiStats : defaultStats;
 
    const filterRef = React.useRef<HTMLDivElement>(null);
 
@@ -99,7 +133,6 @@ export default function DashboardOverview() {
             </div>
 
             <div ref={filterRef} className="flex flex-wrap items-center gap-3">
-                {/* Filters */}
                 <div className="relative">
                    <div 
                       onClick={() => toggleDropdown('calendar')}
@@ -116,7 +149,7 @@ export default function DashboardOverview() {
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 5, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute top-full left-0 mt-1 w-64 bg-white/80 backdrop-blur-xl border border-white/60 rounded-xl shadow-xl z-50 overflow-hidden"
+                            className="absolute top-full right-0 lg:left-0 mt-1 w-64 bg-white/80 backdrop-blur-xl border border-white/60 rounded-xl shadow-xl z-50 overflow-hidden"
                          >
                             <div className="p-4 space-y-4">
                                <div className="flex items-center justify-between mb-2">
@@ -189,7 +222,7 @@ export default function DashboardOverview() {
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 5, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute top-full left-0 mt-1 w-40 bg-white/80 backdrop-blur-xl border border-white/60 rounded-xl shadow-xl z-50 overflow-hidden"
+                            className="absolute top-full right-0 lg:left-0 mt-1 w-40 bg-white/80 backdrop-blur-xl border border-white/60 rounded-xl shadow-xl z-50 overflow-hidden"
                          >
                             {categoryOptions.map((option) => (
                                <div 
@@ -204,87 +237,43 @@ export default function DashboardOverview() {
                       )}
                    </AnimatePresence>
                 </div>
-
-                <div className="relative">
-                   <div 
-                      onClick={() => toggleDropdown('location')}
-                      className={`flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border rounded-xl shadow-sm cursor-pointer transition-all ${activeDropdown === 'location' ? 'bg-white/80 border-blue-200' : 'bg-white/40 border-white/60 hover:bg-white/60'}`}
-                   >
-                      <MapPin size={12} className="text-blue-600" />
-                      <span className="text-[10px] font-bold text-gray-600">{selectedLocation}</span>
-                      <ChevronDown size={12} className={`text-gray-400 transition-transform duration-200 ${activeDropdown === 'location' ? 'rotate-180' : ''}`} />
-                   </div>
-
-                   <AnimatePresence>
-                      {activeDropdown === 'location' && (
-                         <motion.div 
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 5, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute top-full left-0 mt-1 w-40 bg-white/80 backdrop-blur-xl border border-white/60 rounded-xl shadow-xl z-50 overflow-hidden"
-                         >
-                            {locationOptions.map((option) => (
-                               <div 
-                                  key={option}
-                                  onClick={() => handleSelect(setSelectedLocation, option)}
-                                  className="px-4 py-2 text-[10px] font-bold text-gray-600 hover:bg-blue-600 hover:text-white cursor-pointer transition-colors"
-                               >
-                                  {option}
-                               </div>
-                            ))}
-                         </motion.div>
-                      )}
-                   </AnimatePresence>
-                </div>
-
-               <div className="h-6 w-[1px] bg-gray-200 mx-1" />
-
-               <button className="p-2.5 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 hover:scale-105 transition-transform flex items-center gap-2">
-                  <RefreshCw size={14} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Sync Data</span>
-               </button>
             </div>
          </div>
 
          <div className="space-y-8">
-            {/* KPI Stat Cards Row - Optimised Grid for 6 Cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                {stats.map((stat, i) => (
                   <StatCard key={stat.title} {...stat} index={i} />
                ))}
             </div>
 
-            {/* Row 1: Revenue Trend (Line) + Order Status (Donut) */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                <div className="xl:col-span-2 bg-white/40 backdrop-blur-xl border border-white/60 p-6 rounded-2xl shadow-sm relative z-10 overflow-hidden">
-                  <RevenueChart />
+                  <RevenueChart data={chartData?.revenue} />
                </div>
                <div className="bg-white/40 backdrop-blur-xl border border-white/60 p-6 rounded-2xl shadow-sm relative z-10">
-                  <OrderDonutChart />
+                  <OrderDonutChart data={chartData?.orderDonut} />
                </div>
             </div>
 
-            {/* Row 2: Booking Trends (Bar) + Service Distribution (Pie) */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                <div className="xl:col-span-2 bg-white/40 backdrop-blur-xl border border-white/60 p-6 rounded-2xl shadow-sm relative z-10 overflow-hidden">
-                  <BookingChart />
+                  <BookingChart data={chartData?.bookings} />
                </div>
                <div className="bg-white/40 backdrop-blur-xl border border-white/60 p-6 rounded-2xl shadow-sm relative z-10">
-                  <ServicePieChart />
+                  <ServicePieChart data={chartData?.servicePie} />
                </div>
             </div>
 
-            {/* Row 3: Provider Performance + Peak Time Heatmap */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                <div className="xl:col-span-2 bg-white/40 backdrop-blur-xl border border-white/60 p-6 rounded-2xl shadow-sm relative z-10">
-                  <ProviderPerformanceChart />
+                  <ProviderPerformanceChart data={chartData?.providers} />
                </div>
                <div className="bg-white/40 backdrop-blur-xl border border-white/60 p-6 rounded-2xl shadow-sm relative z-10">
-                  <PeakTimeHeatmap />
+                  <PeakTimeHeatmap data={chartData?.heatmap} />
                </div>
             </div>
 
-            {/* Row 4: FULL WIDTH Recent Bookings Hub */}
             <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-2xl shadow-sm overflow-hidden relative z-10">
                <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center bg-white/20">
                   <div className="flex items-center gap-4">
@@ -305,14 +294,8 @@ export default function DashboardOverview() {
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-white/20">
-                     {[
-                        { id: '#UC-1234', client: 'Aravind K', service: 'AC Installation', status: 'Completed', color: 'green', price: '₹1,499' },
-                        { id: '#UC-1235', client: 'Sneha Rao', service: 'House Cleaning', status: 'Pending', color: 'blue', price: '₹899' },
-                        { id: '#UC-1236', client: 'John Doe', service: 'Electrician', status: 'Cancelled', color: 'red', price: '₹499' },
-                        { id: '#UC-1237', client: 'Manoj S', service: 'Plumbing', status: 'Completed', color: 'green', price: '₹599' },
-                        { id: '#UC-1238', client: 'Priya K', service: 'Kitchen Deep Clean', status: 'Pending', color: 'blue', price: '₹2,499' },
-                     ].map((booking) => (
-                        <tr key={booking.id} className="hover:bg-white/30 transition-colors group">
+                     {apiBookings.map((booking: any, index: number) => (
+                        <tr key={booking.id || index} className="hover:bg-white/30 transition-colors group">
                            <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
                                  <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-[10px] group-hover:bg-blue-600 group-hover:text-white transition-colors uppercase">
@@ -349,12 +332,10 @@ export default function DashboardOverview() {
                </table>
             </div>
 
-            {/* Row 5: Reviews + Strategic Alerts & Insights */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
-               <ReviewsSnapshot />
+               <ReviewsSnapshot data={chartData?.reviews} />
 
                <div className="space-y-6">
-                  {/* Dynamic AI Insights / Alerts */}
                   <div className="bg-[#0F172A] p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden group border border-white/5">
                      <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
                         <TrendingUp size={160} />
@@ -396,7 +377,6 @@ export default function DashboardOverview() {
                      </div>
                   </div>
 
-                  {/* Operational Health Summary */}
                   <div className="bg-white/40 backdrop-blur-xl border border-white/60 p-8 rounded-3xl shadow-sm">
                      <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-8">Performance Health</h3>
                      <div className="space-y-6">

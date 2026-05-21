@@ -24,10 +24,10 @@ export default function ReportsOverview({ stats, revenueChartData, userChartData
        <BIHeader />
 
        {/* 2. Rapid KPI Summary Rail */}
-       <BIKPICards />
+       <BIKPICards stats={stats} />
 
        {/* 3. Recharts Visualization Engine (Main Grid) */}
-       <BIChartsGrid />
+       <BIChartsGrid revenueChartData={revenueChartData} userChartData={userChartData} />
 
        {/* 4. Deep Audit Tables & Specialized Insights */}
        <BIDetailedInsights />

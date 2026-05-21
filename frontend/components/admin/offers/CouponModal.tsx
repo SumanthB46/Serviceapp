@@ -400,6 +400,7 @@ const CouponModal: React.FC<CouponModalProps> = ({ isOpen, onClose, onSuccess, e
       }
       open={isOpen}
       onCancel={onClose}
+      forceRender
       width={680}
       centered
       footer={

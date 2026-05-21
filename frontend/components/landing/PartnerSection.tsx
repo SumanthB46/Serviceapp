@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Cookies from "js-cookie";
 import { Button } from "antd";
 import {
   CheckCircle2, Sparkles, Scissors, Wind, Zap, Wrench, Settings,
@@ -62,6 +63,12 @@ const Card = ({ catIdx, rowIdx, colIdx }: { catIdx: number; rowIdx: number; colI
 };
 
 const PartnerSection = () => {
+  const [userRole, setUserRole] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    setUserRole(Cookies.get("userRole") || null);
+  }, []);
+
   return (
     <section className="bg-[#FCF8FF] py-12 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -96,11 +103,13 @@ const PartnerSection = () => {
               ))}
             </div>
 
-            <Link href="/join-as-partner" className="inline-block mt-8 sm:mt-10">
-              <button className="group relative flex items-center justify-center overflow-hidden transition-all duration-300 border-none outline-none px-8 sm:px-10 h-12 sm:h-14 rounded-xl cursor-pointer active:scale-95 shadow-lg shadow-blue-500/20 bg-[#1D2B83] text-white">
-                <span className="text-xs sm:text-sm font-bold uppercase tracking-wider">Become a Partner</span>
-              </button>
-            </Link>
+            {userRole !== "user" && (
+              <Link href="/join-as-partner" className="inline-block mt-8 sm:mt-10">
+                <button className="group relative flex items-center justify-center overflow-hidden transition-all duration-300 border-none outline-none px-8 sm:px-10 h-12 sm:h-14 rounded-xl cursor-pointer active:scale-95 shadow-lg shadow-blue-500/20 bg-[#1D2B83] text-white">
+                  <span className="text-xs sm:text-sm font-bold uppercase tracking-wider">Become a Provider</span>
+                </button>
+              </Link>
+            )}
           </div>
 
           {/* Right Side: Diamond Grid - Scale down for mobile */}

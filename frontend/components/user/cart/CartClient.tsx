@@ -127,7 +127,8 @@ export default function CartClient() {
           booking_date: bookingDate,
           time_slot: selectedSlot,
           address: defaultAddress,
-          payment_method: paymentMethod
+          payment_method: paymentMethod,
+          coupon_code: couponCode
         })
       });
 

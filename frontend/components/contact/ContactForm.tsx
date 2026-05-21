@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle } from 'lucide-react';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
+import CelebrationModal from '@/components/common/CelebrationModal';
 
 const ContactForm = () => {
     const reveal = useScrollReveal(0.1);
@@ -16,40 +17,51 @@ const ContactForm = () => {
 
     const [isSubmitted, setIsSubmitted] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSubmitted(true);
-        setTimeout(() => {
-            setIsSubmitted(false);
+        setIsLoading(true);
+        setErrorMsg("");
+
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
+            const response = await fetch(`${API_URL}/contact`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formState),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Something went wrong');
+            }
+
+            setIsSubmitted(true);
             setFormState({ name: '', email: '', phone: '', subject: '', message: '' });
-        }, 3000);
+        } catch (error: any) {
+            setErrorMsg(error.message || 'Failed to send message.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
-        <div
-            ref={reveal.ref}
-            className={`scroll-hidden ${reveal.isVisible ? 'scroll-visible' : ''}`}
-        >
-            <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-blue-500/5 p-8 md:p-10 h-full flex flex-col">
-                <div className="flex-grow">
+        <>
+            <div
+                ref={reveal.ref}
+                className={`scroll-hidden ${reveal.isVisible ? 'scroll-visible' : ''}`}
+            >
+                <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-blue-500/5 p-8 md:p-10 h-full flex flex-col">
+                    <div className="flex-grow">
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-8 text-center">
                         Send a Message
                     </h2>
 
-                    {isSubmitted ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-6">
-                                <CheckCircle size={32} className="text-blue-600" />
-                            </div>
-                            <h3 className="text-xl font-black text-slate-900 mb-2">
-                                Message Sent!
-                            </h3>
-                            <p className="text-slate-500 text-xs font-medium">
-                                We'll get back to you within 24 hours.
-                            </p>
-                        </div>
-                    ) : (
-                        <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-5">
                             {/* Name Field */}
                             <div className="space-y-1.5">
                                 <label htmlFor="contact-name" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
@@ -132,29 +144,42 @@ const ContactForm = () => {
                                 />
                             </div>
 
+                            {errorMsg && (
+                                <p className="text-red-500 text-sm font-medium text-center">{errorMsg}</p>
+                            )}
+
                             {/* Submit Button */}
                             <button
                                 type="submit"
-                                className="w-full group relative inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-4 rounded-2xl font-black text-[10px] tracking-widest uppercase shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
+                                disabled={isLoading}
+                                className="w-full group relative inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-4 rounded-2xl font-black text-[10px] tracking-widest uppercase shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:scale-100 transition-all duration-300"
                             >
-                                <span>SUBMIT INQUIRY</span>
-                                <Send size={14} strokeWidth={2.5} className="group-hover:translate-x-1 transition-transform" />
+                                <span>{isLoading ? 'SENDING...' : 'SUBMIT INQUIRY'}</span>
+                                {!isLoading && <Send size={14} strokeWidth={2.5} className="group-hover:translate-x-1 transition-transform" />}
                             </button>
                         </form>
-                    )}
-                </div>
+                    </div>
 
-                {/* Bottom Image to Fill All Remaining Space */}
-                <div className="relative overflow-hidden rounded-2xl min-h-[280px] flex-grow group">
-                    <img
-                        src="https://images.pexels.com/photos/34432794/pexels-photo-34432794.jpeg"
-                        alt="Architectural detail"
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-transparent pointer-events-none" />
+                    {/* Bottom Image to Fill All Remaining Space */}
+                    <div className="relative overflow-hidden rounded-2xl min-h-[280px] flex-grow group">
+                        <img
+                            src="https://images.pexels.com/photos/34432794/pexels-photo-34432794.jpeg"
+                            alt="Architectural detail"
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-transparent pointer-events-none" />
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <CelebrationModal
+                open={isSubmitted}
+                onClose={() => setIsSubmitted(false)}
+                title="Message Sent!"
+                subtitle="Thank you for reaching out. We will get back to you within 24 hours."
+                type="success"
+            />
+        </>
     );
 };
 

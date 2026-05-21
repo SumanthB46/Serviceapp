@@ -3,8 +3,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const OrderDonutChart: React.FC = () => {
-   const data = [
+const OrderDonutChart: React.FC<{data?: any}> = ({data}) => {
+   const chartDataToUse = [
+  { name: 'Completed', value: data?.completed !== undefined ? data.completed : 65, color: '#2563EB' },
+  { name: 'Pending', value: data?.pending !== undefined ? data.pending : 20, color: '#F59E0B' },
+  { name: 'Cancelled', value: data?.cancelled !== undefined ? data.cancelled : 15, color: '#EF4444' }
+];
+const dummy = [
       { name: 'Completed', value: 65, color: '#2563EB' },
       { name: 'Pending', value: 25, color: '#60A5FA' },
       { name: 'Cancelled', value: 10, color: '#F87171' },
@@ -23,7 +28,7 @@ const OrderDonutChart: React.FC = () => {
          <div className="flex-1 flex flex-col items-center justify-center">
             <div className="relative w-48 h-48">
                <svg viewBox="0 0 42 42" className="w-full h-full -rotate-90">
-                  {data.map((item, i) => {
+                  {chartDataToUse.map((item, i) => {
                      const dashArray = `${(item.value * circumference) / 100} ${circumference}`;
                      const dashOffset = (cumulativePercentage * circumference) / 100;
                      cumulativePercentage += item.value;
@@ -55,7 +60,7 @@ const OrderDonutChart: React.FC = () => {
             </div>
 
             <div className="mt-8 space-y-2 w-full">
-               {data.map(item => (
+               {chartDataToUse.map(item => (
                   <div key={item.name} className="flex items-center justify-between group cursor-pointer px-2 py-1 rounded-lg hover:bg-white/40 transition-colors">
                      <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />

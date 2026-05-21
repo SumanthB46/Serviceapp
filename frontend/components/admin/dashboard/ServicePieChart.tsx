@@ -3,8 +3,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const ServicePieChart: React.FC = () => {
-   const services = [
+const ServicePieChart: React.FC<{data?: any}> = ({data}) => {
+   const services = data || [
       { name: 'AC Repair', value: 35, color: '#2563EB' },
       { name: 'Cleaning', value: 25, color: '#3B82F6' },
       { name: 'Plumbing', value: 20, color: '#60A5FA' },
