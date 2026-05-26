@@ -78,3 +78,11 @@ backend/src/find_roshan.ts
 backend/src/find_user_by_id.ts
 backend/src/list_collections.ts
 frontend/update_fields.js
+fix_backticks.js
+fix_dashboard_filters.js
+patch_backend_filters.js
+patch_dashboard_filters.js
+patch_pie_heatmap.js
+rebuild_dashboard.js
+refactor_dashboard.js
+restore_filters.js
