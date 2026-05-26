@@ -339,6 +339,9 @@ export const processVerificationAction = async (req: AuthRequest, res: Response)
         emailMessage += `\nAdditional request from admin:\n"${custom_message}"\n`;
       }
       emailMessage += `\nYou can upload these documents from your profile verification page.\n\nRegards,\nFixvo Verification Team`;
+    } else if (action_type === 'approved') {
+      emailSubject = 'Fixvo Provider Verification Approved';
+      emailMessage = `Hello ${providerUser.name},\n\nCongratulations!\n\nYour provider account has been successfully verified by the Fixvo Admin team.\n\nYou can now log in and start accepting service requests on the Fixvo platform.\n\nThank you for being part of Fixvo.\n\nRegards,\nFixvo Admin Team\nfixvoadmin@gmail.com`;
     }
 
     if (emailSubject && emailMessage) {

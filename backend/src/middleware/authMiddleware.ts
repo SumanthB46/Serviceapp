@@ -47,3 +47,18 @@ export const admin = (req: AuthRequest, res: Response, next: NextFunction): void
     res.status(403).json({ message: 'Not authorized as an admin' });
   }
 };
+
+export const requireVerifiedProvider = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user && req.user.role === 'provider') {
+      const { Provider } = await import('../models/Provider');
+      const provider = await Provider.findOne({ user_id: req.user._id });
+      if (provider && provider.kyc_status === 'verified') {
+        return next();
+      }
+    }
+    res.status(403).json({ success: false, message: 'Provider verification pending. Access denied.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};

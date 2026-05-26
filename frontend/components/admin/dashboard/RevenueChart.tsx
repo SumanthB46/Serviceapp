@@ -15,12 +15,12 @@ const RevenueChart: React.FC<{data?: any}> = ({data}) => {
   const PADDING = 20;
   const MAX_VAL = Math.max(...currentData, ...lastData, 100) * 1.1;
 
-  const currentPoints = currentData.map((val, i) => ({
+  const currentPoints = currentData.map((val: number, i: number) => ({
     x: (i / (currentData.length - 1)) * W,
     y: H - (val / MAX_VAL) * H
   }));
 
-  const lastPoints = lastData.map((val, i) => ({
+  const lastPoints = lastData.map((val: number, i: number) => ({
     x: (i / (lastData.length - 1)) * W,
     y: H - (val / MAX_VAL) * H
   }));

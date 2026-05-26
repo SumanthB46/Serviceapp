@@ -97,6 +97,7 @@ export const dispatchNearbyProviders = async (bookingId: string) => {
             isOnline: true,
             isBusy: false,
             is_verified: true,
+            kyc_status: 'verified',
             isDeleted: false,
             availability_status: 'available',
             $or: [
@@ -134,6 +135,7 @@ export const dispatchNearbyProviders = async (bookingId: string) => {
             query: {
               _id: { $in: qualifiedIds },
               is_verified: true,
+              kyc_status: 'verified',
               isDeleted: false,
               $or: [
                 { service_locations: { $in: nearbyLocationIds } },
@@ -164,6 +166,7 @@ export const dispatchNearbyProviders = async (bookingId: string) => {
           $match: {
             _id: { $in: qualifiedIds },
             is_verified: true,
+            kyc_status: 'verified',
             isDeleted: false,
             $or: [
               { service_locations: { $in: nearbyLocationIds } },

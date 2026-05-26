@@ -14,18 +14,18 @@ import {
   updateMyAvailability,
   processVerificationAction
 } from '../../controllers/provider/providerController';
-import { protect, admin } from '../../middleware/authMiddleware';
+import { protect, admin, requireVerifiedProvider } from '../../middleware/authMiddleware';
 
 const router = express.Router();
 
 router.get('/me',                       protect, getMyProviderProfile);
 router.put('/me',                       protect, updateMyProviderProfile);
 // Job Requests & Status
-router.get('/job-requests',            protect, getMyJobRequests);
-router.post('/job-requests/:id/accept', protect, acceptJobRequest);
-router.post('/job-requests/:id/reject', protect, rejectJobRequest);
-router.patch('/live-location',        protect, updateLiveLocation);
-router.put('/availability',           protect, updateMyAvailability);
+router.get('/job-requests',            protect, requireVerifiedProvider, getMyJobRequests);
+router.post('/job-requests/:id/accept', protect, requireVerifiedProvider, acceptJobRequest);
+router.post('/job-requests/:id/reject', protect, requireVerifiedProvider, rejectJobRequest);
+router.patch('/live-location',        protect, requireVerifiedProvider, updateLiveLocation);
+router.put('/availability',           protect, requireVerifiedProvider, updateMyAvailability);
 
 router.get('/',                       protect, admin, getProviders);
 router.get('/:id',                    protect, admin, getProviderById);

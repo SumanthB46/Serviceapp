@@ -129,8 +129,10 @@ export default function BookingsPage() {
       }));
       
       setBookings([...mappedRequests, ...mappedBookings]);
-    } catch (error) {
-      console.error("Error fetching bookings:", error);
+    } catch (error: any) {
+      if (error.response?.status !== 403 && !error.message?.includes('403')) {
+        console.error("Error fetching bookings:", error);
+      }
     } finally {
       setLoading(false);
     }
