@@ -16,7 +16,7 @@ export function PartnerNavbar({ onRegisterClick }: { onRegisterClick: () => void
                 </div>
                 <button
                     onClick={onRegisterClick}
-                    className="rounded-xl bg-[#1D2B83] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#16236b] transition-colors"
+                    className="rounded-xl bg-[#1D2B83] px-4 py-2 text-sm font-bold text-white hover:bg-[#16236b] transition-colors"
                 >
                     Register Now
                 </button>

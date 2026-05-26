@@ -69,7 +69,7 @@ const Hero = () => {
             </div>
 
             {/* Role-based Book Now Button */}
-            {userRole !== "user" && (
+            {!userRole && (
               <div className="mt-6">
                 <Link href="/signup">
                   <button className="group relative overflow-hidden bg-[#1D2B83] active:scale-95 text-white text-sm font-bold uppercase tracking-widest px-8 py-4 rounded-xl shadow-lg hover:shadow-2xl hover:shadow-[#1D2B83]/50 transition-all duration-300">

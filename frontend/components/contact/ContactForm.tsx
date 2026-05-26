@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle } from 'lucide-react';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
+import { API_URL } from '@/config/api';
+// Force reload to fix Turbopack cache
 import CelebrationModal from '@/components/common/CelebrationModal';
 
 const ContactForm = () => {
@@ -26,7 +28,6 @@ const ContactForm = () => {
         setErrorMsg("");
 
         try {
-            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api';
             const response = await fetch(`${API_URL}/contact`, {
                 method: 'POST',
                 headers: {

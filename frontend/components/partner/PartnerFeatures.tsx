@@ -2,22 +2,22 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { 
-    GraduationCap, 
-    Sparkles, 
-    Scissors, 
-    Layers, 
-    CreditCard, 
-    Wind, 
-    Zap, 
-    Wrench, 
-    Paintbrush, 
-    Hammer, 
-    Bug, 
-    Settings, 
-    Heart, 
-    Dumbbell, 
-    Truck, 
+import {
+    GraduationCap,
+    Sparkles,
+    Scissors,
+    Layers,
+    CreditCard,
+    Wind,
+    Zap,
+    Wrench,
+    Paintbrush,
+    Hammer,
+    Bug,
+    Settings,
+    Heart,
+    Dumbbell,
+    Truck,
     Shirt,
     User,
     Upload,
@@ -163,42 +163,7 @@ const MARQUEE_IMAGES = [
 export function PartnerFeatures() {
     return (
         <>
-            {/* AUTO-SCROLL MARQUEE SECTION */}
-            <section className="py-12 bg-white overflow-hidden border-b border-slate-100">
-                <style dangerouslySetInnerHTML={{__html: `
-                    @keyframes scroll {
-                        0% { transform: translateX(0); }
-                        100% { transform: translateX(calc(-250px * 6 - 1.5rem * 6)); }
-                    }
-                    .animate-scroll {
-                        animation: scroll 20s linear infinite;
-                    }
-                    .animate-scroll:hover {
-                        animation-play-state: paused;
-                    }
-                `}} />
-                <div className="mx-auto max-w-7xl px-4 text-center mb-8">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#1D2B83]">
-                        Our Partners in Action
-                    </span>
-                </div>
-                <div className="relative flex w-full overflow-hidden">
-                    <div className="flex animate-scroll gap-6 w-max">
-                        {/* First set of images */}
-                        {MARQUEE_IMAGES.map((src, i) => (
-                            <div key={`img1-${i}`} className="w-[250px] h-[180px] sm:w-[320px] sm:h-[220px] rounded-2xl overflow-hidden shrink-0 shadow-sm border border-slate-100">
-                                <img src={src} alt={`Partner Service ${i}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" />
-                            </div>
-                        ))}
-                        {/* Duplicate set for infinite scroll effect */}
-                        {MARQUEE_IMAGES.map((src, i) => (
-                            <div key={`img2-${i}`} className="w-[250px] h-[180px] sm:w-[320px] sm:h-[220px] rounded-2xl overflow-hidden shrink-0 shadow-sm border border-slate-100">
-                                <img src={src} alt={`Partner Service ${i}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+
 
             {/* WHO CAN JOIN */}
             <section className="py-24 px-4">
@@ -311,6 +276,43 @@ export function PartnerFeatures() {
                                     </div>
                                 </motion.div>
                             </FadeIn>
+                        ))}
+                    </div>
+                </div>
+            </section>
+            {/* AUTO-SCROLL MARQUEE SECTION */}
+            <section className="py-12 bg-white overflow-hidden border-b border-slate-100">
+                <style dangerouslySetInnerHTML={{
+                    __html: `
+                    @keyframes scroll {
+                        0% { transform: translateX(0); }
+                        100% { transform: translateX(calc(-250px * 6 - 1.5rem * 6)); }
+                    }
+                    .animate-scroll {
+                        animation: scroll 20s linear infinite;
+                    }
+                    .animate-scroll:hover {
+                        animation-play-state: paused;
+                    }
+                `}} />
+                <div className="mx-auto max-w-7xl px-4 text-center mb-8">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#1D2B83]">
+                        Our Partners in Action
+                    </span>
+                </div>
+                <div className="relative flex w-full overflow-hidden">
+                    <div className="flex animate-scroll gap-6 w-max">
+                        {/* First set of images */}
+                        {MARQUEE_IMAGES.map((src, i) => (
+                            <div key={`img1-${i}`} className="w-[250px] h-[180px] sm:w-[320px] sm:h-[220px] rounded-2xl overflow-hidden shrink-0 shadow-sm border border-slate-100">
+                                <img src={src} alt={`Partner Service ${i}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" />
+                            </div>
+                        ))}
+                        {/* Duplicate set for infinite scroll effect */}
+                        {MARQUEE_IMAGES.map((src, i) => (
+                            <div key={`img2-${i}`} className="w-[250px] h-[180px] sm:w-[320px] sm:h-[220px] rounded-2xl overflow-hidden shrink-0 shadow-sm border border-slate-100">
+                                <img src={src} alt={`Partner Service ${i}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" />
+                            </div>
                         ))}
                     </div>
                 </div>
