@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Info } from "lucide-react";
+import { Clock } from "lucide-react";
 
 const TIME_SLOTS = [
   "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM",
@@ -13,7 +13,7 @@ interface TimeSlotSelectionProps {
   selectedDate: "today" | "tomorrow";
   setSelectedDate: (date: "today" | "tomorrow") => void;
   selectedSlot: string | null;
-  setSelectedSlot: (slot: string) => void;
+  setSelectedSlot: (slot: string | null) => void;
 }
 
 export default function TimeSlotSelection({
@@ -23,47 +23,66 @@ export default function TimeSlotSelection({
   setSelectedSlot
 }: TimeSlotSelectionProps) {
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-end px-1">
+    <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-3">
+      {/* Compact header row */}
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="flex items-center gap-1.5">
+          <Clock className="w-3.5 h-3.5 text-[#1D2B83]" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-700">
+            Select Time Slot
+          </span>
+          {!selectedSlot && (
+            <span className="text-[9px] font-bold text-rose-400 bg-rose-50 px-1.5 py-0.5 rounded-md ml-1">
+              Required
+            </span>
+          )}
+          {selectedSlot && (
+            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md ml-1">
+              ✓ {selectedSlot}
+            </span>
+          )}
+        </div>
 
-        <div className="flex p-1 bg-slate-100 rounded-xl">
-          <button 
+        {/* Compact Date Switcher */}
+        <div className="flex p-0.5 bg-slate-100 rounded-lg">
+          <button
             onClick={() => setSelectedDate("today")}
-            className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${selectedDate === "today" ? "bg-white text-[#1D2B83] shadow-sm" : "text-slate-400"}`}
+            className={`px-3 py-1 text-[9px] font-black uppercase tracking-wider rounded-md transition-all ${
+              selectedDate === "today"
+                ? "bg-white text-[#1D2B83] shadow-sm"
+                : "text-slate-400 hover:text-slate-600"
+            }`}
           >
             Today
           </button>
-          <button 
+          <button
             onClick={() => setSelectedDate("tomorrow")}
-            className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${selectedDate === "tomorrow" ? "bg-white text-[#1D2B83] shadow-sm" : "text-slate-400"}`}
+            className={`px-3 py-1 text-[9px] font-black uppercase tracking-wider rounded-md transition-all ${
+              selectedDate === "tomorrow"
+                ? "bg-white text-[#1D2B83] shadow-sm"
+                : "text-slate-400 hover:text-slate-600"
+            }`}
           >
             Tomorrow
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {TIME_SLOTS.map((slot) => (
-            <button
-              key={slot}
-              onClick={() => setSelectedSlot(slot)}
-              className={`py-4 rounded-2xl text-xs font-black transition-all border-2 ${
-                selectedSlot === slot 
-                  ? "bg-[#1D2B83] border-[#1D2B83] text-white shadow-lg shadow-blue-900/20" 
-                  : "bg-slate-50 border-transparent text-slate-400 hover:border-slate-200 hover:text-slate-600"
-              }`}
-            >
-              {slot}
-            </button>
-          ))}
-        </div>
-        <div className="mt-8 flex items-center gap-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
-          <Info className="w-5 h-5 text-blue-600" />
-          <p className="text-[11px] font-bold text-blue-800 leading-tight">
-            Professional will arrive within 30 minutes of the selected time slot.
-          </p>
-        </div>
+      {/* Compact slot grid */}
+      <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
+        {TIME_SLOTS.map((slot) => (
+          <button
+            key={slot}
+            onClick={() => setSelectedSlot(selectedSlot === slot ? null : slot)}
+            className={`py-2 rounded-xl text-[9px] font-black transition-all border ${
+              selectedSlot === slot
+                ? "bg-[#1D2B83] border-[#1D2B83] text-white shadow-sm shadow-blue-900/10"
+                : "bg-slate-50 border-slate-100 text-slate-400 hover:border-[#1D2B83]/30 hover:text-[#1D2B83]"
+            }`}
+          >
+            {slot}
+          </button>
+        ))}
       </div>
     </section>
   );
