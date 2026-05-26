@@ -1,30 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, Legend 
 } from 'recharts';
 import { TrendingUp, AlertCircle, CheckCircle2, ChevronRight } from 'lucide-react';
-
-const REVENUE_DATA = [
-  { name: 'Mon', current: 4000, previous: 2400 },
-  { name: 'Tue', current: 3000, previous: 1398 },
-  { name: 'Wed', current: 2000, previous: 9800 },
-  { name: 'Thu', current: 2780, previous: 3908 },
-  { name: 'Fri', current: 1890, previous: 4800 },
-  { name: 'Sat', current: 2390, previous: 3800 },
-  { name: 'Sun', current: 3490, previous: 4300 },
-];
-
-const BOOKING_DATA = [
-  { name: 'Jan', bookings: 400 },
-  { name: 'Feb', bookings: 300 },
-  { name: 'Mar', bookings: 600 },
-  { name: 'Apr', bookings: 800 },
-  { name: 'May', bookings: 500 },
-  { name: 'Jun', bookings: 900 },
-];
 
 const SERVICE_DATA = [
   { name: 'Cleaning', value: 35 },
@@ -48,13 +29,34 @@ const ChartCard: React.FC<{ title: string; children: React.ReactNode }> = ({ tit
   </div>
 );
 
-const BIChartsGrid: React.FC = () => {
+interface BIChartsGridProps {
+  revenueChartData?: { labels: string[], values: number[] };
+  userChartData?: { labels: string[], values: number[] };
+}
+
+const BIChartsGrid: React.FC<BIChartsGridProps> = ({ revenueChartData, userChartData }) => {
+  const formattedRevenueData = useMemo(() => {
+    if (!revenueChartData || !revenueChartData.labels) return [];
+    return revenueChartData.labels.map((label, index) => ({
+      name: label,
+      current: revenueChartData.values[index] || 0,
+    }));
+  }, [revenueChartData]);
+
+  const formattedUserData = useMemo(() => {
+    if (!userChartData || !userChartData.labels) return [];
+    return userChartData.labels.map((label, index) => ({
+      name: label,
+      users: userChartData.values[index] || 0,
+    }));
+  }, [userChartData]);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
        {/* 1. Revenue Visualization - Line Chart */}
        <ChartCard title="Revenue Performance Index">
           <ResponsiveContainer width="100%" height="100%">
-             <LineChart data={REVENUE_DATA}>
+             <LineChart data={formattedRevenueData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                 <XAxis dataKey="name" fontSize={10} fontWeight={800} axisLine={false} tickLine={false} dy={10} />
                 <YAxis fontSize={10} fontWeight={800} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${v}`} />
@@ -63,7 +65,6 @@ const BIChartsGrid: React.FC = () => {
                    labelStyle={{ fontWeight: 800, color: '#111827', textTransform: 'uppercase', fontSize: '10px' }}
                 />
                 <Line type="monotone" dataKey="current" stroke="#2563eb" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 8 }} name="Current Period" />
-                <Line type="monotone" dataKey="previous" stroke="#e5e7eb" strokeWidth={2} dot={false} strokeDasharray="5 5" name="Previous Period" />
              </LineChart>
           </ResponsiveContainer>
        </ChartCard>
@@ -71,7 +72,7 @@ const BIChartsGrid: React.FC = () => {
        {/* 2. Customer Growth Visualization - Area Chart */}
        <ChartCard title="Capability & User Growth">
           <ResponsiveContainer width="100%" height="100%">
-             <AreaChart data={REVENUE_DATA}>
+             <AreaChart data={formattedUserData}>
                 <defs>
                    <linearGradient id="colorUser" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3}/>
@@ -83,22 +84,22 @@ const BIChartsGrid: React.FC = () => {
                 <Tooltip 
                    contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '16px', border: 'none' }}
                 />
-                <Area type="monotone" dataKey="current" stroke="#7c3aed" fillOpacity={1} fill="url(#colorUser)" strokeWidth={3} />
+                <Area type="monotone" dataKey="users" stroke="#7c3aed" fillOpacity={1} fill="url(#colorUser)" strokeWidth={3} />
              </AreaChart>
           </ResponsiveContainer>
        </ChartCard>
 
-       {/* 3. Booking Trends Visualization - Bar Chart */}
+       {/* 3. Transactional Momentum - Using static or mixed data for demo since backend doesn't provide booking array yet */}
        <ChartCard title="Transactional Momentum">
           <ResponsiveContainer width="100%" height="100%">
-             <BarChart data={BOOKING_DATA}>
+             <BarChart data={formattedUserData}>
                 <XAxis dataKey="name" fontSize={10} fontWeight={800} axisLine={false} tickLine={false} />
                 <YAxis fontSize={10} fontWeight={800} axisLine={false} tickLine={false} />
                 <Tooltip 
                    cursor={{ fill: 'rgba(37, 99, 235, 0.05)' }}
                    contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '16px', border: 'none' }}
                 />
-                <Bar dataKey="bookings" fill="#2563eb" radius={[10, 10, 10, 10]} barSize={20} />
+                <Bar dataKey="users" fill="#2563eb" radius={[10, 10, 10, 10]} barSize={20} />
              </BarChart>
           </ResponsiveContainer>
        </ChartCard>

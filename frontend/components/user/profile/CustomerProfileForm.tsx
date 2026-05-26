@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { API_URL } from '@/config/api';
+import Cookies from 'js-cookie';
+import { useCart } from '@/context/CartContext';
 
 export default function CustomerProfileForm() {
   const router = useRouter();
+  const { refreshCart } = useCart();
   
   const [userId, setUserId] = useState("");
   const [token, setToken] = useState("");
@@ -112,6 +115,11 @@ export default function CustomerProfileForm() {
         gender: formData.gender,
         profile_image: data.profile_image,
       }));
+      
+      Cookies.set('token', data.token, { expires: 7 });
+      Cookies.set('userRole', data.role, { expires: 7 });
+      
+      await refreshCart();
       
       // Redirect to main app/dashboard after success
       if (data.role === 'provider') {

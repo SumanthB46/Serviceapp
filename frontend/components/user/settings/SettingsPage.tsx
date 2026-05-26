@@ -26,7 +26,7 @@ const SectionHeader = ({ title, onEdit }: { title: string; onEdit?: () => void }
   <div className="flex items-center justify-between px-1 pt-6 pb-2">
     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{title}</p>
     {onEdit && (
-      <button 
+      <button
         onClick={onEdit}
         className="p-1.5 hover:bg-slate-100 rounded-lg text-[#1D2B83] transition-colors group"
       >
@@ -81,7 +81,7 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ type, currentValu
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden"
@@ -101,8 +101,8 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ type, currentValu
                   {type === "password" ? "Reset Password" : `Update ${type === "phone" ? "Phone" : "Email"}`}
                 </h3>
                 <p className="text-sm font-medium text-slate-500 mt-1">
-                  {type === "password" 
-                    ? "We'll send an OTP to your registered info to verify it's you." 
+                  {type === "password"
+                    ? "We'll send an OTP to your registered info to verify it's you."
                     : `Enter your new ${type} below to receive a verification code.`}
                 </p>
               </div>
@@ -144,7 +144,7 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ type, currentValu
                     maxLength={1}
                     value={digit}
                     onChange={(e) => handleOtpChange(i, e.target.value)}
-                    onKeyDown={(e) => e.key === "Backspace" && !digit && i > 0 && otpRefs.current[i-1]?.focus()}
+                    onKeyDown={(e) => e.key === "Backspace" && !digit && i > 0 && otpRefs.current[i - 1]?.focus()}
                     className="w-12 h-14 bg-slate-50 border-2 border-slate-100 rounded-xl text-center text-xl font-black text-[#1D2B83] focus:border-[#1D2B83] focus:bg-white transition-all outline-none"
                   />
                 ))}
@@ -171,7 +171,7 @@ const VerificationModal: React.FC<VerificationModalProps> = ({ type, currentValu
 
 const PrivacyModal = ({ onClose }: { onClose: () => void }) => (
   <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white w-full max-w-2xl max-h-[80vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col"
@@ -215,7 +215,7 @@ const SettingsPage = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [verifyType, setVerifyType] = useState<"phone" | "email" | "password" | null>(null);
   const [showPrivacy, setShowPrivacy] = useState(false);
-  
+
   const [notifications, setNotifications] = useState({
     bookingUpdates: true,
     promotions: false,
@@ -280,13 +280,13 @@ const SettingsPage = () => {
 
       <AnimatePresence>
         {verifyType && (
-          <VerificationModal 
-            type={verifyType} 
-            onClose={() => setVerifyType(null)} 
+          <VerificationModal
+            type={verifyType}
+            onClose={() => setVerifyType(null)}
             onSuccess={(val) => {
               if (val) handleUpdateUser({ ...user, [verifyType]: val });
               setVerifyType(null);
-            }} 
+            }}
           />
         )}
         {showPrivacy && <PrivacyModal onClose={() => setShowPrivacy(false)} />}
@@ -299,7 +299,7 @@ const SettingsPage = () => {
         </div>
 
         {/* PROFILE SUMMARY CARD */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-blue-900/5 p-12 mb-12 relative overflow-hidden group"
@@ -307,7 +307,7 @@ const SettingsPage = () => {
           {/* Elegant background elements */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full -mr-48 -mt-48 blur-3xl opacity-60 group-hover:opacity-80 transition-opacity" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-slate-50 rounded-full -ml-32 -mb-32 blur-3xl opacity-40" />
-          
+
           <div className="flex flex-col md:flex-row items-center gap-10 relative z-10">
             <div className="relative group/avatar">
               <div className="w-32 h-32 rounded-[3rem] bg-gradient-to-br from-[#1D2B83] to-blue-600 flex items-center justify-center shadow-2xl shadow-blue-200 overflow-hidden ring-8 ring-white">
@@ -318,7 +318,7 @@ const SettingsPage = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="flex-1 text-center md:text-left space-y-4">
               <div>
                 <div className="flex flex-col md:flex-row items-center gap-4">
@@ -364,79 +364,26 @@ const SettingsPage = () => {
             {/* SECURITY */}
             <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-blue-900/5 overflow-hidden p-6 h-full">
               <SectionHeader title="Account Security" />
-              <RowLink icon={Smartphone} label="Update Phone"   sub={`Current: ${user?.phone || "Not set"}`} onClick={() => setVerifyType("phone")} />
-              <RowLink icon={Mail}       label="Update Email"   sub={`Current: ${user?.email || "Not set"}`} onClick={() => setVerifyType("email")} />
-              <RowLink icon={Lock}       label="Change Password" sub="OTP Verification required"             onClick={() => setVerifyType("password")} />
+              <RowLink icon={Smartphone} label="Update Phone" sub={`Current: ${user?.phone || "Not set"}`} onClick={() => setVerifyType("phone")} />
+              <RowLink icon={Mail} label="Update Email" sub={`Current: ${user?.email || "Not set"}`} onClick={() => setVerifyType("email")} />
+              <RowLink icon={Lock} label="Change Password" sub="OTP Verification required" onClick={() => setVerifyType("password")} />
             </div>
           </div>
 
           <div className="space-y-8">
-            {/* NOTIFICATIONS */}
-            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-blue-900/5 overflow-hidden p-6">
-              <SectionHeader title="Notifications" />
-              <RowToggle icon={Bell}       label="Booking Updates"  sub="Status changes, confirmations"  checked={notifications.bookingUpdates} onChange={() => toggle("bookingUpdates")} />
-              <RowToggle icon={Bell}       label="Promotions"       sub="Deals and seasonal offers"      checked={notifications.promotions}     onChange={() => toggle("promotions")}     />
-              <RowToggle icon={Bell}       label="New Offers"       sub="Coupons and discount alerts"    checked={notifications.offers}         onChange={() => toggle("offers")}         />
-              <RowToggle icon={Bell}       label="Reminders"        sub="Upcoming service reminders"     checked={notifications.reminders}      onChange={() => toggle("reminders")}      />
-              <RowToggle icon={Smartphone} label="SMS Alerts"       sub="Text message notifications"     checked={notifications.sms}            onChange={() => toggle("sms")}            />
-            </div>
-          </div>
-
-          <div className="space-y-8">
-            {/* PREFERENCES */}
+            {/* PREFERENCES & SYSTEM */}
             <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-blue-900/5 overflow-hidden p-6 h-full">
-              <SectionHeader title="System" />
-              <RowToggle icon={Moon}  label="Dark Mode"  sub="Toggle dark theme"  checked={darkMode} onChange={() => setDarkMode(!darkMode)} />
-              <RowLink icon={Shield}    label="Privacy Policy"      sub="How we use your data"   onClick={() => setShowPrivacy(true)} />
-            </div>
-          </div>
-
-          <div className="space-y-8">
-            {/* DANGER ZONE */}
-            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-blue-900/5 overflow-hidden p-6">
-              <SectionHeader title="Danger Zone" />
-              <RowLink icon={LogOut}    label="Logout All Devices"  sub="Sign out everywhere"    href="#" />
-              <button
-                onClick={() => setShowDelete(!showDelete)}
-                className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl hover:bg-red-50 transition-all group text-left"
-              >
-                <div className="w-10 h-10 rounded-[18px] bg-red-100 flex items-center justify-center flex-shrink-0">
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-black text-red-500">Delete Account</p>
-                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">Permanently remove your account</p>
-                </div>
-                <ChevronRight className={`w-4 h-4 text-red-300 transition-transform ${showDelete ? "rotate-90" : ""}`} />
-              </button>
-
-              {showDelete && (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mx-4 mt-2 p-6 bg-red-50 rounded-3xl space-y-4 border border-red-100">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-red-500 flex items-center justify-center flex-shrink-0 text-white shadow-lg shadow-red-200">
-                      <AlertTriangle size={20} />
-                    </div>
-                    <p className="text-sm font-bold text-red-700 leading-relaxed">
-                      This action is irreversible. All your bookings, wallet balance, and data will be permanently deleted.
-                    </p>
-                  </div>
-                  <div className="flex gap-3">
-                    <button onClick={() => setShowDelete(false)} className="flex-1 py-3 bg-white text-slate-600 text-xs font-black rounded-2xl hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm">Cancel</button>
-                    <button className="flex-1 py-3 bg-red-500 text-white text-xs font-black rounded-2xl hover:bg-red-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-red-200"><Trash2 size={14} /> Delete Account</button>
-                  </div>
-                </motion.div>
-              )}
+              <SectionHeader title="System & Policy" />
+              <RowLink icon={Shield} label="Privacy Policy" sub="How we use your data" onClick={() => setShowPrivacy(true)} />
+              <RowLink icon={LogOut} label="Logout" sub="Sign out of your account" href="#" danger={true} />
             </div>
           </div>
         </div>
 
-        <div className="text-center pt-12 pb-6">
-          <p className="text-[12px] text-slate-400 font-black tracking-[0.3em] uppercase">FIXVO Technologies</p>
-          <p className="text-[10px] text-slate-300 font-bold mt-2">Version 2.4.1 (Stable) · © 2026</p>
-        </div>
+
       </div>
 
-      <ProfileModal 
+      <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         user={user}

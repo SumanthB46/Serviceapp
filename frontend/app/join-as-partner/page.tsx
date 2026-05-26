@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
+import { useRouter } from "next/navigation";
 import { PartnerNavbar } from "@/components/partner/PartnerNavbar";
 import { PartnerHero } from "@/components/partner/PartnerHero";
 import { PartnerFeatures } from "@/components/partner/PartnerFeatures";
@@ -17,19 +18,20 @@ import StickyNavPill from '@/components/common/StickyNavPill';
  */
 export default function JoinAsPartnerPage() {
     const formRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
 
-    const scrollToForm = () => {
-        formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const handleRegisterClick = () => {
+        router.push("/signup/verify?role=provider");
     };
 
     return (
         <div className="min-h-screen bg-[#FCF8FF] font-sans">
             <StickyNavPill />
             {/* Header / Navigation */}
-            <PartnerNavbar onRegisterClick={scrollToForm} />
+            <PartnerNavbar onRegisterClick={handleRegisterClick} />
 
             {/* 1. Hero Section */}
-            <PartnerHero onRegisterClick={scrollToForm} />
+            <PartnerHero onRegisterClick={handleRegisterClick} />
 
             {/* 2. Core Features & Benefits */}
             {/* Includes Sections: Who Can Join, How It Works, Benefits, Documents Required, Testimonials */}
@@ -45,7 +47,7 @@ export default function JoinAsPartnerPage() {
             <PartnerFAQ />
 
             {/* 6. Final Call to Action */}
-            <PartnerFinalCTA onRegisterClick={scrollToForm} />
+            <PartnerFinalCTA onRegisterClick={handleRegisterClick} />
 
             {/* 7. Footer Strip */}
             <PartnerFooterStrip />

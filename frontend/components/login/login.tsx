@@ -24,6 +24,7 @@ import { API_URL } from '@/config/api';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import Cookies from 'js-cookie';
+import { useCart } from '@/context/CartContext';
 
 interface LoginFormProps {
     isModal?: boolean;
@@ -35,6 +36,7 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("1"); // 1: Password, 2: OTP
     const { message } = App.useApp();
+    const { refreshCart } = useCart();
 
     // OTP State
     const [useEmail, setUseEmail] = useState(false);
@@ -68,6 +70,8 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
                 // Set cookies for middleware protection
                 Cookies.set('token', data.token, { expires: 7 }); // Expires in 7 days
                 Cookies.set('userRole', data.role, { expires: 7 });
+
+                await refreshCart();
 
                 if (onSuccess) {
                     onSuccess();
@@ -155,6 +159,8 @@ const LoginFormContent: React.FC<LoginFormProps> = ({ isModal, onSuccess }) => {
             // Set cookies for middleware protection
             Cookies.set('token', data.user.token, { expires: 7 });
             Cookies.set('userRole', data.user.role, { expires: 7 });
+
+            await refreshCart();
 
             if (onSuccess) {
                 onSuccess();

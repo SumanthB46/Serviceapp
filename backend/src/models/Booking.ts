@@ -33,6 +33,12 @@ export interface IBooking extends Document {
   
   invoice_url?: string;
   cancel_refund_status?: 'pending' | 'processed';
+  
+  refund_status?: 'none' | 'pending' | 'processing' | 'refunded' | 'failed';
+  refund_amount?: number;
+  refund_reason?: string;
+  
+  applied_coupon?: string;
 
   is_reviewed: boolean;
   isDeleted: boolean;
@@ -142,6 +148,21 @@ const bookingSchema = new Schema<IBooking>(
     cancel_refund_status: {
       type: String,
       enum: ['pending', 'processed'],
+    },
+    refund_status: {
+      type: String,
+      enum: ['none', 'pending', 'processing', 'refunded', 'failed'],
+      default: 'none',
+    },
+    refund_amount: {
+      type: Number,
+      default: 0,
+    },
+    refund_reason: {
+      type: String,
+    },
+    applied_coupon: {
+      type: String,
     },
     is_reviewed: {
       type: Boolean,

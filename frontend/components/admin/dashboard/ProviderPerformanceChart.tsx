@@ -4,8 +4,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
 
-const ProviderPerformanceChart: React.FC = () => {
-   const providers = [
+const ProviderPerformanceChart: React.FC<{data?: any[]}> = ({data}) => {
+   const providers = data && data.length > 0 ? data : [
       { name: 'Arjun Verma', jobs: 124, rating: 4.8 },
       { name: 'Sneha Kapur', jobs: 98, rating: 4.9 },
       { name: 'Ritesh Kumar', jobs: 86, rating: 4.6 },

@@ -3,12 +3,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const PeakTimeHeatmap: React.FC = () => {
+const PeakTimeHeatmap: React.FC<{data?: any[][]}> = ({data}) => {
    const hours = ['9am', '11am', '1pm', '3pm', '5pm', '7pm', '9pm'];
    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
    
    // Mock density data (0 to 1)
-   const data = [
+   const matrix = data || [
       [0.2, 0.4, 0.6, 0.3, 0.5, 0.8, 0.4],
       [0.3, 0.5, 0.7, 0.4, 0.6, 0.9, 0.5],
       [0.4, 0.6, 0.8, 0.5, 0.7, 1.0, 0.6],
@@ -37,7 +37,7 @@ const PeakTimeHeatmap: React.FC = () => {
                <div key={day} className="flex gap-2 items-center group">
                   <div className="w-8 shrink-0 text-[9px] font-bold text-gray-500 uppercase tracking-tighter group-hover:text-blue-600 transition-colors">{day}</div>
                   <div className="flex-1 flex gap-1.5 h-6">
-                     {data[di].map((val, hi) => (
+                     {matrix[di].map((val, hi) => (
                         <motion.div
                            key={hi}
                            initial={{ opacity: 0, scale: 0.8 }}

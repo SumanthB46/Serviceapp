@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { motion, Variants } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const cardVariants: Variants = {
@@ -32,7 +33,16 @@ const SignupRoleSelect = () => {
   `;
 
   return (
-    <div className="min-h-screen bg-[#F3F4F8] flex flex-col items-center justify-center px-1 py-8">
+    <div className="relative min-h-screen bg-[#F3F4F8] flex flex-col items-center justify-center px-1 py-8">
+      {/* Back Button */}
+      <Link 
+        href="/" 
+        className="absolute top-6 left-6 sm:top-8 sm:left-8 flex items-center gap-2 text-slate-500 hover:text-[#1D2B83] transition-colors"
+      >
+        <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+        <span className="font-semibold text-sm hidden sm:inline">Back</span>
+      </Link>
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

@@ -122,6 +122,30 @@ const Categories = () => {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    // Listen for custom event from PromoBanners
+    const handleOpenCategoryModal = (event: CustomEvent) => {
+      const categorySlugOrUrl = event.detail.url; // e.g., "/services/bulk-booking"
+      
+      let targetCat = null;
+      if (categorySlugOrUrl.includes("bulk-booking") || categorySlugOrUrl.includes("bulk-ordering")) {
+        targetCat = categories.find(c => c.name.toLowerCase().includes("bulk"));
+      } else if (categorySlugOrUrl.includes("loan") || categorySlugOrUrl.includes("emi")) {
+        targetCat = categories.find(c => c.name.toLowerCase().includes("loan") || c.name.toLowerCase().includes("emi"));
+      }
+
+      if (targetCat) {
+        handleCategoryClick(targetCat);
+      }
+    };
+
+    window.addEventListener("openCategoryModal", handleOpenCategoryModal as EventListener);
+    
+    return () => {
+      window.removeEventListener("openCategoryModal", handleOpenCategoryModal as EventListener);
+    };
+  }, [categories]);
+
   const handleCategoryClick = async (category: Category) => {
     if (category.redirectPath) {
       router.push(category.redirectPath);

@@ -47,12 +47,21 @@ const KPICard: React.FC<KPICardProps> = ({ label, value, trend, icon: Icon, colo
   );
 };
 
-const BIKPICards: React.FC = () => {
+interface BIKPICardsProps {
+  stats?: {
+    revenue: string;
+    signups: string;
+    providers: string;
+    bookings: string;
+  }
+}
+
+const BIKPICards: React.FC<BIKPICardsProps> = ({ stats }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
        <KPICard 
          label="Total Revenue" 
-         value="₹1,24,000" 
+         value={stats?.revenue || "₹0"} 
          trend={12} 
          icon={DollarSign} 
          color="text-green-600" 
@@ -60,7 +69,7 @@ const BIKPICards: React.FC = () => {
        />
        <KPICard 
          label="Total Bookings" 
-         value="856" 
+         value={stats?.bookings || "0"} 
          trend={8} 
          icon={Star} 
          color="text-blue-600" 
@@ -68,15 +77,15 @@ const BIKPICards: React.FC = () => {
        />
        <KPICard 
          label="New Customers" 
-         value="124" 
+         value={stats?.signups || "0"} 
          trend={-2.4} 
          icon={Users} 
          color="text-orange-600" 
          bg="bg-orange-50" 
        />
        <KPICard 
-         label="Avg Rating" 
-         value="4.8" 
+         label="Total Providers" 
+         value={stats?.providers || "0"} 
          trend={0.5} 
          icon={Star} 
          color="text-purple-600" 

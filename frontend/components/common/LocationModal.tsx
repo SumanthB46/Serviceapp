@@ -1,4 +1,6 @@
 "use client";
+// Force Turbopack Cache Invalidation
+
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -278,8 +280,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
 
               {/* Content */}
               <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
-                {activeTab === "cities" ? (
-                  <div className="space-y-6">
+                <div className={activeTab === "cities" ? "block space-y-6" : "hidden"}>
                     <div className="relative group">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1D2B83] transition-colors" />
                       <input
@@ -337,11 +338,12 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                           ))}
                         </div>
                       )}
-                    </div>
                   </div>
-                ) : (
-                  <div className="space-y-6">
-                    {showAddForm ? (
+                </div>
+
+                <div className={activeTab === "addresses" ? "block space-y-6" : "hidden"}>
+                  {/* Form is always rendered (never conditionally removed) to keep it connected to the useForm instance */}
+                    <div className={showAddForm ? 'block' : 'hidden'}>
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -383,7 +385,9 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                           </Button>
                         </Form>
                       </motion.div>
-                    ) : (
+                    </div>
+
+                    <div className={showAddForm ? 'hidden' : 'block'}>
                       <>
                         <div className="grid grid-cols-1 gap-3">
                           <button
@@ -464,10 +468,9 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                           )}
                         </div>
                       </>
-                    )}
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
 
               {/* Footer */}
               <div className="p-6 bg-slate-50/50 flex justify-center border-t border-gray-50">

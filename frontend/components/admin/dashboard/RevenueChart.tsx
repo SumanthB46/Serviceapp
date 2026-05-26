@@ -3,17 +3,17 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const RevenueChart: React.FC = () => {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
-  const currentData = [32, 58, 45, 78, 62, 95, 84]; 
-  const lastData = [28, 45, 40, 55, 52, 70, 65]; 
+const RevenueChart: React.FC<{data?: any}> = ({data}) => {
+  const months = data?.labels || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+  const currentData = data?.current || [32, 58, 45, 78, 62, 95, 84]; 
+  const lastData = data?.previous || [28, 45, 40, 55, 52, 70, 65]; 
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   // Geometry Constants (Internal SVG Coordinate System: 1000x300)
   const W = 1000;
   const H = 300;
   const PADDING = 20;
-  const MAX_VAL = 110;
+  const MAX_VAL = Math.max(...currentData, ...lastData, 100) * 1.1;
 
   const currentPoints = currentData.map((val, i) => ({
     x: (i / (currentData.length - 1)) * W,

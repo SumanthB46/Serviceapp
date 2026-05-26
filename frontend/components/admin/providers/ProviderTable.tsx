@@ -30,29 +30,39 @@ const ProviderTable: React.FC = () => {
   const [isServiceFilterOpen, setIsServiceFilterOpen] = useState(false);
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
   const [providers, setProviders] = useState<Provider[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [subservices, setSubservices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       console.log('ProviderTable: Initiating data fetch...');
-      await fetchCategories();
+      await fetchSubservices();
+      await fetchLocations();
       await fetchProviders();
     };
     loadData();
   }, []);
 
-  const fetchCategories = async () => {
+  const fetchLocations = async () => {
     try {
-      const response = await axios.get(`${API_URL}/categories`);
-      console.log('Fetched Categories Raw:', response.data);
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        setCategories(response.data);
-      } else {
-        console.warn('Categories API returned empty or invalid data');
+      const response = await axios.get(`${API_URL}/locations`);
+      if (Array.isArray(response.data)) {
+        setLocations(response.data);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error fetching locations:', error);
+    }
+  };
+
+  const fetchSubservices = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/sub-services`);
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        setSubservices(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching subservices:', error);
     }
   };
 
@@ -76,22 +86,35 @@ const ProviderTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 6;
 
-  const filtered = providers.filter(p => {
-    const matchStatus = activeTab === 'All' || p.kyc_status === activeTab;
-    const matchSearch = (p.user_id?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
-      (p.user_id?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
-      (p.user_id?.phone?.includes(searchTerm) ?? false);
-    const matchLocation = locationFilter === 'All'; // Location filter is temporarily disabled
-    const matchService = serviceFilter === 'All' || (p.services && p.services.some(s => s.subservice_ids.some(sub => sub.subservice_name === serviceFilter)));
-    return matchStatus && matchSearch && matchLocation && matchService;
-
-
-  });
+  const filtered = React.useMemo(() => {
+    return providers.filter(p => {
+      const matchStatus = activeTab === 'All' || p.kyc_status === activeTab;
+      
+      const matchSearch = (p.user_id?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+        (p.user_id?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+        (p.user_id?.phone?.includes(searchTerm) ?? false);
+        
+      const matchLocation = locationFilter === 'All' || (p.services && p.services.some(s => 
+        s.location_ids && s.location_ids.some((loc: any) => 
+          (typeof loc === 'string' ? loc : loc._id) === locationFilter
+        )
+      ));
+      
+      const matchService = serviceFilter === 'All' || (p.services && p.services.some(s => 
+        s.subservice_ids && s.subservice_ids.some((sub: any) => 
+          (typeof sub === 'string' ? sub : sub._id) === serviceFilter
+        )
+      ));
+      
+      return matchStatus && matchSearch && matchLocation && matchService;
+    });
+  }, [providers, activeTab, searchTerm, locationFilter, serviceFilter]);
 
   // Stats
   const totalProviders = providers.length;
   const pendingCount = providers.filter(p => p.kyc_status === 'pending').length;
   const verifiedCount = providers.filter(p => p.kyc_status === 'verified').length;
+  const rejectedCount = providers.filter(p => p.kyc_status === 'rejected').length;
 
 
   // Calculate slices
@@ -129,6 +152,11 @@ const ProviderTable: React.FC = () => {
   };
 
   const handleUpdateStatus = async (id: string, newStatus: string, reason?: string) => {
+    if (newStatus === 'refresh') {
+      await fetchProviders();
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       const response = await axios.put(`${API_URL}/providers/${id}`,
@@ -139,6 +167,7 @@ const ProviderTable: React.FC = () => {
 
     } catch (error) {
       console.error('Error updating status:', error);
+      throw error; // Re-throw to let caller handle it if needed
     }
   };
 
@@ -180,13 +209,17 @@ const ProviderTable: React.FC = () => {
             <div className="relative">
               <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
               <select
+                value={locationFilter}
                 onChange={(e) => setLocationFilter(e.target.value)}
                 className="pl-10 pr-8 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-600 appearance-none focus:outline-none focus:border-blue-200 shadow-sm cursor-pointer w-full"
               >
                 <option value="All">All Locations</option>
-                <option value="Mumbai">Mumbai</option>
-                <option value="Delhi">Delhi</option>
-                <option value="Bangalore">Bangalore</option>
+                {locations
+                  .filter(loc => loc.type === 'area' || !loc.type) // Fallback if type isn't fully implemented
+                  .map(loc => (
+                    <option key={loc._id} value={loc._id}>{loc.name}</option>
+                  ))
+                }
               </select>
             </div>
             <div className="relative">
@@ -195,7 +228,11 @@ const ProviderTable: React.FC = () => {
                 className="flex items-center gap-3 pl-10 pr-10 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-200 w-full"
               >
                 <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                <span className="truncate">{serviceFilter === 'All' ? 'All Services' : serviceFilter}</span>
+                <span className="truncate">
+                  {serviceFilter === 'All' 
+                    ? 'All Services' 
+                    : subservices.find(s => s._id === serviceFilter)?.subservice_name || 'Selected Service'}
+                </span>
                 <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition-transform ${isServiceFilterOpen ? 'rotate-180' : ''}`} size={12} />
               </button>
 
@@ -216,16 +253,16 @@ const ProviderTable: React.FC = () => {
                         >
                           All Services
                         </div>
-                        {categories.map((cat, idx) => {
-                          const name = cat.category_name || cat.name || `Category ${idx + 1}`;
+                        {subservices.map((sub, idx) => {
+                          const name = sub.subservice_name || sub.name || `Service ${idx + 1}`;
                           return (
                             <div
-                              key={cat._id || idx}
+                              key={sub._id || idx}
                               onClick={() => {
-                                setServiceFilter(name);
+                                setServiceFilter(sub._id);
                                 setIsServiceFilterOpen(false);
                               }}
-                              className={`px-4 py-3 text-[10px] font-black tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${serviceFilter === name ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
+                              className={`px-4 py-3 text-[10px] font-black tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${serviceFilter === sub._id ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
                             >
                               {name}
                             </div>
@@ -237,6 +274,7 @@ const ProviderTable: React.FC = () => {
                 )}
               </AnimatePresence>
             </div>
+            
             <Button
               variant="primary"
               size="sm"
@@ -247,6 +285,24 @@ const ProviderTable: React.FC = () => {
               Invite Expert
             </Button>
           </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-2 px-1">
+          <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            Showing {filtered.length} Providers
+          </div>
+          {(locationFilter !== 'All' || serviceFilter !== 'All' || searchTerm !== '') && (
+            <button
+              onClick={() => {
+                setLocationFilter('All');
+                setServiceFilter('All');
+                setSearchTerm('');
+              }}
+              className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors"
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
 
         {/* Workflow Tabs */}
@@ -260,6 +316,8 @@ const ProviderTable: React.FC = () => {
             >
               {tab === 'pending' && <span className="mr-2 px-1.5 py-0.5 bg-amber-100 text-amber-600 rounded-md text-[8px]">{pendingCount}</span>}
               {tab === 'verified' && <span className="mr-2 px-1.5 py-0.5 bg-green-100 text-green-600 rounded-md text-[8px]">{verifiedCount}</span>}
+              {tab === 'rejected' && <span className="mr-2 px-1.5 py-0.5 bg-red-100 text-red-600 rounded-md text-[8px]">{rejectedCount}</span>}
+              {tab === 'All' && <span className="mr-2 px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-md text-[8px]">{totalProviders}</span>}
               {tab}
               {activeTab === tab && (
                 <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
@@ -276,13 +334,13 @@ const ProviderTable: React.FC = () => {
           <Table
             headers={headers}
           >
-            <AnimatePresence mode="popLayout" initial={false}>
+            <AnimatePresence mode="wait">
               {currentProviders.map((provider) => (
                 <motion.tr
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.2 }}
                   key={provider._id}
                   className="hover:bg-blue-50/20 transition-all group/row border-b border-gray-50 last:border-0 text-[11px]"
                 >
@@ -314,7 +372,25 @@ const ProviderTable: React.FC = () => {
                       </Badge>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-500 font-bold uppercase text-[9px] tracking-widest">Unassigned</td>
+                  <td className="px-6 py-4 text-gray-500 font-bold uppercase text-[9px] tracking-widest max-w-[150px] truncate">
+                    {(() => {
+                      if (!provider.services || provider.services.length === 0) return 'Unassigned';
+                      const names = new Set<string>();
+                      provider.services.forEach(service => {
+                        if (service.location_ids && Array.isArray(service.location_ids)) {
+                          service.location_ids.forEach((loc: any) => {
+                            if (loc && typeof loc === 'object' && loc.name) {
+                              names.add(loc.name);
+                            } else if (typeof loc === 'string') {
+                              const found = locations.find(l => l._id === loc);
+                              if (found && found.name) names.add(found.name);
+                            }
+                          });
+                        }
+                      });
+                      return names.size > 0 ? Array.from(names).join(', ') : 'Unassigned';
+                    })()}
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5 text-gray-900 font-black">
                       <CheckCircle2 size={14} className="text-green-600" />
@@ -372,6 +448,27 @@ const ProviderTable: React.FC = () => {
                   )}
                 </motion.tr>
               ))}
+              
+              {currentProviders.length === 0 && (
+                <motion.tr
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="bg-gray-50/50"
+                >
+                  <td colSpan={headers.length} className="px-6 py-20 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <div className="p-4 bg-white rounded-2xl shadow-sm border border-gray-100 text-gray-400">
+                        <Search size={32} />
+                      </div>
+                      <h3 className="text-[13px] font-black text-gray-700 tracking-tight uppercase">No Experts Found</h3>
+                      <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase max-w-[250px] leading-relaxed">
+                        There are no providers matching your selected filters. Try adjusting your search criteria.
+                      </p>
+                    </div>
+                  </td>
+                </motion.tr>
+              )}
             </AnimatePresence>
           </Table>
         </div>

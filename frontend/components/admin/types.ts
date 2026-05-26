@@ -70,6 +70,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
+  password?: string;
   status: 'active' | 'blocked';
   isDeleted: boolean;
   lastLogin?: string;
@@ -79,6 +80,8 @@ export interface User {
   role?: 'admin' | 'customer' | 'provider';
   avatar?: string;
   joinedDate: string;
+  createdAt: string;
+  updatedAt: string;
   lastActive?: string;
   bookings?: number;
   spent?: string;

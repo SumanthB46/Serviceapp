@@ -50,6 +50,12 @@ const UserTable: React.FC = () => {
           email: u.email,
           phone: u.phone,
           status: u.status === 'active' ? 'Active' : 'Blocked',
+          gender: u.gender || '',
+          isDeleted: u.isDeleted || false,
+          isEmailVerified: u.isEmailVerified || false,
+          isPhoneVerified: u.isPhoneVerified || false,
+          createdAt: u.createdAt ? new Date(u.createdAt) : null,
+          updatedAt: u.updatedAt ? new Date(u.updatedAt) : null,
           joinedDate: new Date(u.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
           avatar: u.profile_image
         }));
@@ -120,6 +126,50 @@ const UserTable: React.FC = () => {
     }
   };
 
+  const handleExportCSV = () => {
+    const headers = [
+      'Name', 'Email', 'Phone', 'Status', 'Gender', 
+      'Is Deleted', 'Email Verified', 'Phone Verified', 
+      'Created At', 'Updated At'
+    ];
+    
+    const formatDate = (date: any) => {
+      if (!date) return '';
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      const d = new Date(date);
+      return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    };
+
+    const csvRows = filtered.map(user => {
+      const escapeCsv = (str: string | boolean | undefined) => `"${String(str ?? '').replace(/"/g, '""')}"`;
+      // By using ="value", Excel treats the cell as a string rather than interpreting it and messing up formatting.
+      const formatExcelStr = (val: string) => `="${String(val ?? '').replace(/"/g, '""')}"`;
+
+      return [
+        escapeCsv(user.name),
+        escapeCsv(user.email),
+        formatExcelStr(user.phone),
+        escapeCsv(user.status),
+        escapeCsv(user.gender),
+        escapeCsv(user.isDeleted),
+        escapeCsv(user.isEmailVerified),
+        escapeCsv(user.isPhoneVerified),
+        formatExcelStr(formatDate(user.createdAt)),
+        formatExcelStr(formatDate(user.updatedAt))
+      ].join(',');
+    });
+    
+    const csvString = [headers.join(','), ...csvRows].join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `registered_users_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2">
@@ -128,7 +178,7 @@ const UserTable: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" icon={Download} className="shadow-sm border-gray-100 bg-white text-[11px]">Export Users</Button>
+          <Button onClick={handleExportCSV} variant="outline" size="sm" icon={Download} className="shadow-sm border-gray-100 bg-white text-[11px]">Export Users</Button>
           <Button
             onClick={() => setIsAddModalOpen(true)}
             variant="primary"

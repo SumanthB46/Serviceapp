@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { Booking } from '../../models/Booking';
 import { Cart } from '../../models/Cart';
+import { Coupon } from '../../models/Coupon';
+import { UserMembership } from '../../models/UserMembership';
 import { AuthRequest } from '../../middleware/authMiddleware';
 import { dispatchNearbyProviders } from '../../services/bookingDispatchService';
 export const getAllBookings = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -145,7 +147,8 @@ export const createBooking = async (req: AuthRequest, res: Response): Promise<vo
       booking_date, 
       time_slot, 
       address,
-      payment_method
+      payment_method,
+      coupon_code
     } = req.body;
 
     if (!address) {
@@ -153,25 +156,138 @@ export const createBooking = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const cart = await Cart.findOne({ user_id: req.user?._id });
+    const cart = await Cart.findOne({ user_id: req.user?._id }).populate({
+      path: 'items.subservice_id',
+      populate: { path: 'service_id' }
+    });
     if (!cart || cart.items.length === 0) {
       res.status(400).json({ message: 'Cart is empty' });
       return;
     }
 
+    let totalDiscount = 0;
+    
+    // FINAL BACKEND COUPON VALIDATION
+    if (coupon_code) {
+      const coupon = await Coupon.findOne({ code: coupon_code });
+      if (!coupon) {
+        res.status(400).json({ message: 'Invalid coupon code' });
+        return;
+      }
+      
+      if (coupon.status !== 'active') {
+        res.status(400).json({ message: 'Coupon is not active' });
+        return;
+      }
+
+      if (new Date() > new Date(coupon.expiryDate)) {
+        res.status(400).json({ message: 'Coupon has expired' });
+        return;
+      }
+
+      if (cart.total_amount < coupon.minOrderAmount) {
+        res.status(400).json({ message: `Minimum order amount of ₹${coupon.minOrderAmount} required` });
+        return;
+      }
+
+      // User eligibility check
+      if (coupon.targetAudience.includes('members')) {
+        const activeMembership = await UserMembership.findOne({ 
+          user_id: req.user?._id, 
+          membership_status: 'active' 
+        });
+        if (!activeMembership) {
+          res.status(400).json({ message: 'This coupon is valid for members only' });
+          return;
+        }
+      }
+
+      if (coupon.targetAudience.includes('first_time')) {
+        const previousBookings = await Booking.countDocuments({ user_id: req.user?._id, status: 'completed' });
+        if (previousBookings > 0) {
+          res.status(400).json({ message: 'This coupon is valid for first-time users only' });
+          return;
+        }
+      }
+
+      // Usage limits check
+      if (coupon.usageLimit > 0) {
+        // Since one checkout creates multiple bookings, count distinct group_booking_ids or just total usages
+        const totalUses = await Booking.distinct('booking_id', { applied_coupon: coupon_code });
+        if (totalUses.length >= coupon.usageLimit) {
+          res.status(400).json({ message: 'Coupon usage limit has been reached' });
+          return;
+        }
+      }
+
+      if (coupon.perUserLimit > 0) {
+        const userUses = await Booking.distinct('booking_id', { applied_coupon: coupon_code, user_id: req.user?._id });
+        if (userUses.length >= coupon.perUserLimit) {
+          res.status(400).json({ message: `You have reached the maximum usage limit (${coupon.perUserLimit}) for this coupon` });
+          return;
+        }
+      }
+      
+      // Calculate total eligible amount
+      let eligibleAmount = 0;
+      for (const item of cart.items) {
+        let isEligible = true;
+        const subservice: any = item.subservice_id;
+        
+        if (coupon.allowedServices && coupon.allowedServices.length > 0) {
+           if (!coupon.allowedServices.includes(subservice.service_id?._id) && !coupon.allowedServices.includes(subservice._id)) {
+             isEligible = false;
+           }
+        }
+        
+        if (coupon.allowedCategories && coupon.allowedCategories.length > 0) {
+           if (!coupon.allowedCategories.includes(subservice.service_id?.category_id)) {
+             isEligible = false;
+           }
+        }
+        
+        if (isEligible) {
+          eligibleAmount += item.price_snapshot * item.quantity;
+        }
+      }
+
+      if (eligibleAmount === 0 && (coupon.allowedServices?.length > 0 || coupon.allowedCategories?.length > 0)) {
+        res.status(400).json({ message: 'Coupon is not applicable for the selected services' });
+        return;
+      }
+
+      // Calculate discount
+      if (coupon.discountType === 'flat') {
+        totalDiscount = coupon.discountValue;
+      } else if (coupon.discountType === 'percentage') {
+        totalDiscount = (eligibleAmount * coupon.discountValue) / 100;
+        if (coupon.maxDiscountLimit && totalDiscount > coupon.maxDiscountLimit) {
+          totalDiscount = coupon.maxDiscountLimit;
+        }
+      }
+    }
+
     const createdBookings = [];
+    const groupBookingId = `BK-${Math.floor(100000 + Math.random() * 900000)}`;
 
     for (const item of cart.items) {
+      const itemPrice = item.price_snapshot * item.quantity;
+      // Pro-rata discount distribution
+      const itemDiscount = cart.total_amount > 0 ? (itemPrice / cart.total_amount) * totalDiscount : 0;
+      const payableAmount = Math.max(0, itemPrice - itemDiscount);
+
       const booking = await Booking.create({
-        booking_id: `BK-${Math.floor(100000 + Math.random() * 900000)}`,
+        booking_id: groupBookingId,
         user_id: req.user?._id,
-        subservice_id: item.subservice_id,
+        subservice_id: (item.subservice_id as any)._id || item.subservice_id,
         address_id: address._id || address,
         scheduled_at: booking_date,
         booking_time: time_slot,
-        service_price: item.price_snapshot * item.quantity,
-        payable_amount: item.price_snapshot * item.quantity,
+        service_price: itemPrice,
+        discount_amount: itemDiscount,
+        payable_amount: payableAmount,
         payment_method: payment_method || 'cod',
+        applied_coupon: totalDiscount > 0 ? coupon_code : undefined,
         status: 'pending',
         is_reviewed: false,
         isDeleted: false
@@ -370,6 +486,17 @@ export const cancelBooking = async (req: AuthRequest, res: Response): Promise<vo
     booking.cancelled_at = new Date();
     booking.cancelled_by = 'customer';
     booking.cancellation_reason = reason;
+
+    // Refund logic
+    if (booking.payment_method === 'cod') {
+      booking.refund_status = 'none';
+      booking.refund_amount = 0;
+      booking.refund_reason = 'COD payment not refundable';
+    } else if (booking.payment_method === 'online' || booking.payment_method === 'wallet') {
+      booking.refund_status = 'processing';
+      booking.refund_amount = booking.payable_amount;
+      booking.refund_reason = 'Service cancelled before delivery';
+    }
 
     await booking.save();
 
