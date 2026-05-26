@@ -5,6 +5,7 @@ import { Button, Carousel } from "antd";
 import { Search, Check, MapPin, Navigation } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
+import Cookies from "js-cookie";
 
 const heroImages = [
   "/images/hero/p1.jpeg",
@@ -17,6 +18,11 @@ const Hero = () => {
   const [location, setLocation] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [detecting, setDetecting] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    setUserRole(Cookies.get("userRole") || null);
+  }, []);
 
   const textY = useTransform(scrollY, [0, 500], [0, -50]);
   const imageY = useTransform(scrollY, [0, 500], [0, 50]);
@@ -61,6 +67,20 @@ const Hero = () => {
                 </button>
               </div>
             </div>
+
+            {/* Role-based Book Now Button */}
+            {!userRole && (
+              <div className="mt-6">
+                <Link href="/signup">
+                  <button className="group relative overflow-hidden bg-[#1D2B83] active:scale-95 text-white text-sm font-bold uppercase tracking-widest px-8 py-4 rounded-xl shadow-lg hover:shadow-2xl hover:shadow-[#1D2B83]/50 transition-all duration-300">
+                    <span className="absolute left-0 top-0 h-full w-0 bg-white transition-all duration-300 ease-out group-hover:w-full"></span>
+                    <span className="relative z-10 transition-colors duration-300 group-hover:text-[#1D2B83]">
+                      Book Now
+                    </span>
+                  </button>
+                </Link>
+              </div>
+            )}
           </motion.div>
 
           {/* Right Column: Image & Carousel */}

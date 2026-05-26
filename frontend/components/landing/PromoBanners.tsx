@@ -62,6 +62,19 @@ export default function PromoBanners() {
   const currentBanner = banners[activeIndex];
   const isEvenLayout = activeIndex % 2 === 0;
 
+  const handleBannerClick = (e: React.MouseEvent<HTMLAnchorElement>, url?: string) => {
+    if (!url) return;
+    
+    // Dispatch event for categories component to handle modal opening
+    const event = new CustomEvent("openCategoryModal", { detail: { url } });
+    window.dispatchEvent(event);
+    
+    // If it's one of the known categories that opens a modal, prevent navigation
+    if (url.includes("bulk") || url.includes("loan")) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <section className="bg-white py-8 sm:py-12 pb-20 sm:pb-24 relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
@@ -99,7 +112,11 @@ export default function PromoBanners() {
 
                     {currentBanner.button_text && (
                       <div className="mt-4">
-                        <Link href={currentBanner.redirect_url || "/"} className="relative overflow-hidden bg-white text-[#1D2B83] hover:text-white text-xs sm:text-sm font-bold uppercase tracking-[0.2em] px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3 group isolate">
+                        <Link 
+                          href={currentBanner.redirect_url || "/"} 
+                          onClick={(e) => handleBannerClick(e, currentBanner.redirect_url)}
+                          className="relative overflow-hidden bg-white text-[#1D2B83] hover:text-white text-xs sm:text-sm font-bold uppercase tracking-[0.2em] px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3 group isolate"
+                        >
                           <div className="absolute inset-0 bg-indigo-500 scale-x-0 origin-left transition-transform duration-500 ease-out group-hover:scale-x-100 -z-10" />
                           {currentBanner.button_text}
                           <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" />
@@ -147,7 +164,11 @@ export default function PromoBanners() {
 
                     {currentBanner.button_text && (
                       <div className="flex flex-col sm:flex-row items-center gap-3 pt-4">
-                        <Link href={currentBanner.redirect_url || "/"} className="relative overflow-hidden bg-white text-[#1D2B83] hover:text-white text-xs sm:text-sm font-bold uppercase tracking-[0.2em] px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3 group isolate">
+                        <Link 
+                          href={currentBanner.redirect_url || "/"} 
+                          onClick={(e) => handleBannerClick(e, currentBanner.redirect_url)}
+                          className="relative overflow-hidden bg-white text-[#1D2B83] hover:text-white text-xs sm:text-sm font-bold uppercase tracking-[0.2em] px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3 group isolate"
+                        >
                           <div className="absolute inset-0 bg-indigo-500 scale-x-0 origin-left transition-transform duration-500 ease-out group-hover:scale-x-100 -z-10" />
                           {currentBanner.button_text}
                           <span className="ml-3 h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center transition-transform group-hover:translate-x-1">

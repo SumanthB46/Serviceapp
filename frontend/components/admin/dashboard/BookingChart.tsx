@@ -3,11 +3,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const BookingChart: React.FC = () => {
+const BookingChart: React.FC<{data?: any}> = ({data}) => {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const currentWeek = [65, 82, 70, 95, 88, 120, 110];
-  const lastWeek = [58, 70, 62, 80, 75, 100, 95];
-  const max = 150;
+  const currentWeek = data?.current || [65, 82, 70, 95, 88, 120, 110];
+  const lastWeek = data?.previous || [58, 70, 62, 80, 75, 100, 95];
+  const max = Math.max(...currentWeek, ...lastWeek, 10) + 10;
 
   return (
     <div className="flex flex-col h-[350px]">

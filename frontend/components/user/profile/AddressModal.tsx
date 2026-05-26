@@ -195,15 +195,15 @@ export default function AddressModal({ isOpen, onClose, onAddressSelect }: Addre
       try {
         const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
         const data = await response.json();
-        if (data[0].Status === "Success") {
+        if (data && data[0] && data[0].Status === "Success" && Array.isArray(data[0].PostOffice) && data[0].PostOffice.length > 0) {
           const info = data[0].PostOffice[0];
           form.setFieldsValue({
-            city: info.District,
+            city: info.District || info.Region || info.Circle,
             state: info.State
           });
         }
       } catch (error) {
-        console.error("Failed to fetch pincode info", error);
+        console.warn("Failed to fetch or parse pincode info. Kaspersky or network might be blocking it.", error);
       }
     }
   };
@@ -346,131 +346,136 @@ export default function AddressModal({ isOpen, onClose, onAddressSelect }: Addre
 
             {/* Content Area */}
             <div className="p-8 overflow-y-auto custom-scrollbar flex-1 relative">
-              <AnimatePresence mode="wait">
-                {view === "list" ? (
-                  <motion.div
-                    key="list"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="space-y-4"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <button 
-                        onClick={handleGetCurrentLocation}
-                        disabled={isLocating}
-                        className="flex items-center justify-center gap-3 py-5 rounded-[1.5rem] bg-[#1D2B83] text-white font-bold hover:bg-[#16226b] shadow-lg shadow-blue-900/10 transition-all group disabled:opacity-70"
-                      >
-                        {isLocating ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                            <Navigation className="w-4 h-4" />
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={handleSave}
+                requiredMark={false}
+                initialValues={editingAddress || { is_default: false }}
+                className="w-full"
+              >
+                <AnimatePresence mode="wait">
+                  {view === "list" ? (
+                    <motion.div
+                      key="list"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="space-y-4"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button 
+                          onClick={handleGetCurrentLocation}
+                          type="button"
+                          disabled={isLocating}
+                          className="flex items-center justify-center gap-3 py-5 rounded-[1.5rem] bg-[#1D2B83] text-white font-bold hover:bg-[#16226b] shadow-lg shadow-blue-900/10 transition-all group disabled:opacity-70"
+                        >
+                          {isLocating ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                              <Navigation className="w-4 h-4" />
+                            </div>
+                          )}
+                          {isLocating ? "Locating..." : "Use Live Location"}
+                        </button>
+
+                        <button 
+                          onClick={handleAddNew}
+                          type="button"
+                          className="flex items-center justify-center gap-3 py-5 rounded-[1.5rem] border-2 border-dashed border-slate-200 bg-white text-slate-600 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all group"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                            <Plus className="w-4 h-4" />
                           </div>
-                        )}
-                        {isLocating ? "Locating..." : "Use Live Location"}
-                      </button>
+                          Add Manually
+                        </button>
+                      </div>
 
-                      <button 
-                        onClick={handleAddNew}
-                        className="flex items-center justify-center gap-3 py-5 rounded-[1.5rem] border-2 border-dashed border-slate-200 bg-white text-slate-600 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all group"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                          <Plus className="w-4 h-4" />
+                      {loading ? (
+                        <div className="flex justify-center py-10">
+                          <Loader2 className="w-8 h-8 text-[#1D2B83] animate-spin" />
                         </div>
-                        Add Manually
-                      </button>
-                    </div>
-
-                    {loading ? (
-                      <div className="flex justify-center py-10">
-                        <Loader2 className="w-8 h-8 text-[#1D2B83] animate-spin" />
-                      </div>
-                    ) : addresses.length === 0 ? (
-                      <div className="text-center py-10 opacity-60">
-                        <MapPin className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                        <p className="text-sm font-bold text-slate-500">No saved addresses found</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4 mt-6">
-                        {addresses.map((address) => (
-                          <div 
-                            key={address._id}
-                            onClick={() => !address.is_default && handleSetDefault(address)}
-                            className={`p-6 bg-white rounded-[2rem] border-2 transition-all relative group cursor-pointer ${
-                              address.is_default 
-                                ? "border-[#1D2B83] shadow-lg shadow-blue-900/5 ring-1 ring-[#1D2B83]/10" 
-                                : "border-transparent shadow-sm hover:border-slate-200 hover:shadow-md"
-                            }`}
-                          >
-                            {address.is_default && (
-                              <div className="absolute -top-3 left-6 px-3 py-1 bg-[#1D2B83] text-white text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1 shadow-sm z-10">
-                                <CheckCircle2 className="w-3 h-3" /> Default
-                              </div>
-                            )}
-
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="flex gap-4">
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-colors ${address.is_default ? "bg-blue-50 text-[#1D2B83]" : "bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-[#1D2B83]"}`}>
-                                  <Home className="w-6 h-6" />
+                      ) : addresses.length === 0 ? (
+                        <div className="text-center py-10 opacity-60">
+                          <MapPin className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                          <p className="text-sm font-bold text-slate-500">No saved addresses found</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4 mt-6">
+                          {addresses.map((address) => (
+                            <div 
+                              key={address._id}
+                              onClick={() => !address.is_default && handleSetDefault(address)}
+                              className={`p-6 bg-white rounded-[2rem] border-2 transition-all relative group cursor-pointer ${
+                                address.is_default 
+                                  ? "border-[#1D2B83] shadow-lg shadow-blue-900/5 ring-1 ring-[#1D2B83]/10" 
+                                  : "border-transparent shadow-sm hover:border-slate-200 hover:shadow-md"
+                              }`}
+                            >
+                              {address.is_default && (
+                                <div className="absolute -top-3 left-6 px-3 py-1 bg-[#1D2B83] text-white text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1 shadow-sm z-10">
+                                  <CheckCircle2 className="w-3 h-3" /> Default
                                 </div>
-                                <div>
-                                  <p className="text-sm font-bold text-slate-800 mb-1 leading-relaxed max-w-sm">
-                                    {address.address_line}
-                                    {address.landmark && <span className="block text-slate-500 font-medium">Landmark: {address.landmark}</span>}
-                                  </p>
-                                  <p className="text-xs font-bold text-slate-400">
-                                    {address.city}, {address.state} - {address.pincode}
-                                  </p>
+                              )}
+
+                              <div className="flex justify-between items-start gap-4">
+                                <div className="flex gap-4">
+                                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-colors ${address.is_default ? "bg-blue-50 text-[#1D2B83]" : "bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-[#1D2B83]"}`}>
+                                    <Home className="w-6 h-6" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-bold text-slate-800 mb-1 leading-relaxed max-w-sm">
+                                      {address.address_line}
+                                      {address.landmark && <span className="block text-slate-500 font-medium">Landmark: {address.landmark}</span>}
+                                    </p>
+                                    <p className="text-xs font-bold text-slate-400">
+                                      {address.city}, {address.state} - {address.pincode}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                              
-                              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                {!address.is_default && (
+                                
+                                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                  {!address.is_default && (
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleSetDefault(address)}
+                                      className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#1D2B83] px-3 py-2 bg-slate-50 hover:bg-blue-50 rounded-lg transition-all"
+                                    >
+                                      Set Default
+                                    </button>
+                                  )}
                                   <button 
-                                    onClick={() => handleSetDefault(address)}
-                                    className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#1D2B83] px-3 py-2 bg-slate-50 hover:bg-blue-50 rounded-lg transition-all"
+                                    type="button"
+                                    onClick={() => handleEdit(address)}
+                                    className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-blue-600 bg-slate-50 hover:bg-blue-50 rounded-lg transition-all"
                                   >
-                                    Set Default
+                                    <Edit3 className="w-4 h-4" />
                                   </button>
-                                )}
-                                <button 
-                                  onClick={() => handleEdit(address)}
-                                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-blue-600 bg-slate-50 hover:bg-blue-50 rounded-lg transition-all"
-                                >
-                                  <Edit3 className="w-4 h-4" />
-                                </button>
-                                <Popconfirm
-                                  title="Delete this address?"
-                                  onConfirm={() => handleDelete(address._id)}
-                                  okText="Delete"
-                                  cancelText="Cancel"
-                                  okButtonProps={{ danger: true }}
-                                >
-                                  <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-lg transition-all">
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </Popconfirm>
+                                  <Popconfirm
+                                    title="Delete this address?"
+                                    onConfirm={() => handleDelete(address._id)}
+                                    okText="Delete"
+                                    cancelText="Cancel"
+                                    okButtonProps={{ danger: true }}
+                                  >
+                                    <button type="button" className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-lg transition-all">
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </Popconfirm>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="form"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                  >
-                    <Form
-                      form={form}
-                      layout="vertical"
-                      onFinish={handleSave}
-                      requiredMark={false}
-                      initialValues={editingAddress || { is_default: false }}
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="form"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
                       className="space-y-4"
                     >
                       {/* Interactive Map Location Picker */}
@@ -580,10 +585,10 @@ export default function AddressModal({ isOpen, onClose, onAddressSelect }: Addre
                       >
                         {loading ? "Saving..." : "Save Address"}
                       </Button>
-                    </Form>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Form>
             </div>
           </motion.div>
         </div>

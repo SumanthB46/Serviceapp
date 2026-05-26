@@ -18,7 +18,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     const queryList = [];
     if (email) queryList.push({ email });
     if (phone) queryList.push({ phone });
-    
+
     if (queryList.length === 0) {
       res.status(400).json({ message: 'Must provide an email or phone number.' });
       return;
@@ -136,11 +136,11 @@ export const updateMe = async (req: AuthRequest, res: Response): Promise<void> =
       return;
     }
 
-    user.name          = req.body.name          ?? user.name;
-    user.email         = req.body.email         ?? user.email;
-    user.phone         = req.body.phone         ?? user.phone;
+    user.name = req.body.name ?? user.name;
+    user.email = req.body.email ?? user.email;
+    user.phone = req.body.phone ?? user.phone;
     user.profile_image = req.body.profile_image ?? user.profile_image;
-    user.gender        = req.body.gender        ?? user.gender;
+    user.gender = req.body.gender ?? user.gender;
 
     if (req.body.password) {
       const { otp } = req.body;
@@ -166,14 +166,14 @@ export const updateMe = async (req: AuthRequest, res: Response): Promise<void> =
     const updated = await user.save();
 
     res.json({
-      _id:           updated._id,
-      name:          updated.name,
-      email:         updated.email,
-      phone:         updated.phone,
-      gender:        updated.gender,
-      role:          updated.role,
+      _id: updated._id,
+      name: updated.name,
+      email: updated.email,
+      phone: updated.phone,
+      gender: updated.gender,
+      role: updated.role,
       profile_image: updated.profile_image,
-      status:        updated.status,
+      status: updated.status,
     });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -203,18 +203,18 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    user.name          = req.body.name          ?? user.name;
-    user.email         = req.body.email         ?? user.email;
-    user.phone         = req.body.phone         ?? user.phone;
+    user.name = req.body.name ?? user.name;
+    user.email = req.body.email ?? user.email;
+    user.phone = req.body.phone ?? user.phone;
     user.profile_image = req.body.profile_image ?? user.profile_image;
-    
+
     // Explicitly handle status mapping to lower-case for registry consistency
     if (req.body.status) {
-       user.status = req.body.status.toLowerCase();
+      user.status = req.body.status.toLowerCase();
     }
 
     if (req.body.role) {
-       user.role = req.body.role.toLowerCase() as any;
+      user.role = req.body.role.toLowerCase() as any;
     }
 
     if (req.body.password) {
@@ -225,14 +225,14 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     const updated = await user.save();
 
     res.json({
-      _id:           updated._id,
-      name:          updated.name,
-      email:         updated.email,
-      phone:         updated.phone,
-      role:          updated.role,
-      gender:        updated.gender,
+      _id: updated._id,
+      name: updated.name,
+      email: updated.email,
+      phone: updated.phone,
+      role: updated.role,
+      gender: updated.gender,
       profile_image: updated.profile_image,
-      status:        updated.status,
+      status: updated.status,
     });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -264,7 +264,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
 export const sendOtp = async (req: Request, res: Response): Promise<void> => {
   try {
     const { identifier, role, useEmail, mode } = req.body;
-    
+
     // Check if user exists for specific modes
     const existingUser = await User.findOne(useEmail ? { email: identifier } : { phone: identifier });
 
@@ -297,7 +297,7 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
     if (useEmail) {
       // Create a transporter using your SMTP settings
       const transporter = nodemailer.createTransport({
-        service: 'gmail', 
+        service: 'gmail',
         auth: {
           user: process.env.SMTP_EMAIL,
           pass: process.env.SMTP_PASSWORD,
@@ -337,7 +337,7 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
         try {
           const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
           const formattedPhone = identifier.startsWith('+') ? identifier : `+91${identifier}`;
-          
+
           await twilioClient.messages.create({
             body: `Your ServiceApp Verification OTP is: ${otpCode}. Please do not share this code with anyone.`,
             from: process.env.TWILIO_PHONE_NUMBER,
@@ -364,7 +364,7 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
 export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
   try {
     const { identifier, otp, useEmail } = req.body;
-    
+
     const otpRecord = await Otp.findOne({ identifier, otpCode: otp });
 
     if (!otpRecord) {
@@ -526,5 +526,58 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
     res.status(200).json({ message: 'Password reset successful. You can now log in.' });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Register a partner (Sends email to admin)
+// @route   POST /api/users/register-partner
+// @access  Public
+export const registerPartner = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, phone, email, location, category, experience, documents } = req.body;
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.SMTP_EMAIL || 'fixvoadmin@gmail.com',
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.SMTP_EMAIL || 'fixvoadmin@gmail.com',
+      to: 'fixvoadmin@gmail.com',
+      subject: 'New Partner Registration Request',
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px;">
+          <h2 style="color: #1D2B83;">New Partner Application</h2>
+          <p>A new partner has submitted an application to join Fixvo.</p>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Name:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${name || 'N/A'}</td></tr>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Phone:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${phone || 'N/A'}</td></tr>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Email:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${email || 'N/A'}</td></tr>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Location:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${location || 'N/A'}</td></tr>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Category:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${category || 'N/A'}</td></tr>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Experience:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${experience || 'N/A'}</td></tr>
+            <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Documents:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${documents || 'Not uploaded'}</td></tr>
+          </table>
+          <p style="margin-top: 20px; font-size: 12px; color: #666;">This is an automated message from the Fixvo system.</p>
+        </div>
+      `,
+    };
+
+    if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {
+      await transporter.sendMail(mailOptions);
+      console.log('Partner registration email sent successfully to fixvoadmin@gmail.com');
+    } else {
+      console.log('--- EMAIL MOCK (Partner Registration) ---');
+      console.log(`To: fixvoadmin@gmail.com`);
+      console.log(`Payload:`, req.body);
+    }
+
+    res.status(200).json({ message: 'Partner registration application submitted successfully.' });
+  } catch (error: any) {
+    console.error('Error sending partner registration email:', error);
+    res.status(500).json({ message: 'Failed to submit application. Please try again.' });
   }
 };

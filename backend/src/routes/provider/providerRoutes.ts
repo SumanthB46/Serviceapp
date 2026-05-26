@@ -11,7 +11,8 @@ import {
   acceptJobRequest,
   rejectJobRequest,
   updateLiveLocation,
-  updateMyAvailability
+  updateMyAvailability,
+  processVerificationAction
 } from '../../controllers/provider/providerController';
 import { protect, admin } from '../../middleware/authMiddleware';
 
@@ -30,6 +31,7 @@ router.get('/',                       protect, admin, getProviders);
 router.get('/:id',                    protect, admin, getProviderById);
 router.post('/',                      protect, admin, createProvider);
 router.put('/:id',                    protect, admin, updateProvider);
+router.post('/:id/verification-action', protect, admin, processVerificationAction);
 router.delete('/:id',                 protect, admin, deleteProvider);
 
 

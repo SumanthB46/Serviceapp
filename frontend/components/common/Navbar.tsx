@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Menu,
   X,
+  XCircle,
   User,
   ShoppingCart,
   Briefcase,
@@ -126,6 +127,7 @@ const Navbar = () => {
     { icon: List, label: "Categories", href: "/categories" },
     { icon: ShoppingCart, label: "Cart", href: "/user/cart", badge: itemCount > 0 ? itemCount : undefined },
     { icon: Calendar, label: "My Bookings", href: "/user/bookings" },
+    { icon: XCircle, label: "Cancelled & Refunds", href: "/user/cancelled-bookings" },
     { icon: CreditCard, label: "Payments", href: "/user/billing" },
   ];
 
@@ -144,9 +146,10 @@ const Navbar = () => {
 
   const profileMenuItems = [
     { icon: User, label: "My Profile", action: () => setIsProfileModalOpenState(true) },
+    { icon: Calendar, label: "My Bookings", href: "/user/bookings" },
+    { icon: XCircle, label: "Cancelled & Refunds", href: "/user/cancelled-bookings" },
     { icon: MapPin, label: "Saved Addresses", action: () => setIsAddressModalOpen(true) },
     { icon: Bell, label: "Notifications", href: "/user/notifications" },
-
   ];
 
   const DrawerLink = ({ item }: { item: any }) => {

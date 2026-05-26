@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BACKEND_URL } from '@/config/api';
+import RejectVerificationModal from './RejectVerificationModal';
+import RequestDocsModal from './RequestDocsModal';
 
 interface ApprovalModalProps {
   provider: Provider | null;
@@ -20,8 +22,8 @@ interface ApprovalModalProps {
 }
 
 const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpdate }) => {
-  const [rejectionReason, setRejectionReason] = React.useState('');
-  const [isRejecting, setIsRejecting] = React.useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [isRequestDocsModalOpen, setIsRequestDocsModalOpen] = useState(false);
   const [docPreviewUrl, setDocPreviewUrl] = useState<string | null>(null);
   const [docLabel, setDocLabel] = useState<string>('document');
   const [downloading, setDownloading] = useState(false);
@@ -29,12 +31,19 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
   if (!provider) return null;
 
   const handleAction = (status: string) => {
-    if (status === 'rejected' && !isRejecting) {
-      setIsRejecting(true);
+    if (status === 'rejected') {
+      setIsRejectModalOpen(true);
       return;
     }
-    onUpdate(provider._id, status, status === 'rejected' ? rejectionReason : undefined);
-    setIsRejecting(false);
+    // Only used for 'verified' and 'pending' directly now
+    onUpdate(provider._id, status);
+    onClose();
+  };
+
+  const handleActionSuccess = () => {
+    // Treat as if onUpdate fired successfully to refresh parent
+    // The status isn't critical since parent refetches from API, but pass dummy to satisfy signature
+    onUpdate(provider._id, 'refresh');
     onClose();
   };
 
@@ -143,24 +152,15 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
            </div>
             <div className="flex items-center gap-2">
                <Button variant="outline" size="sm" onClick={onClose} className="text-[10px] uppercase font-black px-6">Close</Button>
-               {isRejecting ? (
-                 <div className="flex items-center gap-2">
-                   <Button variant="outline" size="sm" onClick={() => setIsRejecting(false)} className="text-[10px] uppercase font-black px-4">Cancel</Button>
-                   <Button variant="danger" size="sm" onClick={() => handleAction('rejected')} disabled={!rejectionReason.trim()} className="text-[10px] uppercase font-black bg-red-600 shadow-lg px-6">Confirm Rejection</Button>
-                 </div>
-               ) : (
+               {provider.kyc_status === 'pending' && (
                  <>
-                   {provider.kyc_status === 'pending' && (
-                     <>
-                       <Button variant="outline" size="sm" onClick={onClose} className="text-[10px] uppercase font-black text-amber-600 border-amber-100 bg-amber-50 shadow-sm">Request Docs</Button>
-                       <Button variant="danger" size="sm" onClick={() => handleAction('rejected')} className="text-[10px] uppercase font-black bg-red-600 shadow-lg">Reject Entry</Button>
-                       <Button variant="success" size="sm" onClick={() => handleAction('verified')} className="text-[10px] uppercase font-black bg-green-600 shadow-lg">Approve Access</Button>
-                     </>
-                   )}
-                   {provider.kyc_status === 'rejected' && (
-                     <Button variant="primary" size="sm" onClick={() => handleAction('pending')} className="text-[10px] uppercase font-black bg-blue-600 shadow-lg">Reconsider Application</Button>
-                   )}
+                   <Button variant="outline" size="sm" onClick={() => setIsRequestDocsModalOpen(true)} className="text-[10px] uppercase font-black text-amber-600 border-amber-100 bg-amber-50 shadow-sm">Request Docs</Button>
+                   <Button variant="danger" size="sm" onClick={() => setIsRejectModalOpen(true)} className="text-[10px] uppercase font-black bg-red-600 shadow-lg">Reject Entry</Button>
+                   <Button variant="success" size="sm" onClick={() => handleAction('verified')} className="text-[10px] uppercase font-black bg-green-600 shadow-lg">Approve Access</Button>
                  </>
+               )}
+               {provider.kyc_status === 'rejected' && (
+                 <Button variant="primary" size="sm" onClick={() => handleAction('pending')} className="text-[10px] uppercase font-black bg-blue-600 shadow-lg">Reconsider Application</Button>
                )}
             </div>
 
@@ -242,23 +242,7 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
             </div>
         </div>
 
-        {/* Rejection Intelligence */}
-        {isRejecting && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-red-50 border border-red-100 rounded-[2rem] space-y-3">
-            <div className="flex items-center gap-2 text-red-600">
-               <ShieldAlert size={16} />
-               <h4 className="text-[10px] font-black uppercase tracking-widest">Rejection Protocol</h4>
-            </div>
-            <textarea
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Specify precise reason for rejection (e.g., 'Aadhar image blurred', 'Bank mismatch')..."
-              className="w-full bg-white border border-red-100 rounded-2xl p-4 text-xs font-bold text-gray-800 focus:outline-none focus:ring-4 focus:ring-red-500/10 placeholder:text-gray-300 min-h-[100px] resize-none"
-            />
-          </motion.div>
-        )}
-
-        {(provider as any).kyc_rejection_reason && !isRejecting && (
+        {(provider as any).kyc_rejection_reason && (
           <div className="p-5 bg-amber-50 border border-amber-100 rounded-[2rem] flex items-start gap-4">
             <div className="p-2 bg-white rounded-xl text-amber-600 shadow-sm"><FileSearch size={16} /></div>
             <div>
@@ -303,6 +287,20 @@ const ApprovalModal: React.FC<ApprovalModalProps> = ({ provider, onClose, onUpda
         </div>
       </div>
     </Modal>
+
+      <RejectVerificationModal 
+        provider={provider} 
+        isOpen={isRejectModalOpen} 
+        onClose={() => setIsRejectModalOpen(false)} 
+        onSuccess={handleActionSuccess} 
+      />
+
+      <RequestDocsModal 
+        provider={provider} 
+        isOpen={isRequestDocsModalOpen} 
+        onClose={() => setIsRequestDocsModalOpen(false)} 
+        onSuccess={handleActionSuccess} 
+      />
     </>
   );
 };

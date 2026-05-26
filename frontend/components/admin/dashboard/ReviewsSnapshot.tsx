@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Star, MessageSquareQuote } from 'lucide-react';
 
-const ReviewsSnapshot: React.FC = () => {
+const ReviewsSnapshot: React.FC<{data?: any[]}> = ({data}) => {
    const reviews = [
       { user: 'Sumanth B', rating: 5, comment: 'Excellent prompt service for AC repair. Highly recommend!', provider: 'Arjun Verma' },
       { user: 'Ananya R', rating: 4, comment: 'Cleaning was very thorough, but took longer than expected.', provider: 'Sneha Kapur' },
