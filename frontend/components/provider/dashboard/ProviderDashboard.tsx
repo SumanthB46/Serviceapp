@@ -11,7 +11,11 @@ import {
   Zap,
   Clock,
   MapPin,
-  Navigation
+  Navigation,
+  AlertTriangle,
+  XCircle,
+  ShieldCheck,
+  X
 } from "lucide-react";
 import { API_URL } from "@/config/api";
 import { connectSocket, disconnectSocket } from "@/services/socket";
@@ -26,6 +30,7 @@ export default function ProviderDashboard() {
   const [jobRequests, setJobRequests] = React.useState<any[]>([]);
   const [bookings, setBookings] = React.useState<any[]>([]);
   const [actionLoading, setActionLoading] = React.useState<string | null>(null);
+  const [showKycModal, setShowKycModal] = React.useState(true);
 
   const stats = [
     { name: "Total Jobs", value: providerData?.total_jobs?.toString() || "0", icon: TrendingUp, color: "bg-blue-500", trend: "+12%" },
@@ -94,7 +99,9 @@ export default function ProviderDashboard() {
                 longitude
               }, {
                 headers: { Authorization: `Bearer ${token}` }
-              }).catch(e => console.error("Location sync failed", e));
+              }).catch(() => {
+                // Silently ignore errors (e.g. 403 when unverified)
+              });
             }
           });
         }
@@ -138,8 +145,8 @@ export default function ProviderDashboard() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setJobRequests(response.data);
-    } catch (e) {
-      console.error("Failed to fetch job requests", e);
+    } catch (e: any) {
+      // Silently ignore errors
     }
   };
 
@@ -150,8 +157,8 @@ export default function ProviderDashboard() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBookings(response.data.slice(0, 5));
-    } catch (e) {
-      console.error("Failed to fetch bookings", e);
+    } catch (e: any) {
+      // Silently ignore errors
     }
   };
 
@@ -227,6 +234,12 @@ export default function ProviderDashboard() {
         </div>
         
         <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm transition-all hover:shadow-md">
+          {providerData?.kyc_status === 'verified' && (
+             <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl border border-emerald-100">
+               <ShieldCheck size={16} />
+               <span className="text-xs font-bold uppercase tracking-wider">Verified</span>
+             </div>
+          )}
           <div className="flex flex-col items-end px-3 border-r border-slate-100">
             <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Work Status</span>
             <span className={`text-[10px] font-black uppercase tracking-widest ${providerData?.availability_status === 'available' ? 'text-emerald-500' : 'text-rose-500'}`}>
@@ -447,6 +460,59 @@ export default function ProviderDashboard() {
           </div>
         </div>
       </div>
+
+      {/* KYC Status Modals */}
+      {providerData?.kyc_status === 'pending' && showKycModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center relative">
+            <button 
+              onClick={() => setShowKycModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
+            >
+              <X size={20} />
+            </button>
+            <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-6">
+              <AlertTriangle className="h-10 w-10 text-amber-500" />
+            </div>
+            <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-600 px-4 py-1.5 rounded-full text-sm font-bold border border-amber-200 mb-4 uppercase tracking-wider">
+              Pending Verification
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">Verification In Progress</h2>
+            <p className="text-slate-500 font-medium mb-8">
+              Your KYC verification is currently under review by the admin.
+              You will be able to accept service requests once your account is verified.
+              Please wait until the verification process is completed.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {providerData?.kyc_status === 'rejected' && showKycModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center relative">
+            <button 
+              onClick={() => setShowKycModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
+            >
+              <X size={20} />
+            </button>
+            <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mb-6">
+              <XCircle className="h-10 w-10 text-rose-500" />
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">Application Rejected</h2>
+            <p className="text-slate-500 font-medium mb-6">
+              Your provider verification request has been rejected.
+            </p>
+            <div className="w-full bg-rose-50 p-4 rounded-2xl border border-rose-100 text-left mb-8">
+              <p className="text-xs font-bold text-rose-800 uppercase tracking-wider mb-2">Reason:</p>
+              <p className="text-sm text-rose-600 font-medium">{providerData?.kyc_rejection_reason || "Documents did not meet our verification standards."}</p>
+            </div>
+            <p className="text-slate-500 text-sm font-medium">
+              Please update the required details from your profile and contact support or reapply.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
