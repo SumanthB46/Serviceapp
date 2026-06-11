@@ -133,7 +133,7 @@ const RevenueChart: React.FC<{data?: any}> = ({data}) => {
                   />
 
                   {/* Silent Interaction Hubs */}
-                  {currentPoints.map((p, i) => (
+                  {currentPoints.map((p: { x: number; y: number }, i: number) => (
                      <rect
                         key={i}
                         x={p.x - 50} 
@@ -175,7 +175,7 @@ const RevenueChart: React.FC<{data?: any}> = ({data}) => {
 
       {/* Synchronized X-Axis Labels */}
       <div className="flex px-[42px] mt-6 justify-between shrink-0">
-         {months.map(m => (
+         {months.map((m: string) => (
             <span key={m} className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{m}</span>
          ))}
       </div>

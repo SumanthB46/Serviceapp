@@ -3,8 +3,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const ServicePieChart: React.FC<{data?: any}> = ({data}) => {
-   const services = data || [
+interface ServiceItem {
+   name: string;
+   value: number;
+   color: string;
+}
+
+const ServicePieChart: React.FC<{data?: ServiceItem[]}> = ({data}) => {
+   const services: ServiceItem[] = data || [
       { name: 'AC Repair', value: 35, color: '#2563EB' },
       { name: 'Cleaning', value: 25, color: '#3B82F6' },
       { name: 'Plumbing', value: 20, color: '#60A5FA' },
@@ -26,7 +32,7 @@ const ServicePieChart: React.FC<{data?: any}> = ({data}) => {
          
          <div className="relative w-40 h-40">
             <svg viewBox="0 0 42 42" className="w-full h-full -rotate-90">
-               {services.map((service, i) => {
+               {services.map((service: ServiceItem, i: number) => {
                   const dashArray = getDashArray(service.value);
                   const dashOffset = (cumulativePercentage * (2 * Math.PI * 15.9155)) / 100;
                   cumulativePercentage += service.value;
@@ -57,7 +63,7 @@ const ServicePieChart: React.FC<{data?: any}> = ({data}) => {
          </div>
 
          <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-8 w-full">
-            {services.map((service) => (
+            {services.map((service: ServiceItem) => (
                <div key={service.name} className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: service.color }} />
                   <div className="flex flex-col">

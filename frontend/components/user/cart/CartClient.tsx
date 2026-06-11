@@ -21,11 +21,21 @@ import { useRouter } from "next/navigation";
 
 
 export default function CartClient() {
-  const { cart, itemCount, totalAmount, updateQuantity, removeFromCart, clearCart, loading: cartLoading } = useCart();
+  const {
+    cart,
+    itemCount,
+    totalAmount,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    loading: cartLoading,
+    selectedDate,
+    setSelectedDate,
+    selectedSlot,
+    setSelectedSlot
+  } = useCart();
   const router = useRouter();
   const [defaultAddress, setDefaultAddress] = useState<any>(null);
-  const [selectedDate, setSelectedDate] = useState<"today" | "tomorrow">("today");
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
   const [couponCode, setCouponCode] = useState("");
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -72,14 +82,31 @@ export default function CartClient() {
   };
 
   const handleCheckout = async () => {
-    if (!defaultAddress) {
-      // Only prompt the user if they truly have no address yet
-      messageApi.info("Please add a service address to continue");
-      setIsAddressModalOpen(true);
-      return;
-    }
     if (!selectedSlot) {
       messageApi.warning("Please select a convenient time slot");
+      const element = document.getElementById("time-slot-section");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.classList.add("ring-4", "ring-[#1D2B83]/30", "ring-offset-2");
+        setTimeout(() => {
+          element.classList.remove("ring-4", "ring-[#1D2B83]/30", "ring-offset-2");
+        }, 2500);
+      }
+      return;
+    }
+    if (!defaultAddress) {
+      messageApi.info("Please add a service address to continue");
+      const element = document.getElementById("address-section");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.classList.add("ring-4", "ring-[#1D2B83]/30", "ring-offset-2");
+        setTimeout(() => {
+          element.classList.remove("ring-4", "ring-[#1D2B83]/30", "ring-offset-2");
+        }, 2500);
+      }
+      setTimeout(() => {
+        setIsAddressModalOpen(true);
+      }, 800);
       return;
     }
     if (!paymentMethod) {
@@ -200,21 +227,20 @@ export default function CartClient() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Main Content */}
-          <div className="lg:col-span-8 space-y-20">
+          <div className="lg:col-span-8 space-y-3">
             <CartItemList items={cart?.items} removeFromCart={removeFromCart} updateQuantity={updateQuantity} />
 
-
-            <div className="space-y-6 pt-4">
-              <AddressSelection defaultAddress={defaultAddress} onOpenAddressModal={() => setIsAddressModalOpen(true)} />
-            </div>
-
-            <div className="space-y-6 pt-4">
+            <div id="time-slot-section" className="rounded-[1.2rem] transition-all duration-300">
               <TimeSlotSelection selectedDate={selectedDate} setSelectedDate={setSelectedDate} selectedSlot={selectedSlot} setSelectedSlot={setSelectedSlot} />
             </div>
 
-            <div className="space-y-6 pt-4">
+            <div id="address-section" className="rounded-[1.2rem] transition-all duration-300">
+              <AddressSelection defaultAddress={defaultAddress} onOpenAddressModal={() => setIsAddressModalOpen(true)} />
+            </div>
+
+            <div>
               <PaymentMethodSelection paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} />
             </div>
           </div>
